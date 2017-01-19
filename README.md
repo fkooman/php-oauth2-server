@@ -10,13 +10,18 @@ to be compatible with PHP 5.4.
 the League of Extraordinary Packages! It can be found 
 [here](https://oauth2.thephpleague.com/).
 
+# Clients
+
+All (optional) OAuth authorization and token requests MUST always be sent.
+
 # Features
 
 - Simplicity
 - Easy integration with your own application and/or framework;
 - Does not enforce a framework on you;
-- Only conforming OAuth 2.0 servers will work, this library will not get out of 
-  its way to deal with services that blatantly violate the OAuth 2.0 RFC, the 
-  exception may be if a fix does not break conforming servers;
+- Only conforming OAuth 2.0 clients will work, this library will not get out of 
+  its way to deal with clients that blatantly violate the OAuth 2.0 RFC, the 
+  exception may be if a fix does not break conforming clients;
 - There will be no toggles to shoot yourself in the foot;
-- Uses `random_bytes` polyfill on PHP < 7.0 for generating tokens and codes
+- Uses `random_bytes` polyfill on PHP < 7.0 for generating tokens and codes;
+- Supports [PKCE](https://tools.ietf.org/html/rfc7636);
