@@ -14,9 +14,14 @@
     "license": "AGPL-3.0",
     "name": "fkooman/oauth2-server",
     "require": {
+        "ext-date": "*",
+        "ext-filter": "*",
+        "ext-hash": "*",
         "ext-json": "*",
-        "ext-spl": "*",
+        "ext-pcre": "*",
+        "ext-pdo": "*",
         "paragonie/random_compat": "^1.0|^2.0",
-        "php": ">=5.4.0"
+        "php": ">=5.4.0",
+        "symfony/polyfill-php56": "^1.3"
     }
 }
