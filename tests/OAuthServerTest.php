@@ -19,6 +19,7 @@
 namespace fkooman\OAuth\Server;
 
 use DateTime;
+use fkooman\OAuth\Server\Exception\TokenException;
 use PDO;
 use PHPUnit_Framework_TestCase;
 
@@ -154,6 +155,34 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         );
     }
 
+    public function testBrokenPostToken()
+    {
+        try {
+            $tokenResponse = $this->server->postToken(
+                [
+                ]
+            );
+            $this->assertFalse(true);
+        } catch (TokenException $e) {
+            $this->assertEquals(400, $e->getResponse()->getStatusCode());
+            $this->assertEquals(
+                [
+                    'error' => 'invalid_request',
+                    'error_description' => 'missing "grant_type" parameter',
+                ],
+                $e->getResponse()->getBody(true)
+            );
+            $this->assertEquals(
+                [
+                    'Content-Type' => 'application/json',
+                    'Cache-Control' => 'no-store',
+                    'Pragma' => 'no-cache',
+                ],
+                $e->getResponse()->getHeaders()
+            );
+        }
+    }
+
     public function testPostToken()
     {
         $tokenResponse = $this->server->postToken(
@@ -169,9 +198,9 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         $this->assertSame(200, $tokenResponse->getStatusCode());
         $this->assertSame(
             [
-                'Content-Type: application/json',
-                'Cache-Control: no-store',
-                'Pragma: no-cache',
+                'Content-Type' => 'application/json',
+                'Cache-Control' => 'no-store',
+                'Pragma' => 'no-cache',
             ],
             $tokenResponse->getHeaders()
         );

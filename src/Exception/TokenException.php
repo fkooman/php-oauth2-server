@@ -39,6 +39,7 @@ class TokenException extends OAuthException
 
     public function getResponse()
     {
+        $responseHeaders = [];
         if (401 === $this->code) {
             $responseHeaders = [
                 'WWW-Authenticate' => sprintf('Bearer error=%s,error_description=%s', $this->message, $this->description),

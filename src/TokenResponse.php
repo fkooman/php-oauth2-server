@@ -60,12 +60,7 @@ class TokenResponse
 
     public function getHeaders()
     {
-        $responseHeaderList = [];
-        foreach ($this->responseHeaders as $k => $v) {
-            $responseHeaderList[] = sprintf('%s: %s', $k, $v);
-        }
-
-        return $responseHeaderList;
+        return $this->responseHeaders;
     }
 
     public function getStatusCode()

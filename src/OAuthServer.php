@@ -97,9 +97,9 @@ class OAuthServer
             $this->validateTokenPostParameters($postData);
             $this->validateClient($postData['client_id'], 'code', $postData['redirect_uri']);
         } catch (ValidateException $e) {
-            throw new TokenException('invalid_request', $e->getMessage());
+            throw new TokenException('invalid_request', $e->getMessage(), 400);
         } catch (ClientException $e) {
-            throw new TokenException('invalid_client', $e->getMessage());
+            throw new TokenException('invalid_client', $e->getMessage(), 400);
         }
 
     // XXX
