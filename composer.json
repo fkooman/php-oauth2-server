@@ -1,0 +1,22 @@
+{
+    "authors": [
+        {
+            "email": "fkooman@tuxed.net",
+            "name": "Fran\u00e7ois Kooman"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "fkooman\\OAuth\\Server\\": "src/"
+        }
+    },
+    "description": "Very simple OAuth 2.0 server",
+    "license": "AGPL-3.0",
+    "name": "fkooman/oauth2-server",
+    "require": {
+        "ext-json": "*",
+        "ext-spl": "*",
+        "paragonie/random_compat": "^1.0|^2.0",
+        "php": ">=5.4.0"
+    }
+}
