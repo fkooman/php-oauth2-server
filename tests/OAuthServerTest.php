@@ -136,7 +136,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
     public function testAuthorizeCodePost()
     {
         $this->assertSame(
-            'http://example.org/code-cb?authorization_code=cmFuZG9tXzE.cmFuZG9tXzI&state=12345',
+            'http://example.org/code-cb?code=cmFuZG9tXzE.cmFuZG9tXzI&state=12345',
             $this->server->postAuthorize(
                 [
                     'client_id' => 'code-client',

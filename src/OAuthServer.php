@@ -222,7 +222,7 @@ class OAuthServer
             '?',
             $getData['redirect_uri'],
             [
-                'authorization_code' => $authorizationCode,
+                'code' => $authorizationCode,
                 'state' => $getData['state'],
             ]
         );
@@ -398,9 +398,12 @@ class OAuthServer
 
     private function validateRedirectUri($redirectUri)
     {
-        if (false === filter_var($redirectUri, FILTER_VALIDATE_URL, FILTER_FLAG_SCHEME_REQUIRED | FILTER_FLAG_HOST_REQUIRED | FILTER_FLAG_PATH_REQUIRED)) {
-            throw new ValidateException('invalid "redirect_uri"', 400);
-        }
+        // currently we have strict redirect_uri matching with the URI
+        // registered by the client, so we do not need to validate it!
+
+//        if (false === filter_var($redirectUri, FILTER_VALIDATE_URL, FILTER_FLAG_SCHEME_REQUIRED | FILTER_FLAG_HOST_REQUIRED | FILTER_FLAG_PATH_REQUIRED)) {
+//            throw new ValidateException('invalid "redirect_uri"', 400);
+//        }
     }
 
     /**
