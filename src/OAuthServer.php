@@ -135,9 +135,10 @@ class OAuthServer
             throw new TokenException('invalid_grant', 'invalid "code_verifier"', 400);
         }
 
-        // check for code expiry, it may be at most 10 minutes old
+        // check for code expiry, it may be at most 5 minutes old (more strict
+        // than specification that recommends 10 minutes)
         $codeTime = new DateTime($codeInfo['issued_at']);
-        $codeTime->add(new DateInterval('PT10M'));
+        $codeTime->add(new DateInterval('PT5M'));
         if ($this->dateTime >= $codeTime) {
             throw new TokenException('invalid_grant', 'expired "authorization_code"', 400);
         }
@@ -244,8 +245,8 @@ class OAuthServer
 
     private function getAuthorizationCode($userId, $clientId, $scope, $redirectUri, $codeChallenge)
     {
-        $authorizationCodeKey = $this->random->get(8);
-        $authorizationCode = $this->random->get(16);
+        $authorizationCodeKey = $this->uriEncode($this->random->get(8));
+        $authorizationCode = $this->uriEncode($this->random->get(32));
 
         $this->tokenStorage->storeCode(
             $userId,
@@ -276,8 +277,8 @@ class OAuthServer
             $accessToken = $existingToken['access_token'];
         } else {
             // generate a new one
-            $accessTokenKey = $this->random->get(8);
-            $accessToken = $this->random->get(16);
+            $accessTokenKey = $this->uriEncode($this->random->get(8));
+            $accessToken = $this->uriEncode($this->random->get(32));
             // store it
             $this->tokenStorage->storeToken(
                 $userId,
@@ -402,9 +403,16 @@ class OAuthServer
         }
     }
 
+    /**
+     * Validate the authorization code.
+     */
     private function validateCode($code)
     {
         if (1 !== preg_match('/^[\x20-\x7E]+$/', $code)) {
+            throw new ValidateException('invalid "code"', 400);
+        }
+        // the codes we generate also contain a dot "."
+        if (false === strpos($code, '.')) {
             throw new ValidateException('invalid "code"', 400);
         }
     }

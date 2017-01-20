@@ -25,8 +25,8 @@ namespace fkooman\OAuth\Server;
  */
 class Random implements RandomInterface
 {
-    public function get($len)
+    public function get($length)
     {
-        return bin2hex(random_bytes($len));
+        return random_bytes($length);
     }
 }
