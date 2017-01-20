@@ -1,6 +1,6 @@
 <?php
 /**
- *  Copyright (C) 2016 François Kooman <fkooman@tuxed.net>.
+ *  Copyright (C) 2017 François Kooman <fkooman@tuxed.net>.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
