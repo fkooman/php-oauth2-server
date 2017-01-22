@@ -26,6 +26,9 @@ use fkooman\OAuth\Server\Exception\ValidateException;
 
 class OAuthServer
 {
+    /** @var int */
+    private $expiresIn = 3600;
+
     /** @var TokenStorage */
     private $tokenStorage;
 
@@ -44,6 +47,11 @@ class OAuthServer
         $this->random = $random;
         $this->dateTime = $dateTime;
         $this->getClientInfo = $getClientInfo;
+    }
+
+    public function setExpiresIn($expiresIn)
+    {
+        $this->expiresIn = (int) $expiresIn;
     }
 
     /**
@@ -160,8 +168,9 @@ class OAuthServer
 
         return new TokenResponse(
             [
-                'access_token' => $accessToken,
+                'access_token' => $accessToken['access_token'],
                 'token_type' => 'bearer',
+                'expires_in' => $accessToken['expires_in'],
             ]
         );
     }
@@ -190,8 +199,9 @@ class OAuthServer
             '#',
             $getData['redirect_uri'],
             [
-                'access_token' => $accessToken,
+                'access_token' => $accessToken['access_token'],
                 'state' => $getData['state'],
+                'expires_in' => $accessToken['expires_in'],
             ]
         );
     }
@@ -262,34 +272,67 @@ class OAuthServer
         return sprintf('%s.%s', $authorizationCodeKey, $authorizationCode);
     }
 
+    /**
+     * @return array
+     */
     private function getAccessToken($userId, $clientId, $scope)
     {
-        $existingToken = $this->tokenStorage->getExistingToken(
-            $userId,
-            $clientId,
-            $scope
-        );
-
-        if (false !== $existingToken) {
-            // if the user already has an access_token for this client and
-            // scope, reuse it
-            $accessTokenKey = $existingToken['access_token_key'];
-            $accessToken = $existingToken['access_token'];
-        } else {
-            // generate a new one
-            $accessTokenKey = $this->uriEncode($this->random->get(8));
-            $accessToken = $this->uriEncode($this->random->get(32));
-            // store it
-            $this->tokenStorage->storeToken(
-                $userId,
-                $accessTokenKey,
-                $accessToken,
-                $clientId,
-                $scope
-            );
+        // check if we already have a token that is still valid
+        if (false === $accessToken = $this->hasToken($userId, $clientId, $scope)) {
+            // get a new one
+            $accessToken = $this->newToken($userId, $clientId, $scope);
         }
 
-        return sprintf('%s.%s', $accessTokenKey, $accessToken);
+        return [
+            'access_token' => sprintf('%s.%s', $accessToken['access_token_key'], $accessToken['access_token']),
+            'expires_in' => $accessToken['expires_in'],
+        ];
+    }
+
+    private function hasToken($userId, $clientId, $scope)
+    {
+        $existingToken = $this->tokenStorage->getExistingToken($userId, $clientId, $scope);
+        if (false === $existingToken) {
+            return false;
+        }
+
+        // check if it is still valid
+        // XXX think about generating a new one when the token _almost_ expires
+        $expiresAt = new DateTime($existingToken['expires_at']);
+        if ($expiresAt <= $this->dateTime) {
+            return false;
+        }
+
+        // return existing token
+        return [
+            'access_token_key' => $existingToken['access_token_key'],
+            'access_token' => $existingToken['access_token'],
+            'expires_in' => $expiresAt->getTimestamp() - $this->dateTime->getTimestamp(),
+        ];
+    }
+
+    private function newToken($userId, $clientId, $scope)
+    {
+        $accessTokenKey = $this->uriEncode($this->random->get(8));
+        $accessToken = $this->uriEncode($this->random->get(32));
+        $expiresAt = date_add(clone $this->dateTime, new DateInterval(sprintf('PT%dS', $this->expiresIn)));
+
+        // store it
+        $this->tokenStorage->storeToken(
+            $userId,
+            $accessTokenKey,
+            $accessToken,
+            $clientId,
+            $scope,
+            $expiresAt
+        );
+
+        // return new token
+        return [
+            'access_token_key' => $accessTokenKey,
+            'access_token' => $accessToken,
+            'expires_in' => $this->expiresIn,
+        ];
     }
 
     private function uriEncode($inputString)
@@ -316,8 +359,8 @@ class OAuthServer
         }
 
         // check syntax
+        // NOTE: no need to validate the redirect_uri, as we do strict matching
         $this->validateClientId($getData['client_id']);
-        $this->validateRedirectUri($getData['redirect_uri']);
         $this->validateResponseType($getData['response_type']);
         $this->validateScope($getData['scope']);
         $this->validateState($getData['state']);
@@ -344,9 +387,9 @@ class OAuthServer
         }
 
         // check syntax
+        // NOTE: no need to validate the redirect_uri, as we do strict matching
         $this->validateGrantType($postData['grant_type']);
         $this->validateCode($postData['code']);
-        $this->validateRedirectUri($postData['redirect_uri']);
         $this->validateClientId($postData['client_id']);
 
         if ('authorization_code' === $postData['grant_type']) {
@@ -394,16 +437,6 @@ class OAuthServer
         if (1 !== preg_match('/^[\x20-\x7E]+$/', $clientId)) {
             throw new ValidateException('invalid "client_id"', 400);
         }
-    }
-
-    private function validateRedirectUri($redirectUri)
-    {
-        // currently we have strict redirect_uri matching with the URI
-        // registered by the client, so we do not need to validate it!
-
-//        if (false === filter_var($redirectUri, FILTER_VALIDATE_URL, FILTER_FLAG_SCHEME_REQUIRED | FILTER_FLAG_HOST_REQUIRED | FILTER_FLAG_PATH_REQUIRED)) {
-//            throw new ValidateException('invalid "redirect_uri"', 400);
-//        }
     }
 
     /**
@@ -469,7 +502,8 @@ class OAuthServer
 
     private function validateCodeChallenge($codeChallenge)
     {
-        // it seems the length of the codeChallenge is always 43
+        // it seems the length of the codeChallenge is always 43 because it is
+        // the output of the SHA256 hashing algorithm
         if (1 !== preg_match('/^[\x41-\x5A\x61-\x7A\x30-\x39-_]{43}$/', $codeChallenge)) {
             throw new ValidateException('invalid "code_challenge"', 400);
         }

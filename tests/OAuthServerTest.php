@@ -116,7 +116,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
     public function testAuthorizeTokenPost()
     {
         $this->assertSame(
-            'http://example.org/token-cb#access_token=cmFuZG9tXzE.cmFuZG9tXzI&state=12345',
+            'http://example.org/token-cb#access_token=cmFuZG9tXzE.cmFuZG9tXzI&state=12345&expires_in=3600',
             $this->server->postAuthorize(
                 [
                     'client_id' => 'token-client',
@@ -208,6 +208,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
             [
                 'access_token' => 'cmFuZG9tXzE.cmFuZG9tXzI',
                 'token_type' => 'bearer',
+                'expires_in' => 3600,
             ],
             $tokenResponse->getBody(true)
         );
