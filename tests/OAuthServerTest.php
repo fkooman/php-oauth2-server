@@ -158,7 +158,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
     public function testBrokenPostToken()
     {
         try {
-            $tokenResponse = $this->server->postToken(
+            $this->server->postToken(
                 [
                 ]
             );
@@ -170,7 +170,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
                     'error' => 'invalid_request',
                     'error_description' => 'missing "grant_type" parameter',
                 ],
-                $e->getResponse()->getBody(true)
+                $e->getResponse()->getArrayBody()
             );
             $this->assertEquals(
                 [
@@ -210,7 +210,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
-            $tokenResponse->getBody(true)
+            $tokenResponse->getArrayBody()
         );
     }
 

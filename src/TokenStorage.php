@@ -128,6 +128,7 @@ class TokenStorage
         $stmt = $this->tokenDb->prepare(
             'SELECT
                 user_id,    
+                authorization_code_key,
                 authorization_code,
                 client_id,
                 scope,

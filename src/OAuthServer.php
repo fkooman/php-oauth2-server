@@ -109,13 +109,9 @@ class OAuthServer
             throw new TokenException('invalid_client', $e->getMessage(), 400);
         }
 
-        if (false === strpos($postData['code'], '.')) {
-            throw new TokenException('invalid_grant', 'invalid "authorization_code"', 400);
-        }
         list($authorizationCodeKey, $authorizationCode) = explode('.', $postData['code']);
 
-        $codeInfo = $this->tokenStorage->getCode($authorizationCodeKey);
-        if (false === $codeInfo) {
+        if (false === $codeInfo = $this->tokenStorage->getCode($authorizationCodeKey)) {
             throw new TokenException('invalid_grant', '"authorization_code" not found', 400);
         }
 
@@ -123,12 +119,7 @@ class OAuthServer
             throw new TokenException('invalid_grant', 'invalid "authorization_code"', 400);
         }
 
-        // validate the code_verifier
-        $codeChallenge = $codeInfo['code_challenge'];
-        $codeVerifier = $postData['code_verifier'];
-        if (!hash_equals($codeChallenge, $this->uriEncode(hash('sha256', $codeVerifier, true)))) {
-            throw new TokenException('invalid_grant', 'invalid "code_verifier"', 400);
-        }
+        $this->verifyCodeVerifier($codeInfo['code_challenge'], $postData['code_verifier']);
 
         // check for code expiry, it may be at most 10 minutes old
         $codeTime = new DateTime($codeInfo['issued_at']);
@@ -137,13 +128,7 @@ class OAuthServer
             throw new TokenException('invalid_grant', 'expired "authorization_code"', 400);
         }
 
-        if ($postData['redirect_uri'] !== $codeInfo['redirect_uri']) {
-            throw new TokenException('invalid_request', 'unexpected "redirect_uri"', 400);
-        }
-
-        if ($postData['client_id'] !== $codeInfo['client_id']) {
-            throw new TokenException('invalid_request', 'unexpected "client_id"', 400);
-        }
+        $this->matchParameters($postData, $codeInfo);
 
         // check if this authorization code was already used for getting an
         // access_token before...
@@ -166,6 +151,28 @@ class OAuthServer
                 'expires_in' => $accessToken['expires_in'],
             ]
         );
+    }
+
+    private function matchParameters(array $postData, array $codeInfo)
+    {
+        if ($postData['client_id'] !== $codeInfo['client_id']) {
+            throw new TokenException('invalid_request', 'unexpected "client_id"', 400);
+        }
+
+        if ($postData['redirect_uri'] !== $codeInfo['redirect_uri']) {
+            throw new TokenException('invalid_request', 'unexpected "redirect_uri"', 400);
+        }
+
+        if ($postData['client_id'] !== $codeInfo['client_id']) {
+            throw new TokenException('invalid_request', 'unexpected "client_id"', 400);
+        }
+    }
+
+    private function verifyCodeVerifier($codeChallenge, $codeVerifier)
+    {
+        if (!hash_equals($codeChallenge, $this->uriEncode(hash('sha256', $codeVerifier, true)))) {
+            throw new TokenException('invalid_grant', 'invalid "code_verifier"', 400);
+        }
     }
 
     private function tokenAuthorize(array $getData, array $postData, $userId)

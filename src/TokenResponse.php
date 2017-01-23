@@ -49,13 +49,20 @@ class TokenResponse
         return $this->getBody();
     }
 
-    public function getBody($asArray = false)
+    /**
+     * @return string
+     */
+    public function getBody()
     {
-        if ($asArray) {
-            return $this->responseData;
-        }
-
         return json_encode($this->responseData);
+    }
+
+    /**
+     * @return array
+     */
+    public function getArrayBody()
+    {
+        return $this->responseData;
     }
 
     public function getHeaders()
