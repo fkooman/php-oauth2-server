@@ -154,6 +154,12 @@ class OAuthServer
             throw new TokenException('invalid_request', 'unexpected "client_id"', 400);
         }
 
+        // check if this authorization code was already used for getting an
+        // access_token before...
+        if (false !== $this->tokenStorage->getToken($authorizationCodeKey)) {
+            throw new TokenException('invalid_grant', '"authorization_code" already used', 400);
+        }
+
         $accessToken = $this->getAccessToken(
             $codeInfo['user_id'],
             $postData['client_id'],
