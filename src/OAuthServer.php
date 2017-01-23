@@ -60,7 +60,7 @@ class OAuthServer
      *
      * @return array
      */
-    public function getAuthorize(array $getData, $userId)
+    public function getAuthorize(array $getData)
     {
         $this->validateQueryParameters($getData);
         $clientInfo = $this->validateClient($getData['client_id'], $getData['response_type'], $getData['redirect_uri']);
@@ -109,14 +109,6 @@ class OAuthServer
             throw new TokenException('invalid_client', $e->getMessage(), 400);
         }
 
-    // XXX
-// https://tools.ietf.org/html/rfc6749#section-5.2
-
-// the authorization server MUST
-//               respond with an HTTP 401 (Unauthorized) status code and
-//               include the "WWW-Authenticate" response header field
-//               matching the authentication scheme used by the client.
-
         if (false === strpos($postData['code'], '.')) {
             throw new TokenException('invalid_grant', 'invalid "authorization_code"', 400);
         }
@@ -156,9 +148,9 @@ class OAuthServer
         // check if this authorization code was already used for getting an
         // access_token before...
         if (false !== $this->tokenStorage->getToken($authorizationCodeKey)) {
+            // XXX delete all tokens/codes bound to this authorizationCodeKey
             throw new TokenException('invalid_grant', '"authorization_code" already used', 400);
         }
-        // XXX delete all tokens/codes bound to this authorizationCodeKey
 
         $accessToken = $this->getAccessToken(
             $codeInfo['user_id'],
@@ -283,11 +275,6 @@ class OAuthServer
         // clients we reuse the "authorization_code_key" to be able to track
         // issued access_tokens for a particular "authorization_code" and to
         // prevent authorization code replay
-        //
-        // XXX reuse of an authorization_code will currently lead to a DB
-        // uniqueness constraint exception which will not be the nicest of
-        // errors...  we should also delete the access_token after reuse is
-        // detected!
         if (is_null($accessTokenKey)) {
             $accessTokenKey = $this->uriEncode($this->random->get(8));
         }

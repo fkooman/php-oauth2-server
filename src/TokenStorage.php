@@ -24,21 +24,21 @@ use PDO;
 class TokenStorage
 {
     /** @var \PDO */
-    private $db;
+    private $tokenDb;
 
-    public function __construct(PDO $db)
+    public function __construct(PDO $tokenDb)
     {
-        $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        if ('sqlite' === $db->getAttribute(PDO::ATTR_DRIVER_NAME)) {
-            $db->query('PRAGMA foreign_keys = ON');
+        $tokenDb->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        if ('sqlite' === $tokenDb->getAttribute(PDO::ATTR_DRIVER_NAME)) {
+            $tokenDb->query('PRAGMA foreign_keys = ON');
         }
 
-        $this->db = $db;
+        $this->tokenDb = $tokenDb;
     }
 
     public function storeCode($userId, $authorizationCodeKey, $authorizationCode, $clientId, $scope, $redirectUri, DateTime $dateTime, $codeChallenge)
     {
-        $stmt = $this->db->prepare(
+        $stmt = $this->tokenDb->prepare(
             'INSERT INTO codes (
                 user_id,    
                 authorization_code_key,
@@ -74,7 +74,7 @@ class TokenStorage
 
     public function storeToken($userId, $accessTokenKey, $accessToken, $clientId, $scope, DateTime $expiresAt)
     {
-        $stmt = $this->db->prepare(
+        $stmt = $this->tokenDb->prepare(
             'INSERT INTO tokens (
                 user_id,    
                 access_token_key,
@@ -105,7 +105,7 @@ class TokenStorage
 
     public function getToken($accessTokenKey)
     {
-        $stmt = $this->db->prepare(
+        $stmt = $this->tokenDb->prepare(
             'SELECT
                 user_id,    
                 access_token,
@@ -125,7 +125,7 @@ class TokenStorage
 
     public function getCode($authorizationCodeKey)
     {
-        $stmt = $this->db->prepare(
+        $stmt = $this->tokenDb->prepare(
             'SELECT
                 user_id,    
                 authorization_code,
@@ -147,7 +147,7 @@ class TokenStorage
 
     public function getAuthorizedClients($userId)
     {
-        $stmt = $this->db->prepare(
+        $stmt = $this->tokenDb->prepare(
             'SELECT
                 client_id,
                 scope
@@ -165,7 +165,7 @@ class TokenStorage
     public function removeClientTokens($userId, $clientId)
     {
         // delete authorization_code(s)
-        $stmt = $this->db->prepare(
+        $stmt = $this->tokenDb->prepare(
             'DELETE FROM codes
              WHERE user_id = :user_id AND client_id = :client_id'
         );
@@ -175,7 +175,7 @@ class TokenStorage
         $stmt->execute();
 
         // delete access_token(s)
-        $stmt = $this->db->prepare(
+        $stmt = $this->tokenDb->prepare(
             'DELETE FROM tokens
              WHERE user_id = :user_id AND client_id = :client_id'
         );
@@ -211,7 +211,7 @@ class TokenStorage
         ];
 
         foreach ($queryList as $query) {
-            $this->db->query($query);
+            $this->tokenDb->query($query);
         }
     }
 }
