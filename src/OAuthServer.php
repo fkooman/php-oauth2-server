@@ -20,7 +20,6 @@ namespace fkooman\OAuth\Server;
 
 use DateInterval;
 use DateTime;
-use fkooman\OAuth\Server\Exception\ClientException;
 use fkooman\OAuth\Server\Exception\TokenException;
 use fkooman\OAuth\Server\Exception\ValidateException;
 
@@ -105,8 +104,6 @@ class OAuthServer
             $this->validateClient($postData['client_id'], 'code', $postData['redirect_uri']);
         } catch (ValidateException $e) {
             throw new TokenException('invalid_request', $e->getMessage(), 400);
-        } catch (ClientException $e) {
-            throw new TokenException('invalid_client', $e->getMessage(), 400);
         }
 
         list($authorizationCodeKey, $authorizationCode) = explode('.', $postData['code']);
@@ -383,17 +380,16 @@ class OAuthServer
 
     private function validateClient($clientId, $responseType, $redirectUri)
     {
-        $clientInfo = call_user_func($this->getClientInfo, $clientId);
-        if (false === $clientInfo) {
-            throw new ClientException(sprintf('client not registered', $clientId), 400);
+        if(false === $clientInfo = call_user_func($this->getClientInfo, $clientId)) {
+            throw new TokenException('invalid_client', sprintf('client not registered', $clientId), 400);
         }
 
         if ($clientInfo['response_type'] !== $responseType) {
-            throw new ClientException('"response_type" not supported by this client', 400);
+            throw new TokenException('invalid_client', '"response_type" not supported by this client', 400);
         }
 
         if ($clientInfo['redirect_uri'] !== $redirectUri) {
-            throw new ClientException(sprintf('"redirect_uri" not supported by this client', $clientInfo['redirect_uri']), 400);
+            throw new TokenException('invalid_client', sprintf('"redirect_uri" not supported by this client', $clientInfo['redirect_uri']), 400);
         }
 
         return $clientInfo;
