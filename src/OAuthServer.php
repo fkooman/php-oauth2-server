@@ -122,15 +122,10 @@ class OAuthServer
         }
         list($authorizationCodeKey, $authorizationCode) = explode('.', $postData['code']);
 
-        // XXX the code MUST also be deleted, or marked *used*, it MUST not be reused
-//https://tools.ietf.org/html/rfc6749#section-4.1.2
-
-//    If an authorization code is used more than
-//    once, the authorization server MUST deny the request and SHOULD
-//    revoke (when possible) all tokens previously issued based on
-//    that authorization code.  The authorization code is bound to
-//    the client identifier and redirection URI.
         $codeInfo = $this->tokenStorage->getCode($authorizationCodeKey);
+        if (false === $codeInfo) {
+            throw new TokenException('invalid_grant', '"authorization_code" not found', 400);
+        }
 
         if (!hash_equals($codeInfo['authorization_code'], $authorizationCode)) {
             throw new TokenException('invalid_grant', 'invalid "authorization_code"', 400);
@@ -144,10 +139,9 @@ class OAuthServer
             throw new TokenException('invalid_grant', 'invalid "code_verifier"', 400);
         }
 
-        // check for code expiry, it may be at most 1 minute old (more strict
-        // than specification that recommends 10 minutes)
+        // check for code expiry, it may be at most 10 minutes old
         $codeTime = new DateTime($codeInfo['issued_at']);
-        $codeTime->add(new DateInterval('PT1M'));
+        $codeTime->add(new DateInterval('PT10M'));
         if ($this->dateTime >= $codeTime) {
             throw new TokenException('invalid_grant', 'expired "authorization_code"', 400);
         }
@@ -163,7 +157,8 @@ class OAuthServer
         $accessToken = $this->getAccessToken(
             $codeInfo['user_id'],
             $postData['client_id'],
-            $codeInfo['scope']
+            $codeInfo['scope'],
+            $authorizationCodeKey
         );
 
         return new TokenResponse(
@@ -192,7 +187,8 @@ class OAuthServer
         $accessToken = $this->getAccessToken(
             $userId,
             $getData['client_id'],
-            $getData['scope']
+            $getData['scope'],
+            null
         );
 
         return $this->prepareRedirect(
@@ -275,44 +271,20 @@ class OAuthServer
     /**
      * @return array
      */
-    private function getAccessToken($userId, $clientId, $scope)
+    private function getAccessToken($userId, $clientId, $scope, $accessTokenKey)
     {
-        // check if we already have a token that is still valid
-        if (false === $accessToken = $this->hasToken($userId, $clientId, $scope)) {
-            // get a new one
-            $accessToken = $this->newToken($userId, $clientId, $scope);
+        // for "token" clients we generate an access_token_key here, for "code"
+        // clients we reuse the "authorization_code_key" to be able to track
+        // issued access_tokens for a particular "authorization_code" and to
+        // prevent authorization code replay
+        //
+        // XXX reuse of an authorization_code will currently lead to a DB
+        // uniqueness constraint exception which will not be the nicest of
+        // errors...  we should also delete the access_token after reuse is
+        // detected!
+        if (is_null($accessTokenKey)) {
+            $accessTokenKey = $this->uriEncode($this->random->get(8));
         }
-
-        return [
-            'access_token' => sprintf('%s.%s', $accessToken['access_token_key'], $accessToken['access_token']),
-            'expires_in' => $accessToken['expires_in'],
-        ];
-    }
-
-    private function hasToken($userId, $clientId, $scope)
-    {
-        $existingToken = $this->tokenStorage->getExistingToken($userId, $clientId, $scope);
-        if (false === $existingToken) {
-            return false;
-        }
-
-        // check if the access_token is still valid
-        $expiresAt = new DateTime($existingToken['expires_at']);
-        if ($expiresAt <= $this->dateTime) {
-            return false;
-        }
-
-        // return existing token
-        return [
-            'access_token_key' => $existingToken['access_token_key'],
-            'access_token' => $existingToken['access_token'],
-            'expires_in' => $expiresAt->getTimestamp() - $this->dateTime->getTimestamp(),
-        ];
-    }
-
-    private function newToken($userId, $clientId, $scope)
-    {
-        $accessTokenKey = $this->uriEncode($this->random->get(8));
         $accessToken = $this->uriEncode($this->random->get(32));
         $expiresAt = date_add(clone $this->dateTime, new DateInterval(sprintf('PT%dS', $this->expiresIn)));
 
@@ -328,8 +300,7 @@ class OAuthServer
 
         // return new token
         return [
-            'access_token_key' => $accessTokenKey,
-            'access_token' => $accessToken,
+            'access_token' => sprintf('%s.%s', $accessTokenKey, $accessToken),
             'expires_in' => $this->expiresIn,
         ];
     }

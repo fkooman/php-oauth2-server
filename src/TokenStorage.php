@@ -20,7 +20,6 @@ namespace fkooman\OAuth\Server;
 
 use DateTime;
 use PDO;
-use PDOException;
 
 class TokenStorage
 {
@@ -70,14 +69,7 @@ class TokenStorage
         $stmt->bindValue(':redirect_uri', $redirectUri, PDO::PARAM_STR);
         $stmt->bindValue(':issued_at', $dateTime->format('Y-m-d H:i:s'), PDO::PARAM_STR);
         $stmt->bindValue(':code_challenge', $codeChallenge, PDO::PARAM_STR);
-
-        try {
-            $stmt->execute();
-        } catch (PDOException $e) {
-            return false;
-        }
-
-        return true;
+        $stmt->execute();
     }
 
     public function storeToken($userId, $accessTokenKey, $accessToken, $clientId, $scope, DateTime $expiresAt)
@@ -108,36 +100,7 @@ class TokenStorage
         $stmt->bindValue(':scope', $scope, PDO::PARAM_STR);
         $stmt->bindValue(':expires_at', $expiresAt->format('Y-m-d H:i:s'), PDO::PARAM_STR);
 
-        try {
-            $stmt->execute();
-        } catch (PDOException $e) {
-            return false;
-        }
-
-        return true;
-    }
-
-    public function getExistingToken($userId, $clientId, $scope)
-    {
-        $stmt = $this->db->prepare(
-            'SELECT
-                access_token_key,
-                access_token,
-                expires_at
-             FROM tokens
-             WHERE
-                user_id = :user_id AND
-                client_id = :client_id AND
-                scope = :scope'
-        );
-
-        $stmt->bindValue(':user_id', $userId, PDO::PARAM_STR);
-        $stmt->bindValue(':client_id', $clientId, PDO::PARAM_STR);
-        $stmt->bindValue(':scope', $scope, PDO::PARAM_STR);
-
         $stmt->execute();
-
-        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function getToken($accessTokenKey)

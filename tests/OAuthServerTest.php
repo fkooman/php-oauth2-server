@@ -57,7 +57,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         $tokenStorage = new TokenStorage(new PDO('sqlite::memory:'));
         $tokenStorage->init();
 
-        $tokenStorage->storeCode('foo', '12345', 'abcdefgh', 'code-client', 'config', 'http://example.org/code-cb', new DateTime('2016-01-01'), 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
+        $tokenStorage->storeCode('foo', 'XYZ', 'abcdefgh', 'code-client', 'config', 'http://example.org/code-cb', new DateTime('2016-01-01'), 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
 
         $this->server = new OAuthServer(
             $tokenStorage,
@@ -188,7 +188,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         $tokenResponse = $this->server->postToken(
             [
                 'grant_type' => 'authorization_code',
-                'code' => '12345.abcdefgh',
+                'code' => 'XYZ.abcdefgh',
                 'redirect_uri' => 'http://example.org/code-cb',
                 'client_id' => 'code-client',
                 'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
@@ -206,12 +206,16 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         );
         $this->assertSame(
             [
-                'access_token' => 'cmFuZG9tXzE.cmFuZG9tXzI',
+                'access_token' => 'XYZ.cmFuZG9tXzE',
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
             $tokenResponse->getBody(true)
         );
+    }
+
+    public function testPostReuseCode()
+    {
     }
 
     public function testExpiredCode()
