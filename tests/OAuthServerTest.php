@@ -208,36 +208,6 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         );
     }
 
-    public function testBrokenPostToken()
-    {
-        try {
-            $this->server->postToken(
-                [
-                ],
-                null,
-                null
-            );
-            $this->assertFalse(true);
-        } catch (TokenException $e) {
-            $this->assertEquals(400, $e->getResponse()->getStatusCode());
-            $this->assertEquals(
-                [
-                    'error' => 'invalid_request',
-                    'error_description' => 'missing "grant_type" parameter',
-                ],
-                $e->getResponse()->getArrayBody()
-            );
-            $this->assertEquals(
-                [
-                    'Content-Type' => 'application/json',
-                    'Cache-Control' => 'no-store',
-                    'Pragma' => 'no-cache',
-                ],
-                $e->getResponse()->getHeaders()
-            );
-        }
-    }
-
     public function testPostToken()
     {
         $tokenResponse = $this->server->postToken(
@@ -279,7 +249,6 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
                 'code' => 'DEF.abcdefgh',
                 'redirect_uri' => 'http://example.org/code-cb',
                 'client_id' => 'code-client-secret',
-                'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
             ],
             'code-client-secret',
             '123456'
@@ -304,16 +273,49 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         );
     }
 
+    public function testPostTokenMissingCodeVerifierPublicClient()
+    {
+    }
+
+    public function testBrokenPostToken()
+    {
+        try {
+            $this->server->postToken(
+                [
+                ],
+                null,
+                null
+            );
+            $this->assertFalse(true);
+        } catch (TokenException $e) {
+            $this->assertEquals(400, $e->getResponse()->getStatusCode());
+            $this->assertEquals(
+                [
+                    'error' => 'invalid_request',
+                    'error_description' => 'missing "grant_type" parameter',
+                ],
+                $e->getResponse()->getArrayBody()
+            );
+            $this->assertEquals(
+                [
+                    'Content-Type' => 'application/json',
+                    'Cache-Control' => 'no-store',
+                    'Pragma' => 'no-cache',
+                ],
+                $e->getResponse()->getHeaders()
+            );
+        }
+    }
+
     public function testPostTokenSecretInvalid()
     {
         try {
-            $tokenResponse = $this->server->postToken(
+            $this->server->postToken(
                 [
                     'grant_type' => 'authorization_code',
                     'code' => 'DEF.abcdefgh',
                     'redirect_uri' => 'http://example.org/code-cb',
                     'client_id' => 'code-client-secret',
-                    'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
                 ],
                 'code-client-secret',
                 '654321'

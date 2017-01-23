@@ -64,6 +64,20 @@ class OAuthServer
         $this->validateQueryParameters($getData);
         $clientInfo = $this->validateClient($getData['client_id'], $getData['response_type'], $getData['redirect_uri']);
 
+        // PKCE
+        if (!array_key_exists('client_secret', $clientInfo)) {
+            // public client
+            if ('code' === $getData['response_type']) {
+                foreach (['code_challenge_method', 'code_challenge'] as $queryParameter) {
+                    if (!array_key_exists($queryParameter, $getData)) {
+                        throw new ValidateException(sprintf('missing "%s" parameter', $queryParameter), 400);
+                    }
+                }
+                $this->validateCodeChallengeMethod($getData['code_challenge_method']);
+                $this->validateCodeChallenge($getData['code_challenge']);
+            }
+        }
+
         return [
             'client_id' => $getData['client_id'],
             'display_name' => $clientInfo['display_name'],
@@ -118,7 +132,14 @@ class OAuthServer
             throw new TokenException('invalid_grant', 'invalid "authorization_code"', 400);
         }
 
-        $this->verifyCodeVerifier($codeInfo['code_challenge'], $postData['code_verifier']);
+        if (!array_key_exists('client_secret', $clientInfo)) {
+            // public client
+            if (!array_key_exists('code_verifier', $postData)) {
+                throw new ValidateException('missing "code_verifier" parameter', 400);
+            }
+            $this->validateCodeVerifier($postData['code_verifier']);
+            $this->verifyCodeVerifier($codeInfo['code_challenge'], $postData['code_verifier']);
+        }
 
         // check for code expiry, it may be at most 5 minutes old
         $codeTime = new DateTime($codeInfo['issued_at']);
@@ -178,10 +199,6 @@ class OAuthServer
 
         if ($postData['redirect_uri'] !== $codeInfo['redirect_uri']) {
             throw new TokenException('invalid_request', 'unexpected "redirect_uri"', 400);
-        }
-
-        if ($postData['client_id'] !== $codeInfo['client_id']) {
-            throw new TokenException('invalid_request', 'unexpected "client_id"', 400);
         }
     }
 
@@ -351,16 +368,6 @@ class OAuthServer
         $this->validateResponseType($getData['response_type']);
         $this->validateScope($getData['scope']);
         $this->validateState($getData['state']);
-
-        if ('code' === $getData['response_type']) {
-            foreach (['code_challenge_method', 'code_challenge'] as $queryParameter) {
-                if (!array_key_exists($queryParameter, $getData)) {
-                    throw new ValidateException(sprintf('missing "%s" parameter', $queryParameter), 400);
-                }
-            }
-            $this->validateCodeChallengeMethod($getData['code_challenge_method']);
-            $this->validateCodeChallenge($getData['code_challenge']);
-        }
     }
 
     private function validateTokenPostParameters(array $postData)
@@ -377,13 +384,6 @@ class OAuthServer
         $this->validateGrantType($postData['grant_type']);
         $this->validateCode($postData['code']);
         $this->validateClientId($postData['client_id']);
-
-        if ('authorization_code' === $postData['grant_type']) {
-            if (!array_key_exists('code_verifier', $postData)) {
-                throw new ValidateException('missing "code_verifier" parameter', 400);
-            }
-            $this->validateCodeVerifier($postData['code_verifier']);
-        }
     }
 
     private function validatePostParameters(array $postData)
