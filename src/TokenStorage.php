@@ -201,6 +201,17 @@ class TokenStorage
 
     public function removeClientTokens($userId, $clientId)
     {
+        // delete authorization_code(s)
+        $stmt = $this->db->prepare(
+            'DELETE FROM codes
+             WHERE user_id = :user_id AND client_id = :client_id'
+        );
+
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_STR);
+        $stmt->bindValue(':client_id', $clientId, PDO::PARAM_STR);
+        $stmt->execute();
+
+        // delete access_token(s)
         $stmt = $this->db->prepare(
             'DELETE FROM tokens
              WHERE user_id = :user_id AND client_id = :client_id'
@@ -208,13 +219,7 @@ class TokenStorage
 
         $stmt->bindValue(':user_id', $userId, PDO::PARAM_STR);
         $stmt->bindValue(':client_id', $clientId, PDO::PARAM_STR);
-        try {
-            $stmt->execute();
-        } catch (PDOException $e) {
-            return false;
-        }
-
-        return true;
+        $stmt->execute();
     }
 
     public function init()
