@@ -120,9 +120,9 @@ class OAuthServer
 
         $this->verifyCodeVerifier($codeInfo['code_challenge'], $postData['code_verifier']);
 
-        // check for code expiry, it may be at most 10 minutes old
+        // check for code expiry, it may be at most 5 minutes old
         $codeTime = new DateTime($codeInfo['issued_at']);
-        $codeTime->add(new DateInterval('PT10M'));
+        $codeTime->add(new DateInterval('PT5M'));
         if ($this->dateTime >= $codeTime) {
             throw new TokenException('invalid_grant', 'expired "authorization_code"', 400);
         }
