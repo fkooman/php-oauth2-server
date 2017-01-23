@@ -130,7 +130,6 @@ class OAuthServer
         if (!hash_equals($codeInfo['authorization_code'], $authorizationCode)) {
             throw new TokenException('invalid_grant', 'invalid "authorization_code"', 400);
         }
-        // XXX verify the response codes!
 
         // validate the code_verifier
         $codeChallenge = $codeInfo['code_challenge'];
@@ -159,6 +158,7 @@ class OAuthServer
         if (false !== $this->tokenStorage->getToken($authorizationCodeKey)) {
             throw new TokenException('invalid_grant', '"authorization_code" already used', 400);
         }
+        // XXX delete all tokens/codes bound to this authorizationCodeKey
 
         $accessToken = $this->getAccessToken(
             $codeInfo['user_id'],
