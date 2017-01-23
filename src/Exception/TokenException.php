@@ -42,7 +42,7 @@ class TokenException extends OAuthException
         $responseHeaders = [];
         if (401 === $this->code) {
             $responseHeaders = [
-                'WWW-Authenticate' => sprintf('Bearer error=%s,error_description=%s', $this->message, $this->description),
+                'WWW-Authenticate' => $this->getAuthenticateHeader(),
             ];
         }
 
@@ -54,5 +54,14 @@ class TokenException extends OAuthException
             $responseHeaders,
             $this->code
         );
+    }
+
+    private function getAuthenticateHeader()
+    {
+        if ('no_token' === $this->message) {
+            return 'Bearer realm="OAuth"';
+        }
+
+        return sprintf('Bearer realm="OAuth",error=%s,error_description=%s', $this->message, $this->description);
     }
 }
