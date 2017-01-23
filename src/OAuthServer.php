@@ -100,7 +100,6 @@ class OAuthServer
      */
     public function postToken(array $postData)
     {
-        // for now only "public" clients without authentication
         try {
             $this->validateTokenPostParameters($postData);
             $this->validateClient($postData['client_id'], 'code', $postData['redirect_uri']);
@@ -118,7 +117,9 @@ class OAuthServer
 //               include the "WWW-Authenticate" response header field
 //               matching the authentication scheme used by the client.
 
-        // XXX does NOT necesarilly contain a ".", we have to make sure!
+        if (false === strpos($postData['code'], '.')) {
+            throw new TokenException('invalid_grant', 'invalid "authorization_code"', 400);
+        }
         list($authorizationCodeKey, $authorizationCode) = explode('.', $postData['code']);
 
         // XXX the code MUST also be deleted, or marked *used*, it MUST not be reused
@@ -143,10 +144,10 @@ class OAuthServer
             throw new TokenException('invalid_grant', 'invalid "code_verifier"', 400);
         }
 
-        // check for code expiry, it may be at most 5 minutes old (more strict
+        // check for code expiry, it may be at most 1 minute old (more strict
         // than specification that recommends 10 minutes)
         $codeTime = new DateTime($codeInfo['issued_at']);
-        $codeTime->add(new DateInterval('PT5M'));
+        $codeTime->add(new DateInterval('PT1M'));
         if ($this->dateTime >= $codeTime) {
             throw new TokenException('invalid_grant', 'expired "authorization_code"', 400);
         }
@@ -159,7 +160,6 @@ class OAuthServer
             throw new TokenException('invalid_request', 'unexpected "client_id"', 400);
         }
 
-        // XXX we should link the code to the access token to be able to revoke it?
         $accessToken = $this->getAccessToken(
             $codeInfo['user_id'],
             $postData['client_id'],
@@ -225,7 +225,7 @@ class OAuthServer
             $getData['client_id'],
             $getData['scope'],
             $getData['redirect_uri'],
-            $getData['code_challenge']     // XXX if non public client can be NULL
+            $getData['code_challenge']
         );
 
         return $this->prepareRedirect(
@@ -296,8 +296,7 @@ class OAuthServer
             return false;
         }
 
-        // check if it is still valid
-        // XXX think about generating a new one when the token _almost_ expires
+        // check if the access_token is still valid
         $expiresAt = new DateTime($existingToken['expires_at']);
         if ($expiresAt <= $this->dateTime) {
             return false;
@@ -365,7 +364,6 @@ class OAuthServer
         $this->validateScope($getData['scope']);
         $this->validateState($getData['state']);
 
-        // XXX if client is not public this is not needed!
         if ('code' === $getData['response_type']) {
             foreach (['code_challenge_method', 'code_challenge'] as $queryParameter) {
                 if (!array_key_exists($queryParameter, $getData)) {
@@ -434,6 +432,8 @@ class OAuthServer
 
     private function validateClientId($clientId)
     {
+        // client-id  = *VSCHAR
+        // VSCHAR     = %x20-7E
         if (1 !== preg_match('/^[\x20-\x7E]+$/', $clientId)) {
             throw new ValidateException('invalid "client_id"', 400);
         }
@@ -444,10 +444,12 @@ class OAuthServer
      */
     private function validateCode($code)
     {
+        // code       = 1*VSCHAR
+        // VSCHAR     = %x20-7E
         if (1 !== preg_match('/^[\x20-\x7E]+$/', $code)) {
             throw new ValidateException('invalid "code"', 400);
         }
-        // the codes we generate also contain a dot "."
+        // the codes we generate MUST also contain a dot "."
         if (false === strpos($code, '.')) {
             throw new ValidateException('invalid "code"', 400);
         }
@@ -469,14 +471,20 @@ class OAuthServer
 
     private function validateScope($scope)
     {
-        // XXX do actual "scope" syntax validation here
-        if ('config' !== $scope) {
-            throw new ValidateException('invalid "scope"', 400);
+        // scope       = scope-token *( SP scope-token )
+        // scope-token = 1*NQCHAR
+        // NQCHAR      = %x21 / %x23-5B / %x5D-7E
+        foreach (explode(' ', $scope) as $scopeToken) {
+            if (1 !== preg_match('/^[\x21\x23-\x5B\x5D-\x7E]+$/', $scopeToken)) {
+                throw new ValidateException('invalid "scope"', 400);
+            }
         }
     }
 
     private function validateState($state)
     {
+        // state      = 1*VSCHAR
+        // VSCHAR     = %x20-7E
         if (1 !== preg_match('/^[\x20-\x7E]+$/', $state)) {
             throw new ValidateException('invalid "state"', 400);
         }
@@ -492,9 +500,9 @@ class OAuthServer
     private function validateCodeVerifier($codeVerifier)
     {
         // code-verifier = 43*128unreserved
-        // unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~"
-        // ALPHA = %x41-5A / %x61-7A
-        // DIGIT = %x30-39
+        // unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
+        // ALPHA         = %x41-5A / %x61-7A
+        // DIGIT         = %x30-39
         if (1 !== preg_match('/^[\x41-\x5A\x61-\x7A\x30-\x39-._~]{43,128}$/', $codeVerifier)) {
             throw new ValidateException('invalid "code_verifier"', 400);
         }
