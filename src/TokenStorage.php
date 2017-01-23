@@ -154,7 +154,8 @@ class TokenStorage
                 scope
              FROM tokens
              WHERE
-                user_id = :user_id'
+                user_id = :user_id
+             GROUP BY client_id, scope'
         );
 
         $stmt->bindValue(':user_id', $userId, PDO::PARAM_STR);
