@@ -132,13 +132,18 @@ class OAuthServer
             throw new TokenException('invalid_grant', 'invalid "authorization_code"', 400);
         }
 
-        if (!array_key_exists('client_secret', $clientInfo)) {
-            // public client
-            if (!array_key_exists('code_verifier', $postData)) {
-                throw new ValidateException('missing "code_verifier" parameter', 400);
+        try {
+            if (!array_key_exists('client_secret', $clientInfo)) {
+                // public client
+                if (!array_key_exists('code_verifier', $postData)) {
+                    // this one will never be caught!
+                    throw new ValidateException('missing "code_verifier" parameter', 400);
+                }
+                $this->validateCodeVerifier($postData['code_verifier']);
+                $this->verifyCodeVerifier($codeInfo['code_challenge'], $postData['code_verifier']);
             }
-            $this->validateCodeVerifier($postData['code_verifier']);
-            $this->verifyCodeVerifier($codeInfo['code_challenge'], $postData['code_verifier']);
+        } catch (ValidateException $e) {
+            throw new TokenException('invalid_request', $e->getMessage(), 400);
         }
 
         // check for code expiry, it may be at most 5 minutes old
@@ -260,7 +265,7 @@ class OAuthServer
             $getData['client_id'],
             $getData['scope'],
             $getData['redirect_uri'],
-            $getData['code_challenge']
+            array_key_exists('code_challenge', $getData) ? $getData['code_challenge'] : null
         );
 
         return $this->prepareRedirect(

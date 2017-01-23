@@ -207,7 +207,7 @@ class TokenStorage
                 scope VARCHAR(255) NOT NULL,
                 redirect_uri VARCHAR(255) NOT NULL,
                 issued_at VARCHAR(255) NOT NULL,
-                code_challenge VARCHAR(255) NOT NULL,
+                code_challenge VARCHAR(255) DEFAULT NULL,
                 UNIQUE(authorization_code_key)
             )',
         ];
