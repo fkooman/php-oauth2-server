@@ -15,7 +15,6 @@
     "name": "fkooman/oauth2-server",
     "require": {
         "ext-date": "*",
-        "ext-filter": "*",
         "ext-hash": "*",
         "ext-json": "*",
         "ext-pcre": "*",
