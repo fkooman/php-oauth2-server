@@ -44,6 +44,11 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
                 'response_type' => 'code',
                 'display_name' => 'Code Client',
             ],
+            'code-client-query-redirect' => [
+                'redirect_uri' => 'http://example.org/code-cb?keep=this',
+                'response_type' => 'code',
+                'display_name' => 'Code Client',
+            ],
             'code-client-secret' => [
                 'redirect_uri' => 'http://example.org/code-cb',
                 'response_type' => 'code',
@@ -64,6 +69,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         $tokenStorage->init();
 
         $tokenStorage->storeCode('foo', 'XYZ', 'abcdefgh', 'code-client', 'config', 'http://example.org/code-cb', new DateTime('2016-01-01'), 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
+        $tokenStorage->storeCode('foo', 'ABC', 'abcdefgh', 'code-client-query-redirect', 'config', 'http://example.org/code-cb?keep=this', new DateTime('2016-01-01'), 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
         $tokenStorage->storeCode('foo', 'DEF', 'abcdefgh', 'code-client-secret', 'config', 'http://example.org/code-cb', new DateTime('2016-01-01'), 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
 
         $this->server = new OAuthServer(
@@ -90,8 +96,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
                     'response_type' => 'token',
                     'scope' => 'config',
                     'state' => '12345',
-                ],
-                'foo'
+                ]
             )
         );
     }
@@ -114,8 +119,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
                     'state' => '12345',
                     'code_challenge_method' => 'S256',
                     'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-                ],
-                'foo'
+                ]
             )
         );
     }
@@ -140,6 +144,26 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         );
     }
 
+    public function testAuthorizeTokenPostNotApproved()
+    {
+        $this->assertSame(
+            'http://example.org/token-cb#error=access_denied&error_description=user+refused+authorization&state=12345',
+            $this->server->postAuthorize(
+                [
+                    'client_id' => 'token-client',
+                    'redirect_uri' => 'http://example.org/token-cb',
+                    'response_type' => 'token',
+                    'scope' => 'config',
+                    'state' => '12345',
+                ],
+                [
+                    'approve' => 'no',
+                ],
+                'foo'
+            )
+        );
+    }
+
     public function testAuthorizeCodePost()
     {
         $this->assertSame(
@@ -148,6 +172,28 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
                 [
                     'client_id' => 'code-client',
                     'redirect_uri' => 'http://example.org/code-cb',
+                    'response_type' => 'code',
+                    'scope' => 'config',
+                    'state' => '12345',
+                    'code_challenge_method' => 'S256',
+                    'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+                ],
+                [
+                    'approve' => 'yes',
+                ],
+                'foo'
+            )
+        );
+    }
+
+    public function testAuthorizeTokenPostRedirectUriWithQuery()
+    {
+        $this->assertSame(
+            'http://example.org/code-cb?keep=this&code=cmFuZG9tXzE.cmFuZG9tXzI&state=12345',
+            $this->server->postAuthorize(
+                [
+                    'client_id' => 'code-client-query-redirect',
+                    'redirect_uri' => 'http://example.org/code-cb?keep=this',
                     'response_type' => 'code',
                     'scope' => 'config',
                     'state' => '12345',
