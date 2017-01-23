@@ -44,6 +44,12 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
                 'response_type' => 'code',
                 'display_name' => 'Code Client',
             ],
+            'code-client-secret' => [
+                'redirect_uri' => 'http://example.org/code-cb',
+                'response_type' => 'code',
+                'display_name' => 'Code Client',
+                'client_secret' => '123456',
+            ],
         ];
 
         $getClientInfo = function ($clientId) use ($oauthClients) {
@@ -58,6 +64,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         $tokenStorage->init();
 
         $tokenStorage->storeCode('foo', 'XYZ', 'abcdefgh', 'code-client', 'config', 'http://example.org/code-cb', new DateTime('2016-01-01'), 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
+        $tokenStorage->storeCode('foo', 'DEF', 'abcdefgh', 'code-client-secret', 'config', 'http://example.org/code-cb', new DateTime('2016-01-01'), 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
 
         $this->server = new OAuthServer(
             $tokenStorage,
@@ -160,7 +167,9 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         try {
             $this->server->postToken(
                 [
-                ]
+                ],
+                null,
+                null
             );
             $this->assertFalse(true);
         } catch (TokenException $e) {
@@ -192,7 +201,9 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
                 'redirect_uri' => 'http://example.org/code-cb',
                 'client_id' => 'code-client',
                 'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
-            ]
+            ],
+            null,
+            null
         );
 
         $this->assertSame(200, $tokenResponse->getStatusCode());
@@ -212,6 +223,75 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
             ],
             $tokenResponse->getArrayBody()
         );
+    }
+
+    public function testPostTokenSecret()
+    {
+        $tokenResponse = $this->server->postToken(
+            [
+                'grant_type' => 'authorization_code',
+                'code' => 'DEF.abcdefgh',
+                'redirect_uri' => 'http://example.org/code-cb',
+                'client_id' => 'code-client-secret',
+                'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
+            ],
+            'code-client-secret',
+            '123456'
+        );
+
+        $this->assertSame(200, $tokenResponse->getStatusCode());
+        $this->assertSame(
+            [
+                'Content-Type' => 'application/json',
+                'Cache-Control' => 'no-store',
+                'Pragma' => 'no-cache',
+            ],
+            $tokenResponse->getHeaders()
+        );
+        $this->assertSame(
+            [
+                'access_token' => 'DEF.cmFuZG9tXzE',
+                'token_type' => 'bearer',
+                'expires_in' => 3600,
+            ],
+            $tokenResponse->getArrayBody()
+        );
+    }
+
+    public function testPostTokenSecretInvalid()
+    {
+        try {
+            $tokenResponse = $this->server->postToken(
+                [
+                    'grant_type' => 'authorization_code',
+                    'code' => 'DEF.abcdefgh',
+                    'redirect_uri' => 'http://example.org/code-cb',
+                    'client_id' => 'code-client-secret',
+                    'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
+                ],
+                'code-client-secret',
+                '654321'
+            );
+            $this->assertTrue(false);
+        } catch (TokenException $e) {
+            $this->assertEquals(401, $e->getResponse()->getStatusCode());
+            $this->assertEquals(
+                [
+                    'error' => 'invalid_client',
+                    'error_description' => 'invalid "client_secret"',
+                ],
+                $e->getResponse()->getArrayBody()
+            );
+            $this->assertEquals(
+                [
+                    'Content-Type' => 'application/json',
+                    'Cache-Control' => 'no-store',
+                    'Pragma' => 'no-cache',
+                    'WWW-Authenticate' => 'Bearer realm="OAuth",error=invalid_client,error_description=invalid "client_secret"',
+                ],
+                $e->getResponse()->getHeaders()
+            );
+        }
     }
 
     public function testPostReuseCode()

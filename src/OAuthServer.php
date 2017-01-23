@@ -97,14 +97,16 @@ class OAuthServer
      *
      * @throws TokenException
      */
-    public function postToken(array $postData)
+    public function postToken(array $postData, $authUser = null, $authPass = null)
     {
         try {
             $this->validateTokenPostParameters($postData);
-            $this->validateClient($postData['client_id'], 'code', $postData['redirect_uri']);
         } catch (ValidateException $e) {
             throw new TokenException('invalid_request', $e->getMessage(), 400);
         }
+
+        $clientInfo = $this->validateClient($postData['client_id'], 'code', $postData['redirect_uri']);
+        $this->verifyCredentials($postData['client_id'], $clientInfo, $authUser, $authPass);
 
         list($authorizationCodeKey, $authorizationCode) = explode('.', $postData['code']);
 
@@ -148,6 +150,24 @@ class OAuthServer
                 'expires_in' => $accessToken['expires_in'],
             ]
         );
+    }
+
+    private function verifyCredentials($clientId, array $clientInfo, $authUser, $authPass)
+    {
+        if (array_key_exists('client_secret', $clientInfo)) {
+            // requires authentication
+            if ($clientId !== $authUser) {
+                throw new TokenException('invalid_client', 'authenticating "client_id" must match request body "client_id"', 401);
+            }
+
+            if (!is_string($authPass)) {
+                throw new TokenException('invalid_client', 'no "client_secret" provided', 401);
+            }
+
+            if (!hash_equals($clientInfo['client_secret'], $authPass)) {
+                throw new TokenException('invalid_client', 'invalid "client_secret"', 401);
+            }
+        }
     }
 
     private function matchParameters(array $postData, array $codeInfo)
@@ -380,7 +400,7 @@ class OAuthServer
 
     private function validateClient($clientId, $responseType, $redirectUri)
     {
-        if(false === $clientInfo = call_user_func($this->getClientInfo, $clientId)) {
+        if (false === $clientInfo = call_user_func($this->getClientInfo, $clientId)) {
             throw new TokenException('invalid_client', sprintf('client not registered', $clientId), 400);
         }
 
