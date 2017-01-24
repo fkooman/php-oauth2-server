@@ -23,5 +23,6 @@ All (optional) OAuth authorization and token requests MUST always be sent.
   its way to deal with clients that blatantly violate the OAuth 2.0 RFC, the 
   exception may be if a fix does not break conforming clients;
 - There will be no toggles to shoot yourself in the foot;
-- Uses `random_bytes` polyfill on PHP < 7.0 for generating tokens and codes;
+- Uses `random_bytes` polyfill on PHP < 7.0 for generating tokens and codes and
+  `hash_equals` polyfoll on PHP < 5.6 for timing safe compare of strings;
 - Supports [PKCE](https://tools.ietf.org/html/rfc7636);

@@ -299,7 +299,7 @@ class OAuthServer
      */
     private function getAuthorizationCode($userId, $clientId, $scope, $redirectUri, $codeChallenge)
     {
-        $authorizationCodeKey = $this->uriEncode($this->random->get(8));
+        $authorizationCodeKey = $this->uriEncode($this->random->get(16));
         $authorizationCode = $this->uriEncode($this->random->get(32));
 
         $this->tokenStorage->storeCode(
