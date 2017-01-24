@@ -75,4 +75,17 @@ class RequestValidator
             SyntaxValidator::validateCodeVerifier($postData['code_verifier']);
         }
     }
+
+    public static function validatePkceParameters(array $clientInfo, array $getData)
+    {
+        // if client is public and response_type is code, PKCE is enforced
+        if ('code' === $getData['response_type'] && !array_key_exists('client_secret', $clientInfo)) {
+            if (!array_key_exists('code_challenge_method', $getData)) {
+                throw new ValidateException('missing "code_challenge_method" parameter');
+            }
+            if (!array_key_exists('code_challenge', $getData)) {
+                throw new ValidateException('missing "code_challenge" parameter');
+            }
+        }
+    }
 }

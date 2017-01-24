@@ -67,8 +67,8 @@ class OAuthServer
     public function getAuthorize(array $getData)
     {
         RequestValidator::validateAuthorizeQueryParameters($getData);
-        $clientInfo = $this->validateClient($getData);
-        $this->validatePkce($getData, $clientInfo);
+        $clientInfo = $this->validateClient($getData['client_id'], $getData['response_type'], $getData['redirect_uri']);
+        RequestValidator::validatePkceParameters($clientInfo, $getData);
 
         return [
             'client_id' => $getData['client_id'],
@@ -84,8 +84,8 @@ class OAuthServer
     public function postAuthorize(array $getData, array $postData, $userId)
     {
         RequestValidator::validateAuthorizeQueryParameters($getData);
-        $clientInfo = $this->validateClient($getData);
-        $this->validatePkce($getData, $clientInfo);
+        $clientInfo = $this->validateClient($getData['client_id'], $getData['response_type'], $getData['redirect_uri']);
+        RequestValidator::validatePkceParameters($clientInfo, $getData);
         RequestValidator::validateAuthorizePostParameters($postData);
 
         if ('token' === $getData['response_type']) {
@@ -110,7 +110,7 @@ class OAuthServer
     {
         try {
             RequestValidator::validateTokenPostParameters($postData);
-            $clientInfo = $this->validateClient($postData);
+            $clientInfo = $this->validateClient($postData['client_id'], 'code', $postData['redirect_uri']);
 
             if (array_key_exists('client_secret', $clientInfo)) {
                 if ($postData['client_id'] !== $authUser) {
@@ -345,25 +345,6 @@ class OAuthServer
         }
     }
 
-    private function validatePkce(array $getData, array $clientInfo)
-    {
-        if ('code' !== $clientInfo['response_type']) {
-            return;
-        }
-
-        if (array_key_exists('client_secret', $clientInfo)) {
-            return;
-        }
-
-        // public client, PKCE required
-        if (!array_key_exists('code_challenge_method', $getData)) {
-            throw new ValidateException('missing "code_challenge_method" parameter');
-        }
-        if (!array_key_exists('code_challenge', $getData)) {
-            throw new ValidateException('missing "code_challenge" parameter');
-        }
-    }
-
     private function uriEncode($inputString)
     {
         return strtr(
@@ -376,29 +357,24 @@ class OAuthServer
         );
     }
 
-    // VALIDATORS
-
     /**
+     * @param string $clientId
+     * @param string $responseType "token" or "code"
+     * @param string $redirectUri
+     *
      * @return array
      */
-    private function validateClient(array $getData)
+    private function validateClient($clientId, $responseType, $redirectUri)
     {
-        if (false === $clientInfo = call_user_func($this->getClientInfo, $getData['client_id'])) {
-            throw new ClientException('no such client', 400);
+        if (false === $clientInfo = call_user_func($this->getClientInfo, $clientId)) {
+            throw new ClientException('client does not exist with this "client_id"', 400);
         }
 
-        if ('code' === $clientInfo['response_type']) {
-            if (array_key_exists('response_type', $getData) && 'code' === $getData['response_type']) {
-                return $clientInfo;
-            }
-            if (array_key_exists('grant_type', $getData) && 'authorization_code' === $getData['grant_type']) {
-                return $clientInfo;
-            }
-
-            throw new ClientException('client does not support this "response_type" or "grant_Type"', 400);
+        if ($clientInfo['response_type'] !== $responseType) {
+            throw new ClientException('client does not support this "response_type"', 400);
         }
 
-        if ($clientInfo['redirect_uri'] !== $getData['redirect_uri']) {
+        if ($clientInfo['redirect_uri'] !== $redirectUri) {
             throw new ClientException('client does not support this "redirect_uri"', 400);
         }
 
