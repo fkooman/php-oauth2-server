@@ -388,17 +388,17 @@ class OAuthServer
         }
 
         // NOTE: no need to validate the redirect_uri, as we do strict matching
-        $this->validateClientId($getData['client_id']);
-        $this->validateResponseType($getData['response_type']);
-        $this->validateScope($getData['scope']);
-        $this->validateState($getData['state']);
+        SyntaxValidator::validateClientId($getData['client_id']);
+        SyntaxValidator::validateResponseType($getData['response_type']);
+        SyntaxValidator::validateScope($getData['scope']);
+        SyntaxValidator::validateState($getData['state']);
 
         // OPTIONAL
         if (array_key_exists('code_challenge_method', $getData)) {
-            $this->validateCodeChallengeMethod($getData['code_challenge_method']);
+            SyntaxValidator::validateCodeChallengeMethod($getData['code_challenge_method']);
         }
         if (array_key_exists('code_challenge', $getData)) {
-            $this->validateCodeChallenge($getData['code_challenge']);
+            SyntaxValidator::validateCodeChallenge($getData['code_challenge']);
         }
     }
 
@@ -408,7 +408,7 @@ class OAuthServer
             throw new ValidateException('missing "approve" parameter');
         }
 
-        $this->validateApprove($postData['approve']);
+        SyntaxValidator::validateApprove($postData['approve']);
     }
 
     private function validateTokenPostParameters(array $postData)
@@ -422,13 +422,13 @@ class OAuthServer
 
         // check syntax
         // NOTE: no need to validate the redirect_uri, as we do strict matching
-        $this->validateGrantType($postData['grant_type']);
-        $this->validateCode($postData['code']);
-        $this->validateClientId($postData['client_id']);
+        SyntaxValidator::validateGrantType($postData['grant_type']);
+        SyntaxValidator::validateCode($postData['code']);
+        SyntaxValidator::validateClientId($postData['client_id']);
 
         // OPTIONAL
         if (array_key_exists('code_verifier', $postData)) {
-            $this->validateCodeVerifier($postData['code_verifier']);
+            SyntaxValidator::validateCodeVerifier($postData['code_verifier']);
         }
     }
 
@@ -457,101 +457,5 @@ class OAuthServer
         }
 
         return $clientInfo;
-    }
-
-    // STRING VALIDATORS
-
-    private function validateClientId($clientId)
-    {
-        // client-id  = *VSCHAR
-        // VSCHAR     = %x20-7E
-        if (1 !== preg_match('/^[\x20-\x7E]+$/', $clientId)) {
-            throw new ValidateException('invalid "client_id"');
-        }
-    }
-
-    /**
-     * Validate the authorization code.
-     */
-    private function validateCode($code)
-    {
-        // code       = 1*VSCHAR
-        // VSCHAR     = %x20-7E
-        if (1 !== preg_match('/^[\x20-\x7E]+$/', $code)) {
-            throw new ValidateException('invalid "code"');
-        }
-        // the codes we generate MUST also contain a dot "."
-        if (false === strpos($code, '.')) {
-            throw new ValidateException('invalid "code"');
-        }
-    }
-
-    private function validateGrantType($grantType)
-    {
-        if ('authorization_code' !== $grantType) {
-            throw new ValidateException('invalid "grant_type"');
-        }
-    }
-
-    private function validateResponseType($responseType)
-    {
-        if (!in_array($responseType, ['token', 'code'])) {
-            throw new ValidateException('invalid "response_type"');
-        }
-    }
-
-    private function validateScope($scope)
-    {
-        // scope       = scope-token *( SP scope-token )
-        // scope-token = 1*NQCHAR
-        // NQCHAR      = %x21 / %x23-5B / %x5D-7E
-        foreach (explode(' ', $scope) as $scopeToken) {
-            if (1 !== preg_match('/^[\x21\x23-\x5B\x5D-\x7E]+$/', $scopeToken)) {
-                throw new ValidateException('invalid "scope"');
-            }
-        }
-    }
-
-    private function validateState($state)
-    {
-        // state      = 1*VSCHAR
-        // VSCHAR     = %x20-7E
-        if (1 !== preg_match('/^[\x20-\x7E]+$/', $state)) {
-            throw new ValidateException('invalid "state"');
-        }
-    }
-
-    private function validateCodeChallengeMethod($codeChallengeMethod)
-    {
-        if ('S256' !== $codeChallengeMethod) {
-            throw new ValidateException('invalid "code_challenge_method"');
-        }
-    }
-
-    private function validateCodeVerifier($codeVerifier)
-    {
-        // code-verifier = 43*128unreserved
-        // unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
-        // ALPHA         = %x41-5A / %x61-7A
-        // DIGIT         = %x30-39
-        if (1 !== preg_match('/^[\x41-\x5A\x61-\x7A\x30-\x39-._~]{43,128}$/', $codeVerifier)) {
-            throw new ValidateException('invalid "code_verifier"');
-        }
-    }
-
-    private function validateCodeChallenge($codeChallenge)
-    {
-        // it seems the length of the codeChallenge is always 43 because it is
-        // the output of the SHA256 hashing algorithm
-        if (1 !== preg_match('/^[\x41-\x5A\x61-\x7A\x30-\x39-_]{43}$/', $codeChallenge)) {
-            throw new ValidateException('invalid "code_challenge"');
-        }
-    }
-
-    private function validateApprove($approve)
-    {
-        if (!in_array($approve, ['yes', 'no'])) {
-            throw new ValidateException('invalid "approve"');
-        }
     }
 }
