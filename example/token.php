@@ -63,14 +63,14 @@ $authUser = array_key_exists('PHP_AUTH_USER', $_SERVER) ? $_SERVER['PHP_AUTH_USE
 $authPass = array_key_exists('PHP_AUTH_PW', $_SERVER) ? $_SERVER['PHP_AUTH_PW'] : null;
 
 try {
-    $response = $oauthServer->postToken($_POST, $authUser, $authPass);
+    $tokenResponse = $oauthServer->postToken($_POST, $authUser, $authPass);
 } catch (TokenException $e) {
-    $response = $e->getResponse();
+    $tokenResponse = $e->getResponse();
 }
 
-http_response_code($response->getStatusCode());
-foreach ($response->getHeaders() as $k => $v) {
+http_response_code($tokenResponse->getStatusCode());
+foreach ($tokenResponse->getHeaders() as $k => $v) {
     header(sprintf('%s: %s', $k, $v));
 }
-echo $response->getBody();
+echo $tokenResponse->getBody();
 exit(0);
