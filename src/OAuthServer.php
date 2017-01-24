@@ -112,12 +112,8 @@ class OAuthServer
             RequestValidator::validateTokenPostParameters($postData);
             $clientInfo = $this->validateClient($postData['client_id'], 'code', $postData['redirect_uri']);
 
-            if (array_key_exists('client_secret', $clientInfo)) {
-                if ($postData['client_id'] !== $authUser) {
-                    throw new ClientException('"client_id" does not match authenticating user', 401);
-                }
-                $this->verifyClientCredentials($clientInfo, $authPass);
-            }
+            // verify credentials if not a public client
+            $this->verifyClientCredentials($postData['client_id'], $clientInfo, $authUser, $authPass);
 
             list($authorizationCodeKey, $authorizationCode) = explode('.', $postData['code']);
             if (false === $codeInfo = $this->tokenStorage->getCode($authorizationCodeKey)) {
@@ -139,13 +135,8 @@ class OAuthServer
             // the code
             $this->verifyCodeInfo($postData, $codeInfo);
 
-            if (!array_key_exists('client_secret', $clientInfo)) {
-                // PKCE
-                if (!array_key_exists('code_verifier', $postData)) {
-                    throw new ValidateException('missing "code_verifier" parameter');
-                }
-                $this->verifyCodeVerifier($codeInfo['code_challenge'], $postData['code_verifier']);
-            }
+            // verify code_verifier if public client
+            $this->verifyCodeVerifier($clientInfo, $codeInfo, $postData);
 
             // check if this authorization code was already used for getting an
             // access token in the past
@@ -327,21 +318,37 @@ class OAuthServer
         }
     }
 
-    private function verifyClientCredentials(array $clientInfo, $authPass)
+    /**
+     * @param array       $clientInfo
+     * @param string|null $authPass
+     */
+    private function verifyClientCredentials($clientId, array $clientInfo, $authUser, $authPass)
     {
-        if (!is_string($authPass)) {
-            throw new ClientException('invalid credentials (no password)', 401);
-        }
+        if (array_key_exists('client_secret', $clientInfo)) {
+            if ($clientId !== $authUser) {
+                throw new ClientException('"client_id" does not match authenticating user', 401);
+            }
 
-        if (!hash_equals($clientInfo['client_secret'], $authPass)) {
-            throw new ClientException('invalid credentials (wrong password)', 401);
+            if (!is_string($authPass)) {
+                throw new ClientException('invalid credentials (no client_secret)', 401);
+            }
+
+            if (!hash_equals($clientInfo['client_secret'], $authPass)) {
+                throw new ClientException('invalid credentials (invalid client_secret)', 401);
+            }
         }
     }
 
-    private function verifyCodeVerifier($codeChallenge, $codeVerifier)
+    private function verifyCodeVerifier(array $clientInfo, array $codeInfo, array $postData)
     {
-        if (!hash_equals($codeChallenge, $this->uriEncode(hash('sha256', $codeVerifier, true)))) {
-            throw new GrantException('unexpected "code_verifier"');
+        if (!array_key_exists('client_secret', $clientInfo)) {
+            if (!array_key_exists('code_verifier', $postData)) {
+                throw new ValidateException('missing "code_verifier" parameter');
+            }
+
+            if (!hash_equals($codeInfo['code_challenge'], $this->uriEncode(hash('sha256', $postData['code_verifier'], true)))) {
+                throw new GrantException('unexpected "code_verifier"');
+            }
         }
     }
 
