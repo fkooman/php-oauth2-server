@@ -326,7 +326,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
             $this->assertEquals(
                 [
                     'error' => 'invalid_client',
-                    'error_description' => 'invalid "client_secret"',
+                    'error_description' => 'invalid credentials (wrong password)',
                 ],
                 $e->getResponse()->getArrayBody()
             );
@@ -335,7 +335,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
                     'Content-Type' => 'application/json',
                     'Cache-Control' => 'no-store',
                     'Pragma' => 'no-cache',
-                    'WWW-Authenticate' => 'Bearer realm="OAuth",error=invalid_client,error_description=invalid "client_secret"',
+                    'WWW-Authenticate' => 'Bearer realm="OAuth",error=invalid_client,error_description=invalid credentials (wrong password)',
                 ],
                 $e->getResponse()->getHeaders()
             );

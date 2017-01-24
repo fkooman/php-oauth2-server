@@ -18,6 +18,6 @@
 
 namespace fkooman\OAuth\Server\Exception;
 
-class AuthorizeException extends OAuthException
+class GrantException extends OAuthException
 {
 }
