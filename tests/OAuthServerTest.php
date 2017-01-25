@@ -342,6 +342,30 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         }
     }
 
+    public function testSignedAccessToken()
+    {
+        $secretKey = '39a7c3be60667a08449f6cf6cc51557a79ccc63f2a6ceaeaf9bb53af3dfd6e6e665963adfcd2e165df827673fb59f949ec43aa955d1413d637d2a44043f03a28';
+        $publicKey = '665963adfcd2e165df827673fb59f949ec43aa955d1413d637d2a44043f03a28';
+        $this->server->setSecret(hex2bin($secretKey));
+
+        $this->assertSame(
+            'http://example.org/token-cb#access_token=cmFuZG9tXzE.mZA7eyGnOmVUdqdcJEY4pMW-SsVPAxpl5jr2Du8OVfnrZ54M84eGI8_3Ci8o8cxj8yyVNOdrPohcQ9sail-PDGNtRnVaRzl0WHpJ&state=12345&expires_in=3600',
+            $this->server->postAuthorize(
+                [
+                    'client_id' => 'token-client',
+                    'redirect_uri' => 'http://example.org/token-cb',
+                    'response_type' => 'token',
+                    'scope' => 'config',
+                    'state' => '12345',
+                ],
+                [
+                    'approve' => 'yes',
+                ],
+                'foo'
+            )
+        );
+    }
+
     public function testPostReuseCode()
     {
     }

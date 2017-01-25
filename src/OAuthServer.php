@@ -42,6 +42,9 @@ class OAuthServer
     /** @var callable */
     private $getClientInfo;
 
+    /** @var string|null */
+    private $secretKey = null;
+
     public function __construct(TokenStorage $tokenStorage, RandomInterface $random, DateTime $dateTime, callable $getClientInfo)
     {
         $this->tokenStorage = $tokenStorage;
@@ -56,6 +59,14 @@ class OAuthServer
     public function setExpiresIn($expiresIn)
     {
         $this->expiresIn = (int) $expiresIn;
+    }
+
+    /**
+     * @param string $secretKey
+     */
+    public function setSecret($secretKey)
+    {
+        $this->secretKey = $secretKey;
     }
 
     /**
@@ -260,7 +271,18 @@ class OAuthServer
         if (is_null($accessTokenKey)) {
             $accessTokenKey = $this->uriEncode($this->random->get(16));
         }
+
         $accessToken = $this->uriEncode($this->random->get(32));
+        if (!is_null($this->secretKey)) {
+            // optionally sign the accessToken so resource servers can verify it
+            // came from us
+            $accessToken = $this->uriEncode(
+                \Sodium\crypto_sign(
+                    $accessToken,
+                    $this->secretKey
+                )
+            );
+        }
         $expiresAt = date_add(clone $this->dateTime, new DateInterval(sprintf('PT%dS', $this->expiresIn)));
 
         // store it
