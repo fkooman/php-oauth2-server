@@ -22,7 +22,7 @@ use DateTime;
 use PDO;
 use PHPUnit_Framework_TestCase;
 
-class ValidatorTest extends PHPUnit_Framework_TestCase
+class BearerValidatorTest extends PHPUnit_Framework_TestCase
 {
     /** @var TokenStorage */
     private $tokenStorage;
@@ -38,89 +38,82 @@ class ValidatorTest extends PHPUnit_Framework_TestCase
             'abcdefgh',
             'vpn-companion',
             'scope',
-            new DateTime('2016-01-01')
+            new DateTime('2016-01-01 01:00:00')
         );
     }
 
     public function testValidToken()
     {
-        $validator = new Validator($this->tokenStorage, new DateTime('2016-01-01'));
+        $validator = new BearerValidator($this->tokenStorage, new DateTime('2016-01-01'));
         $this->assertSame(
             [
                 'user_id' => 'foo',
                 'scope' => 'scope',
+                'expires_in' => 3600,
             ],
             $validator->validate('Bearer 1234.abcdefgh')
         );
     }
 
-    /**
-     * @expectedException \fkooman\OAuth\Server\Exception\OAuthException
-     * @expectedExceptionMessage: invalid_token
-     */
     public function testNoAuth()
     {
-        $validator = new Validator($this->tokenStorage, new DateTime('2016-01-01'));
-        $validator->validate(null);
+        $validator = new BearerValidator($this->tokenStorage, new DateTime('2016-01-01'));
+        $this->assertFalse($validator->validate(null));
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\OAuthException
+     * @expectedException \fkooman\OAuth\Server\Exception\BearerException
      * @expectedExceptionMessage: invalid_token
      */
     public function testInvalidAccessTokenKey()
     {
-        $validator = new Validator($this->tokenStorage, new DateTime('2016-01-01'));
+        $validator = new BearerValidator($this->tokenStorage, new DateTime('2016-01-01'));
         $validator->validate('Bearer aaaa.abcdefgh');
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\OAuthException
+     * @expectedException \fkooman\OAuth\Server\Exception\BearerException
      * @expectedExceptionMessage: invalid_token
      */
     public function testInvalidAccessToken()
     {
-        $validator = new Validator($this->tokenStorage, new DateTime('2016-01-01'));
+        $validator = new BearerValidator($this->tokenStorage, new DateTime('2016-01-01'));
         $validator->validate('Bearer 1234.aaaaaaaa');
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\OAuthException
+     * @expectedException \fkooman\OAuth\Server\Exception\BearerException
      * @expectedExceptionMessage: invalid_token
      */
     public function testInvalidSyntax()
     {
-        $validator = new Validator($this->tokenStorage, new DateTime('2016-01-01'));
+        $validator = new BearerValidator($this->tokenStorage, new DateTime('2016-01-01'));
         $validator->validate('Bearer %%%%');
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\OAuthException
+     * @expectedException \fkooman\OAuth\Server\Exception\BearerException
      * @expectedExceptionMessage: invalid_token
      */
     public function testExpiredToken()
     {
-        $validator = new Validator($this->tokenStorage, new DateTime('2017-01-01'));
+        $validator = new BearerValidator($this->tokenStorage, new DateTime('2017-01-01'));
         $validator->validate('Bearer 1234.abcdefgh');
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\OAuthException
+     * @expectedException \fkooman\OAuth\Server\Exception\BearerException
      * @expectedExceptionMessage: invalid_token
      */
     public function testNoDot()
     {
-        $validator = new Validator($this->tokenStorage, new DateTime('2016-01-01'));
+        $validator = new BearerValidator($this->tokenStorage, new DateTime('2016-01-01'));
         $validator->validate('Bearer abcdef');
     }
 
-    /**
-     * @expectedException \fkooman\OAuth\Server\Exception\OAuthException
-     * @expectedExceptionMessage: invalid_token
-     */
     public function testBasicAuthentication()
     {
-        $validator = new Validator($this->tokenStorage, new DateTime('2016-01-01'));
-        $validator->validate('Basic AAA===');
+        $validator = new BearerValidator($this->tokenStorage, new DateTime('2016-01-01'));
+        $this->assertFalse($validator->validate('Basic AAA==='));
     }
 }

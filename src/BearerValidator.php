@@ -19,9 +19,9 @@
 namespace fkooman\OAuth\Server;
 
 use DateTime;
-use fkooman\OAuth\Server\Exception\OAuthException;
+use fkooman\OAuth\Server\Exception\BearerException;
 
-class Validator
+class BearerValidator
 {
     /** @var TokenStorage */
     private $tokenStorage;
@@ -36,47 +36,49 @@ class Validator
     }
 
     /**
-     * @param string|null $authorizationHeader
+     * @param string $bearerToken
      *
-     * @return array with "user_id" and "scope" fields
+     * @return false|array
+     *
+     * @throws BearerException when the provided Bearer token is not valid
      */
     public function validate($authorizationHeader)
     {
-        if (is_null($authorizationHeader)) {
-            throw new OAuthException('no_token', 'no authorization header', 401);
+        if (0 !== strpos($authorizationHeader, 'Bearer ')) {
+            return false;
         }
+        $bearerToken = substr($authorizationHeader, 7);
 
         // b64token    = 1*( ALPHA / DIGIT /
         //                   "-" / "." / "_" / "~" / "+" / "/" ) *"="
         // credentials = "Bearer" 1*SP b64token
-        if (1 !== preg_match('|^Bearer [a-zA-Z0-9-._~+/]+=*$|', $authorizationHeader)) {
-            throw new OAuthException('no_token', 'no Bearer token', 401);
+        if (1 !== preg_match('|^[a-zA-Z0-9-._~+/]+=*$|', $bearerToken)) {
+            throw new BearerException('syntax error');
         }
 
-        $bearerToken = substr($authorizationHeader, 7);
         if (false === strpos($bearerToken, '.')) {
-            throw new OAuthException('invalid_token', 'bearer token is expected to contain a "."', 401);
+            throw new BearerException('syntax error (contains no dot)');
         }
 
         list($accessTokenKey, $accessToken) = explode('.', $bearerToken);
         $tokenInfo = $this->tokenStorage->getToken($accessTokenKey);
         if (false === $tokenInfo) {
-            throw new OAuthException('invalid_token', 'token key does not exist', 401);
+            throw new BearerException('token does not exist');
         }
 
-        // time safe string compare, using polyfill on PHP < 5.6
         if (0 !== \Sodium\compare($tokenInfo['access_token'], $accessToken)) {
-            throw new OAuthException('invalid_token', 'token does not match expected value', 401);
+            throw new BearerException('token does not exist');
         }
 
         $expiresAt = new DateTime($tokenInfo['expires_at']);
-        if ($this->dateTime > $expiresAt) {
-            throw new OAuthException('invalid_token', 'token expired', 401);
+        if ($this->dateTime >= $expiresAt) {
+            throw new BearerException('token expired');
         }
 
         return [
             'user_id' => $tokenInfo['user_id'],
             'scope' => $tokenInfo['scope'],
+            'expires_in' => $expiresAt->getTimestamp() - $this->dateTime->getTimestamp(),
         ];
     }
 }
