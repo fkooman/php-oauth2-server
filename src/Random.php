@@ -19,14 +19,16 @@
 namespace fkooman\OAuth\Server;
 
 /**
- * Random implementation using `random_bytes`.
- *
- * Uses polyfill on PHP < 7.
+ * Random implementation using `random_bytes` or `libsodium-php`.
  */
 class Random implements RandomInterface
 {
     public function get($length)
     {
-        return random_bytes($length);
+        if (function_exists('random_bytes')) {
+            return random_bytes($length);
+        }
+
+        return \Sodium\randombytes_buf($length);
     }
 }

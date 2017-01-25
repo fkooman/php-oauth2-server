@@ -131,7 +131,7 @@ class OAuthServer
                 throw new GrantException('no such code');
             }
 
-            if (!hash_equals($codeInfo['authorization_code'], $authorizationCode)) {
+            if (0 !== \Sodium\compare($codeInfo['authorization_code'], $authorizationCode)) {
                 throw new GrantException('invalid code');
             }
 
@@ -355,7 +355,7 @@ class OAuthServer
                 throw new ClientException('invalid credentials (no client_secret)', 401);
             }
 
-            if (!hash_equals($clientInfo['client_secret'], $authPass)) {
+            if (0 !== \Sodium\compare($clientInfo['client_secret'], $authPass)) {
                 throw new ClientException('invalid credentials (invalid client_secret)', 401);
             }
         }
@@ -368,7 +368,7 @@ class OAuthServer
                 throw new ValidateException('missing "code_verifier" parameter');
             }
 
-            if (!hash_equals($codeInfo['code_challenge'], $this->uriEncode(hash('sha256', $postData['code_verifier'], true)))) {
+            if (0 !== \Sodium\compare($codeInfo['code_challenge'], $this->uriEncode(hash('sha256', $postData['code_verifier'], true)))) {
                 throw new GrantException('unexpected "code_verifier"');
             }
         }

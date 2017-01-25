@@ -65,7 +65,7 @@ class Validator
         }
 
         // time safe string compare, using polyfill on PHP < 5.6
-        if (!hash_equals($tokenInfo['access_token'], $accessToken)) {
+        if (0 !== \Sodium\compare($tokenInfo['access_token'], $accessToken)) {
             throw new TokenException('invalid_token', 'token does not match expected value', 401);
         }
 
