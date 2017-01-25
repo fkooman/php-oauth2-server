@@ -43,7 +43,7 @@ class OAuthServer
     private $getClientInfo;
 
     /** @var string|null */
-    private $secretKey = null;
+    private $signatureKeyPair = null;
 
     public function __construct(TokenStorage $tokenStorage, RandomInterface $random, DateTime $dateTime, callable $getClientInfo)
     {
@@ -62,11 +62,11 @@ class OAuthServer
     }
 
     /**
-     * @param string $secretKey
+     * @param string $signatureKeyPair
      */
-    public function setSecret($secretKey)
+    public function setSignatureKeyPair($signatureKeyPair)
     {
-        $this->secretKey = $secretKey;
+        $this->signatureKeyPair = $signatureKeyPair;
     }
 
     /**
@@ -273,13 +273,14 @@ class OAuthServer
         }
 
         $accessToken = $this->uriEncode($this->random->get(32));
-        if (!is_null($this->secretKey)) {
+        if (!is_null($this->signatureKeyPair)) {
             // optionally sign the accessToken so resource servers can verify it
             // came from us
+            $secretKey = \Sodium\crypto_sign_secretkey($this->signatureKeyPair);
             $accessToken = $this->uriEncode(
                 \Sodium\crypto_sign(
                     $accessToken,
-                    $this->secretKey
+                    $secretKey
                 )
             );
         }
