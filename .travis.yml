@@ -8,6 +8,7 @@ php:
   - 7.1
 
 before_script:
+  - pecl install libsodium
   - composer install
 
 script: phpunit --coverage-text tests
