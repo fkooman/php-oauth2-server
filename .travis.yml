@@ -1,7 +1,7 @@
 language: php
 
-dist: yakkety
-sudo: required
+dist: trusty
+sudo: false
 
 php:
   - 5.4
@@ -10,8 +10,12 @@ php:
   - 7.0
   - 7.1
 
+cache:
+  directories:
+  - $HOME/libsodium
+
 before_script:
-  - sudo apt-get install libsodium-dev
+  - ./ci/travis-install-libsodium.sh
   - pecl install libsodium
   - composer install
 
