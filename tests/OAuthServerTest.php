@@ -19,7 +19,6 @@
 namespace fkooman\OAuth\Server;
 
 use DateTime;
-use fkooman\OAuth\Server\Exception\OAuthException;
 use PDO;
 use PHPUnit_Framework_TestCase;
 
@@ -221,23 +220,13 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
             null,
             null
         );
-
-        $this->assertSame(200, $tokenResponse->getStatusCode());
-        $this->assertSame(
-            [
-                'Content-Type' => 'application/json',
-                'Cache-Control' => 'no-store',
-                'Pragma' => 'no-cache',
-            ],
-            $tokenResponse->getHeaders()
-        );
         $this->assertSame(
             [
                 'access_token' => 'XYZ.cmFuZG9tXzE',
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
-            $tokenResponse->getArrayBody()
+            $tokenResponse
         );
     }
 
@@ -253,23 +242,13 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
             'code-client-secret',
             '123456'
         );
-
-        $this->assertSame(200, $tokenResponse->getStatusCode());
-        $this->assertSame(
-            [
-                'Content-Type' => 'application/json',
-                'Cache-Control' => 'no-store',
-                'Pragma' => 'no-cache',
-            ],
-            $tokenResponse->getHeaders()
-        );
         $this->assertSame(
             [
                 'access_token' => 'DEF.cmFuZG9tXzE',
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
-            $tokenResponse->getArrayBody()
+            $tokenResponse
         );
     }
 
@@ -277,42 +256,36 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
     {
     }
 
+    /**
+     * @expectedException \fkooman\OAuth\Server\Exception\OAuthException
+     * @expectedExceptionMessage invalid_request
+     */
     public function testBrokenPostToken()
     {
-        try {
-            $this->server->postToken(
-                [
-                ],
-                null,
-                null
-            );
-            $this->assertFalse(true);
-        } catch (OAuthException $e) {
-            $this->assertEquals(400, $e->getCode());
-            $this->assertEquals('invalid_request', $e->getMessage());
-            $this->assertEquals('missing "grant_type" parameter', $e->getDescription());
-        }
+        $this->server->postToken(
+            [
+            ],
+            null,
+            null
+        );
     }
 
+    /**
+     * @expectedException \fkooman\OAuth\Server\Exception\OAuthException
+     * @expectedExceptionMessage invalid_client
+     */
     public function testPostTokenSecretInvalid()
     {
-        try {
-            $this->server->postToken(
-                [
-                    'grant_type' => 'authorization_code',
-                    'code' => 'DEF.abcdefgh',
-                    'redirect_uri' => 'http://example.org/code-cb',
-                    'client_id' => 'code-client-secret',
-                ],
-                'code-client-secret',
-                '654321'
-            );
-            $this->assertTrue(false);
-        } catch (OAuthException $e) {
-            $this->assertEquals(401, $e->getCode());
-            $this->assertEquals('invalid_client', $e->getMessage());
-            $this->assertEquals('invalid credentials (invalid client_secret)', $e->getDescription());
-        }
+        $this->server->postToken(
+            [
+                'grant_type' => 'authorization_code',
+                'code' => 'DEF.abcdefgh',
+                'redirect_uri' => 'http://example.org/code-cb',
+                'client_id' => 'code-client-secret',
+            ],
+            'code-client-secret',
+            '654321'
+        );
     }
 
     public function testSignedAccessToken()

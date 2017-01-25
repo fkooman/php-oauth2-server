@@ -114,7 +114,7 @@ class OAuthServer
      * @param string|null $authUser
      * @param string|null $authPass
      *
-     * @return TokenResponse
+     * @return array
      */
     public function postToken(array $postData, $authUser, $authPass)
     {
@@ -160,13 +160,11 @@ class OAuthServer
             $authorizationCodeKey
         );
 
-        return new TokenResponse(
-            [
-                'access_token' => $accessToken['access_token'],
-                'token_type' => 'bearer',
-                'expires_in' => $accessToken['expires_in'],
-            ]
-        );
+        return [
+            'access_token' => $accessToken['access_token'],
+            'token_type' => 'bearer',
+            'expires_in' => $accessToken['expires_in'],
+        ];
     }
 
     private function tokenAuthorize(array $getData, array $postData, $userId)
