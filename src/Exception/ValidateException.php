@@ -18,6 +18,12 @@
 
 namespace fkooman\OAuth\Server\Exception;
 
+use Exception;
+
 class ValidateException extends OAuthException
 {
+    public function __construct($message, $code = 400, Exception $previous = null)
+    {
+        parent::__construct($message, $code, $previous);
+    }
 }
