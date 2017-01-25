@@ -22,4 +22,17 @@ use Exception;
 
 class OAuthException extends Exception
 {
+    /** @var string */
+    private $description;
+
+    public function __construct($message, $description, $code = 0, Exception $previous = null)
+    {
+        $this->description = $description;
+        parent::__construct($message, $code, $previous);
+    }
+
+    public function getDescription()
+    {
+        return $this->description;
+    }
 }

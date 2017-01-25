@@ -19,7 +19,6 @@
 namespace fkooman\OAuth\Server;
 
 use DateTime;
-use fkooman\OAuth\Server\Exception\TokenException;
 use PDO;
 use PHPUnit_Framework_TestCase;
 
@@ -55,40 +54,28 @@ class ValidatorTest extends PHPUnit_Framework_TestCase
         );
     }
 
+    /**
+     * @expectedException \fkooman\OAuth\Server\Exception\OAuthException
+     * @expectedExceptionMessage: invalid_token
+     */
     public function testNoAuth()
     {
         $validator = new Validator($this->tokenStorage, new DateTime('2016-01-01'));
-        $response = $this->error($validator, null);
-        $this->assertSame(
-            [
-                'Content-Type' => 'application/json',
-                'Cache-Control' => 'no-store',
-                'Pragma' => 'no-cache',
-                'WWW-Authenticate' => 'Bearer realm="OAuth"',
-            ],
-            $response->getHeaders()
-        );
-        $this->assertSame(401, $response->getStatusCode());
-    }
-
-    public function testInvalidAccessTokenKey()
-    {
-        $validator = new Validator($this->tokenStorage, new DateTime('2016-01-01'));
-        $response = $this->error($validator, 'Bearer aaaa.abcdefgh');
-        $this->assertSame(
-            [
-                'Content-Type' => 'application/json',
-                'Cache-Control' => 'no-store',
-                'Pragma' => 'no-cache',
-                'WWW-Authenticate' => 'Bearer realm="OAuth",error=invalid_token,error_description=token key does not exist',
-            ],
-            $response->getHeaders()
-        );
-        $this->assertSame(401, $response->getStatusCode());
+        $validator->validate(null);
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\TokenException
+     * @expectedException \fkooman\OAuth\Server\Exception\OAuthException
+     * @expectedExceptionMessage: invalid_token
+     */
+    public function testInvalidAccessTokenKey()
+    {
+        $validator = new Validator($this->tokenStorage, new DateTime('2016-01-01'));
+        $validator->validate('Bearer aaaa.abcdefgh');
+    }
+
+    /**
+     * @expectedException \fkooman\OAuth\Server\Exception\OAuthException
      * @expectedExceptionMessage: invalid_token
      */
     public function testInvalidAccessToken()
@@ -98,7 +85,7 @@ class ValidatorTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\TokenException
+     * @expectedException \fkooman\OAuth\Server\Exception\OAuthException
      * @expectedExceptionMessage: invalid_token
      */
     public function testInvalidSyntax()
@@ -108,7 +95,7 @@ class ValidatorTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\TokenException
+     * @expectedException \fkooman\OAuth\Server\Exception\OAuthException
      * @expectedExceptionMessage: invalid_token
      */
     public function testExpiredToken()
@@ -118,7 +105,7 @@ class ValidatorTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\TokenException
+     * @expectedException \fkooman\OAuth\Server\Exception\OAuthException
      * @expectedExceptionMessage: invalid_token
      */
     public function testNoDot()
@@ -128,22 +115,12 @@ class ValidatorTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\TokenException
+     * @expectedException \fkooman\OAuth\Server\Exception\OAuthException
      * @expectedExceptionMessage: invalid_token
      */
     public function testBasicAuthentication()
     {
         $validator = new Validator($this->tokenStorage, new DateTime('2016-01-01'));
         $validator->validate('Basic AAA===');
-    }
-
-    private function error(Validator $validator, $authorizationHeader)
-    {
-        try {
-            $validator->validate($authorizationHeader);
-            $this->assertTrue(false);
-        } catch (TokenException $e) {
-            return $e->getResponse();
-        }
     }
 }

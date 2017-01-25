@@ -22,7 +22,6 @@ use DateInterval;
 use DateTime;
 use fkooman\OAuth\Server\Exception\ClientException;
 use fkooman\OAuth\Server\Exception\GrantException;
-use fkooman\OAuth\Server\Exception\TokenException;
 use fkooman\OAuth\Server\Exception\ValidateException;
 
 class OAuthServer
@@ -119,63 +118,55 @@ class OAuthServer
      */
     public function postToken(array $postData, $authUser, $authPass)
     {
-        try {
-            RequestValidator::validateTokenPostParameters($postData);
-            $clientInfo = $this->validateClient($postData['client_id'], 'code', $postData['redirect_uri']);
+        RequestValidator::validateTokenPostParameters($postData);
+        $clientInfo = $this->validateClient($postData['client_id'], 'code', $postData['redirect_uri']);
 
-            // verify credentials if not a public client
-            $this->verifyClientCredentials($postData['client_id'], $clientInfo, $authUser, $authPass);
+        // verify credentials if not a public client
+        $this->verifyClientCredentials($postData['client_id'], $clientInfo, $authUser, $authPass);
 
-            list($authorizationCodeKey, $authorizationCode) = explode('.', $postData['code']);
-            if (false === $codeInfo = $this->tokenStorage->getCode($authorizationCodeKey)) {
-                throw new GrantException('no such code');
-            }
-
-            if (0 !== \Sodium\compare($codeInfo['authorization_code'], $authorizationCode)) {
-                throw new GrantException('invalid code');
-            }
-
-            // check for code expiry, it may be at most 5 minutes old
-            $codeTime = new DateTime($codeInfo['issued_at']);
-            $codeTime->add(new DateInterval('PT5M'));
-            if ($this->dateTime >= $codeTime) {
-                throw new GrantException('expired code');
-            }
-
-            // parameters in POST body need to match the parameters stored with
-            // the code
-            $this->verifyCodeInfo($postData, $codeInfo);
-
-            // verify code_verifier if public client
-            $this->verifyCodeVerifier($clientInfo, $codeInfo, $postData);
-
-            // check if this authorization code was already used for getting an
-            // access token in the past
-            if (false !== $this->tokenStorage->getToken($authorizationCodeKey)) {
-                throw new GrantException('code already used');
-            }
-
-            $accessToken = $this->getAccessToken(
-                $codeInfo['user_id'],
-                $postData['client_id'],
-                $codeInfo['scope'],
-                $authorizationCodeKey
-            );
-
-            return new TokenResponse(
-                [
-                    'access_token' => $accessToken['access_token'],
-                    'token_type' => 'bearer',
-                    'expires_in' => $accessToken['expires_in'],
-                ]
-            );
-        } catch (ClientException $e) {
-            throw new TokenException('invalid_client', $e->getMessage(), $e->getCode());
-        } catch (ValidateException $e) {
-            throw new TokenException('invalid_request', $e->getMessage(), 400);
-        } catch (GrantException $e) {
-            throw new TokenException('invalid_grant', $e->getMessage(), 400);
+        list($authorizationCodeKey, $authorizationCode) = explode('.', $postData['code']);
+        if (false === $codeInfo = $this->tokenStorage->getCode($authorizationCodeKey)) {
+            throw new GrantException('no such code');
         }
+
+        if (0 !== \Sodium\compare($codeInfo['authorization_code'], $authorizationCode)) {
+            throw new GrantException('invalid code');
+        }
+
+        // check for code expiry, it may be at most 5 minutes old
+        $codeTime = new DateTime($codeInfo['issued_at']);
+        $codeTime->add(new DateInterval('PT5M'));
+        if ($this->dateTime >= $codeTime) {
+            throw new GrantException('expired code');
+        }
+
+        // parameters in POST body need to match the parameters stored with
+        // the code
+        $this->verifyCodeInfo($postData, $codeInfo);
+
+        // verify code_verifier if public client
+        $this->verifyCodeVerifier($clientInfo, $codeInfo, $postData);
+
+        // check if this authorization code was already used for getting an
+        // access token in the past
+        if (false !== $this->tokenStorage->getToken($authorizationCodeKey)) {
+            throw new GrantException('code already used');
+        }
+
+        $accessToken = $this->getAccessToken(
+            $codeInfo['user_id'],
+            $postData['client_id'],
+            $codeInfo['scope'],
+            $authorizationCodeKey
+        );
+
+        return new TokenResponse(
+            [
+                'access_token' => $accessToken['access_token'],
+                'token_type' => 'bearer',
+                'expires_in' => $accessToken['expires_in'],
+            ]
+        );
     }
 
     private function tokenAuthorize(array $getData, array $postData, $userId)

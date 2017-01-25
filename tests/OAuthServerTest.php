@@ -19,7 +19,7 @@
 namespace fkooman\OAuth\Server;
 
 use DateTime;
-use fkooman\OAuth\Server\Exception\TokenException;
+use fkooman\OAuth\Server\Exception\OAuthException;
 use PDO;
 use PHPUnit_Framework_TestCase;
 
@@ -287,23 +287,10 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
                 null
             );
             $this->assertFalse(true);
-        } catch (TokenException $e) {
-            $this->assertEquals(400, $e->getResponse()->getStatusCode());
-            $this->assertEquals(
-                [
-                    'error' => 'invalid_request',
-                    'error_description' => 'missing "grant_type" parameter',
-                ],
-                $e->getResponse()->getArrayBody()
-            );
-            $this->assertEquals(
-                [
-                    'Content-Type' => 'application/json',
-                    'Cache-Control' => 'no-store',
-                    'Pragma' => 'no-cache',
-                ],
-                $e->getResponse()->getHeaders()
-            );
+        } catch (OAuthException $e) {
+            $this->assertEquals(400, $e->getCode());
+            $this->assertEquals('invalid_request', $e->getMessage());
+            $this->assertEquals('missing "grant_type" parameter', $e->getDescription());
         }
     }
 
@@ -321,24 +308,10 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
                 '654321'
             );
             $this->assertTrue(false);
-        } catch (TokenException $e) {
-            $this->assertEquals(401, $e->getResponse()->getStatusCode());
-            $this->assertEquals(
-                [
-                    'error' => 'invalid_client',
-                    'error_description' => 'invalid credentials (invalid client_secret)',
-                ],
-                $e->getResponse()->getArrayBody()
-            );
-            $this->assertEquals(
-                [
-                    'Content-Type' => 'application/json',
-                    'Cache-Control' => 'no-store',
-                    'Pragma' => 'no-cache',
-                    'WWW-Authenticate' => 'Bearer realm="OAuth",error=invalid_client,error_description=invalid credentials (invalid client_secret)',
-                ],
-                $e->getResponse()->getHeaders()
-            );
+        } catch (OAuthException $e) {
+            $this->assertEquals(401, $e->getCode());
+            $this->assertEquals('invalid_client', $e->getMessage());
+            $this->assertEquals('invalid credentials (invalid client_secret)', $e->getDescription());
         }
     }
 
