@@ -22,50 +22,61 @@ use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\Random;
 use fkooman\OAuth\Server\TokenStorage;
 
-// storage
-$tokenStorage = new TokenStorage(new PDO(sprintf('sqlite:%s/data/db.sqlite', dirname(__DIR__))));
-$tokenStorage->init();
-
-// client "database"
-$getClientInfo = function ($clientId) {
-    $oauthClients = [
-        'demo_client' => [
-            'redirect_uri' => 'http://localhost:8081/callback.php',
-            'response_type' => 'code',
-            'display_name' => 'Demo Client',
-            'client_secret' => 'demo_secret',
-        ],
-    ];
-
-    if (!array_key_exists($clientId, $oauthClients)) {
-        return false;
-    }
-
-    return $oauthClients[$clientId];
-};
-
-// server
-$oauthServer = new OAuthServer(
-    $tokenStorage,
-    new Random(),
-    new DateTime(),
-    $getClientInfo
-);
-
 try {
-    if ('GET' === $_SERVER['REQUEST_METHOD']) {
-        $authVars = $oauthServer->getAuthorize($_GET);
-        echo sprintf('<html><head><title>Authorize</title></head><body><pre>%s</pre><form method="post"><button type="submit" name="approve" value="yes">Approve</button></form></body></html>', var_export($authVars, true));
-        exit(0);
-    }
+    // storage
+    $tokenStorage = new TokenStorage(new PDO(sprintf('sqlite:%s/data/db.sqlite', dirname(__DIR__))));
+    $tokenStorage->init();
 
-    if ('POST' === $_SERVER['REQUEST_METHOD']) {
-        http_response_code(302);
-        header(sprintf('Location: %s', $oauthServer->postAuthorize($_GET, $_POST, 'foo')));
-        exit(0);
+    // client "database"
+    $getClientInfo = function ($clientId) {
+        $oauthClients = [
+            'demo_client' => [
+                'redirect_uri' => 'http://localhost:8081/callback.php',
+                'response_type' => 'code',
+                'display_name' => 'Demo Client',
+                'client_secret' => 'demo_secret',
+            ],
+        ];
+
+        if (!array_key_exists($clientId, $oauthClients)) {
+            return false;
+        }
+
+        return $oauthClients[$clientId];
+    };
+
+    // server
+    $oauthServer = new OAuthServer(
+        $tokenStorage,
+        new Random(),
+        new DateTime(),
+        $getClientInfo
+    );
+
+    // XXX take this from $_SERVER variable
+    $userId = 'foo';
+
+    switch ($_SERVER['REQUEST_METHOD']) {
+        case 'GET':
+            $authorizeVariables = $oauthServer->getAuthorize($_GET);
+            http_response_code(200);
+            echo sprintf('<html><head><title>Authorize</title></head><body><pre>%s</pre><form method="post"><button type="submit" name="approve" value="yes">Approve</button></form></body></html>', var_export($authorizeVariables, true));
+            break;
+        case 'POST':
+            $redirectUri = $oauthServer->postAuthorize($_GET, $_POST, $userId);
+            http_response_code(302);
+            header(sprintf('Location: %s', $redirectUri));
+            break;
+        default:
+            http_response_code(405);
+            header('Allow: GET,POST');
+            echo '[405] Method Not Allowed';
+            break;
     }
 } catch (OAuthException $e) {
-    error_log($e->getMessage());
-    echo sprintf('ERROR: %s', $e->getMessage());
-    exit(1);
+    http_response_code($e->getCode());
+    echo sprintf('[%d] %s (%s)', $e->getCode(), $e->getMessage(), $e->getDescription());
+} catch (Exception $e) {
+    http_response_code(500);
+    echo sprintf('[500] %s', $e->getMessage());
 }

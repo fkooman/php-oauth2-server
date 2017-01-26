@@ -17,60 +17,75 @@
  */
 require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
-use fkooman\OAuth\Server\Exception\TokenException;
+use fkooman\OAuth\Server\Exception\OAuthException;
 use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\Random;
 use fkooman\OAuth\Server\TokenStorage;
 
-// storage
-$tokenStorage = new TokenStorage(new PDO(sprintf('sqlite:%s/data/db.sqlite', dirname(__DIR__))));
-$tokenStorage->init();
-
-// client "database"
-$getClientInfo = function ($clientId) {
-    $oauthClients = [
-        'demo_client' => [
-            'redirect_uri' => 'http://localhost:8081/callback.php',
-            'response_type' => 'code',
-            'display_name' => 'Demo Client',
-            'client_secret' => 'demo_secret',
-        ],
-    ];
-
-    if (!array_key_exists($clientId, $oauthClients)) {
-        return false;
-    }
-
-    return $oauthClients[$clientId];
-};
-
-// server
-$oauthServer = new OAuthServer(
-    $tokenStorage,
-    new Random(),
-    new DateTime(),
-    $getClientInfo
-);
-
-if ('POST' !== $_SERVER['REQUEST_METHOD']) {
-    http_response_code(405);
-    header('Content-Type: application/json');
-    echo json_encode(['error' => 'only POST is allowed to this endpoint']);
-    exit(1);
-}
-
-$authUser = array_key_exists('PHP_AUTH_USER', $_SERVER) ? $_SERVER['PHP_AUTH_USER'] : null;
-$authPass = array_key_exists('PHP_AUTH_PW', $_SERVER) ? $_SERVER['PHP_AUTH_PW'] : null;
-
 try {
-    $tokenResponse = $oauthServer->postToken($_POST, $authUser, $authPass);
-} catch (TokenException $e) {
-    $tokenResponse = $e->getResponse();
-}
+    // storage
+    $tokenStorage = new TokenStorage(new PDO(sprintf('sqlite:%s/data/db.sqlite', dirname(__DIR__))));
+    $tokenStorage->init();
 
-http_response_code($tokenResponse->getStatusCode());
-foreach ($tokenResponse->getHeaders() as $k => $v) {
-    header(sprintf('%s: %s', $k, $v));
+    // client "database"
+    $getClientInfo = function ($clientId) {
+        $oauthClients = [
+            'demo_client' => [
+                'redirect_uri' => 'http://localhost:8081/callback.php',
+                'response_type' => 'code',
+                'display_name' => 'Demo Client',
+                'client_secret' => 'demo_secret',
+            ],
+        ];
+
+        if (!array_key_exists($clientId, $oauthClients)) {
+            return false;
+        }
+
+        return $oauthClients[$clientId];
+    };
+
+    // server
+    $oauthServer = new OAuthServer(
+        $tokenStorage,
+        new Random(),
+        new DateTime(),
+        $getClientInfo
+    );
+
+    switch ($_SERVER['REQUEST_METHOD']) {
+        case 'POST':
+            $authUser = array_key_exists('PHP_AUTH_USER', $_SERVER) ? $_SERVER['PHP_AUTH_USER'] : null;
+            $authPass = array_key_exists('PHP_AUTH_PW', $_SERVER) ? $_SERVER['PHP_AUTH_PW'] : null;
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            header('Cache-Control: no-store');
+            header('Pragma: no-cache');
+            echo json_encode($oauthServer->postToken($_POST, $authUser, $authPass));
+            break;
+        default:
+            http_response_code(405);
+            header('Content-Type: application/json');
+            header('Cache-Control: no-store');
+            header('Pragma: no-cache');
+            header('Allow: POST');
+            echo json_encode(['error' => 'invalid_request', 'error_description' => 'Method Not Allowed']);
+            break;
+    }
+} catch (OAuthException $e) {
+    http_response_code($e->getCode());
+    header('Content-Type: application/json');
+    header('Cache-Control: no-store');
+    header('Pragma: no-cache');
+    if (401 === $e->getCode()) {
+        header('WWW-Authenticate: Basic realm="OAuth');
+    }
+    echo json_encode(['error' => $e->getMessage(), 'error_description' => $e->getDescription()]);
+} catch (Exception $e) {
+    http_response_code(500);
+    header('Content-Type: application/json');
+    header('Cache-Control: no-store');
+    header('Pragma: no-cache');
+    echo json_encode(['error' => 'server_error', 'error_description' => $e->getMessage()]);
 }
-echo $tokenResponse->getBody();
-exit(0);
