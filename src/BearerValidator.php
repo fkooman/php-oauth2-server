@@ -20,6 +20,7 @@ namespace fkooman\OAuth\Server;
 
 use DateTime;
 use fkooman\OAuth\Server\Exception\BearerException;
+use RuntimeException;
 
 class BearerValidator
 {
@@ -29,10 +30,21 @@ class BearerValidator
     /** @var \DateTime */
     private $dateTime;
 
+    /** @var string|null */
+    private $signPublicKey = null;
+
     public function __construct(TokenStorage $tokenStorage, DateTime $dateTime)
     {
         $this->tokenStorage = $tokenStorage;
         $this->dateTime = $dateTime;
+    }
+
+    /**
+     * @param string $signPublicKey
+     */
+    public function setSignPublicKey($signPublicKey)
+    {
+        $this->signPublicKey = $signPublicKey;
     }
 
     /**
@@ -57,7 +69,8 @@ class BearerValidator
         }
 
         if (false === strpos($bearerToken, '.')) {
-            throw new BearerException('syntax error (contains no dot)');
+            // it is possibly a signed token, try that
+            return $this->validateSignedToken($bearerToken);
         }
 
         list($accessTokenKey, $accessToken) = explode('.', $bearerToken);
@@ -78,6 +91,50 @@ class BearerValidator
         return [
             'user_id' => $tokenInfo['user_id'],
             'scope' => $tokenInfo['scope'],
+            'expires_in' => $expiresAt->getTimestamp() - $this->dateTime->getTimestamp(),
+        ];
+    }
+
+    private function uriDecode($inputString)
+    {
+        // undo the URL safe replacement
+        $convertedData = strtr($inputString, '-_', '+/');
+        // restore the padding
+        switch (strlen($convertedData) % 4) {
+            case 0:
+                break;
+            case 2:
+                $convertedData .= '==';
+                break;
+            case 3:
+                $convertedData .= '=';
+                break;
+            default:
+                throw new RuntimeException('invalid base64url string length');
+        }
+
+        return base64_decode($convertedData);
+    }
+
+    /**
+     * @param string $bearerToken
+     */
+    private function validateSignedToken($bearerToken)
+    {
+        if (is_null($this->signPublicKey)) {
+            throw new BearerException('no public key set to validate the signature');
+        }
+
+        if (false === $plainText = \Sodium\crypto_sign_open($this->uriDecode($bearerToken), $this->signPublicKey)) {
+            throw new BearerException('invalid signature');
+        }
+
+        $jsonData = json_decode($plainText, true);
+        $expiresAt = new DateTime($jsonData['expires_at']);
+
+        return [
+            'user_id' => $jsonData['user_id'],
+            'scope' => $jsonData['scope'],
             'expires_in' => $expiresAt->getTimestamp() - $this->dateTime->getTimestamp(),
         ];
     }

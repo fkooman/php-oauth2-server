@@ -294,7 +294,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         $this->server->setSignatureKeyPair(base64_decode($signatureKeyPair));
 
         $this->assertSame(
-            'http://example.org/token-cb#access_token=cmFuZG9tXzE.oEATiQtpc8gzh7FB4eIrW9xsDVwglt_rMT1JqO7rqErlKO0TaJbXCj2zLCDx3nOwPVUwChzPTlr6T59nQ0RdCmNtRnVaRzl0WHpJ&state=12345&expires_in=3600',
+            'http://example.org/token-cb#access_token=jHU2KsvEmZM2YvgR2cmnOl4S_D0sRHvg90EjetiLq7YbTonGMGq7Hb8F_r3cByzMV4gd-jW3sudGKutsun_TCnsiYWNjZXNzX3Rva2VuX2tleSI6ImNtRnVaRzl0WHpFIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDE6MDA6MDAiLCJzY29wZSI6ImNvbmZpZyIsInVzZXJfaWQiOiJmb28ifQ&state=12345&expires_in=3600',
             $this->server->postAuthorize(
                 [
                     'client_id' => 'token-client',

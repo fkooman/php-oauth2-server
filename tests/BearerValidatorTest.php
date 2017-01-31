@@ -116,4 +116,21 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
         $validator = new BearerValidator($this->tokenStorage, new DateTime('2016-01-01'));
         $this->assertFalse($validator->validate('Basic AAA==='));
     }
+
+    public function testSignedBearerToken()
+    {
+        $signatureKeyPair = 'jq7s7JVBhXk02Nn0Hng4+BNcUlwYOPRR9IXngC51XQDYvQHEgaAvFVHewDvRHtTD5uuVk4cfBbKqT10ckGCJ2Ni9AcSBoC8VUd7AO9Ee1MPm65WThx8FsqpPXRyQYInY';
+        $signPublicKey = \Sodium\crypto_sign_publickey(base64_decode($signatureKeyPair));
+
+        $validator = new BearerValidator($this->tokenStorage, new DateTime('2016-01-01'));
+        $validator->setSignPublicKey($signPublicKey);
+        $this->assertSame(
+            [
+                'user_id' => 'foo',
+                'scope' => 'config',
+                'expires_in' => 3600,
+            ],
+            $validator->validate('Bearer jHU2KsvEmZM2YvgR2cmnOl4S_D0sRHvg90EjetiLq7YbTonGMGq7Hb8F_r3cByzMV4gd-jW3sudGKutsun_TCnsiYWNjZXNzX3Rva2VuX2tleSI6ImNtRnVaRzl0WHpFIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDE6MDA6MDAiLCJzY29wZSI6ImNvbmZpZyIsInVzZXJfaWQiOiJmb28ifQ')
+        );
+    }
 }

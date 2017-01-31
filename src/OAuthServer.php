@@ -261,21 +261,33 @@ class OAuthServer
             $accessTokenKey = $this->uriEncode($this->random->get(16));
         }
 
-        $accessToken = $this->uriEncode($this->random->get(32));
+        $expiresAt = date_add(clone $this->dateTime, new DateInterval(sprintf('PT%dS', $this->expiresIn)));
         if (!is_null($this->signatureKeyPair)) {
-            // optionally sign the accessToken so resource servers can verify it
-            // came from us
+            // (optionally) sign the accessToken so resource servers can verify
+            // it came from us
             $secretKey = \Sodium\crypto_sign_secretkey($this->signatureKeyPair);
             $accessToken = $this->uriEncode(
                 \Sodium\crypto_sign(
-                    $accessToken,
+                    json_encode(
+                        [
+                            'access_token_key' => $accessTokenKey, // to bind it to the authorization code
+                            'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+                            'scope' => $scope,
+                            'user_id' => $userId,
+                        ]
+                    ),
                     $secretKey
                 )
             );
-        }
-        $expiresAt = date_add(clone $this->dateTime, new DateInterval(sprintf('PT%dS', $this->expiresIn)));
 
-        // store it
+            return [
+                'access_token' => $accessToken,
+                'expires_in' => $this->expiresIn,
+            ];
+        }
+
+        // store it in the db
+        $accessToken = $this->uriEncode($this->random->get(32));
         $this->tokenStorage->storeToken(
             $userId,
             $accessTokenKey,
