@@ -132,6 +132,10 @@ class BearerValidator
         $jsonData = json_decode($plainText, true);
         $expiresAt = new DateTime($jsonData['expires_at']);
 
+        if ($this->dateTime >= $expiresAt) {
+            throw new BearerException('token expired');
+        }
+
         return [
             'user_id' => $jsonData['user_id'],
             'scope' => $jsonData['scope'],
