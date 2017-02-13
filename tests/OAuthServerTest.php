@@ -72,10 +72,10 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         $tokenStorage->storeCode('foo', 'DEF', 'abcdefgh', 'code-client-secret', 'config', 'http://example.org/code-cb', new DateTime('2016-01-01'), 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
 
         $this->server = new OAuthServer(
+            $getClientInfo,
             $tokenStorage,
             $random,
-            new DateTime('2016-01-01'),
-            $getClientInfo
+            new DateTime('2016-01-01')
         );
     }
 
@@ -126,7 +126,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
     public function testAuthorizeTokenPost()
     {
         $this->assertSame(
-            'http://example.org/token-cb#access_token=cmFuZG9tXzE%3D.cmFuZG9tXzI%3D&state=12345&expires_in=3600',
+            'http://example.org/token-cb#access_token=random_1.random_2&state=12345&expires_in=3600',
             $this->server->postAuthorize(
                 [
                     'client_id' => 'token-client',
@@ -166,7 +166,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
     public function testAuthorizeCodePost()
     {
         $this->assertSame(
-            'http://example.org/code-cb?code=cmFuZG9tXzE%3D.cmFuZG9tXzI%3D&state=12345',
+            'http://example.org/code-cb?code=random_1.random_2&state=12345',
             $this->server->postAuthorize(
                 [
                     'client_id' => 'code-client',
@@ -188,7 +188,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
     public function testAuthorizeTokenPostRedirectUriWithQuery()
     {
         $this->assertSame(
-            'http://example.org/code-cb?keep=this&code=cmFuZG9tXzE%3D.cmFuZG9tXzI%3D&state=12345',
+            'http://example.org/code-cb?keep=this&code=random_1.random_2&state=12345',
             $this->server->postAuthorize(
                 [
                     'client_id' => 'code-client-query-redirect',
@@ -222,7 +222,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         );
         $this->assertSame(
             [
-                'access_token' => 'XYZ.cmFuZG9tXzE=',
+                'access_token' => 'XYZ.random_1',
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
@@ -244,7 +244,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         );
         $this->assertSame(
             [
-                'access_token' => 'DEF.cmFuZG9tXzE=',
+                'access_token' => 'DEF.random_1',
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
@@ -294,7 +294,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         $this->server->setSignatureKeyPair(base64_decode($signatureKeyPair));
 
         $this->assertSame(
-            'http://example.org/token-cb#access_token=ErQmnSQipyGgRhPFLEXdp%2FJTW%2BUza8kkfPUSFFyJH1UgOLuwxApoLsWiYMXJJzEQxcTSTQkkwCbpWm8jjRjLDHsiYWNjZXNzX3Rva2VuX2tleSI6ImNtRnVaRzl0WHpFPSIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAxOjAwOjAwIiwic2NvcGUiOiJjb25maWciLCJ1c2VyX2lkIjoiZm9vIn0%3D&state=12345&expires_in=3600',
+            'http://example.org/token-cb#access_token=NBr7mAFjm8jzCU5Q%2BbIW2ngS4M7JBXVzPPqgW7yvbHMe859mnJ712JV7tB%2BjZvRo42iATLdeYrqeZAjJEYmMD3siYWNjZXNzX3Rva2VuX2tleSI6InJhbmRvbV8xIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDE6MDA6MDAiLCJzY29wZSI6ImNvbmZpZyIsInVzZXJfaWQiOiJmb28ifQ%3D%3D&state=12345&expires_in=3600',
             $this->server->postAuthorize(
                 [
                     'client_id' => 'token-client',

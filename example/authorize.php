@@ -19,7 +19,6 @@ require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
 use fkooman\OAuth\Server\Exception\OAuthException;
 use fkooman\OAuth\Server\OAuthServer;
-use fkooman\OAuth\Server\Random;
 use fkooman\OAuth\Server\TokenStorage;
 
 try {
@@ -47,10 +46,8 @@ try {
 
     // server
     $oauthServer = new OAuthServer(
-        $tokenStorage,
-        new Random(),
-        new DateTime(),
-        $getClientInfo
+        $getClientInfo,
+        $tokenStorage
     );
 
     // XXX take this from $_SERVER variable

@@ -28,8 +28,8 @@ use ParagonIE\ConstantTime\Base64UrlSafe;
 
 class OAuthServer
 {
-    /** @var int */
-    private $expiresIn = 3600;
+    /** @var callable */
+    private $getClientInfo;
 
     /** @var TokenStorage */
     private $tokenStorage;
@@ -40,18 +40,24 @@ class OAuthServer
     /** @var \DateTime */
     private $dateTime;
 
-    /** @var callable */
-    private $getClientInfo;
+    /** @var int */
+    private $expiresIn = 3600;
 
     /** @var string|null */
     private $signatureKeyPair = null;
 
-    public function __construct(TokenStorage $tokenStorage, RandomInterface $random, DateTime $dateTime, callable $getClientInfo)
+    public function __construct(callable $getClientInfo, TokenStorage $tokenStorage, RandomInterface $random = null, DateTime $dateTime = null)
     {
-        $this->tokenStorage = $tokenStorage;
-        $this->random = $random;
-        $this->dateTime = $dateTime;
         $this->getClientInfo = $getClientInfo;
+        $this->tokenStorage = $tokenStorage;
+        if (is_null($random)) {
+            $random = new Random();
+        }
+        $this->random = $random;
+        if (is_null($dateTime)) {
+            $dateTime = new DateTime();
+        }
+        $this->dateTime = $dateTime;
     }
 
     /**
@@ -260,7 +266,7 @@ class OAuthServer
         // "authorization_code_key" as a tag for the issued access tokens, this
         // is only relevant for the "authorization code" grant type
         if (is_null($accessTokenKey)) {
-            $accessTokenKey = Base64::encode($this->random->get(16));
+            $accessTokenKey = $this->random->get(16);
         }
 
         $expiresAt = date_add(clone $this->dateTime, new DateInterval(sprintf('PT%dS', $this->expiresIn)));
@@ -289,7 +295,7 @@ class OAuthServer
         }
 
         // store it in the db
-        $accessToken = Base64::encode($this->random->get(32));
+        $accessToken = $this->random->get(32);
         $this->tokenStorage->storeToken(
             $userId,
             $accessTokenKey,
@@ -316,8 +322,8 @@ class OAuthServer
      */
     private function getAuthorizationCode($userId, $clientId, $scope, $redirectUri, $codeChallenge)
     {
-        $authorizationCodeKey = Base64::encode($this->random->get(16));
-        $authorizationCode = Base64::encode($this->random->get(32));
+        $authorizationCodeKey = $this->random->get(16);
+        $authorizationCode = $this->random->get(32);
 
         $this->tokenStorage->storeCode(
             $userId,

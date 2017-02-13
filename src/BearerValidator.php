@@ -33,9 +33,12 @@ class BearerValidator
     /** @var string|null */
     private $signPublicKey = null;
 
-    public function __construct(TokenStorage $tokenStorage, DateTime $dateTime)
+    public function __construct(TokenStorage $tokenStorage, DateTime $dateTime = null)
     {
         $this->tokenStorage = $tokenStorage;
+        if (is_null($dateTime)) {
+            $dateTime = new DateTime();
+        }
         $this->dateTime = $dateTime;
     }
 
