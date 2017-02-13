@@ -23,6 +23,8 @@ use DateTime;
 use fkooman\OAuth\Server\Exception\ClientException;
 use fkooman\OAuth\Server\Exception\GrantException;
 use fkooman\OAuth\Server\Exception\ValidateException;
+use ParagonIE\ConstantTime\Base64;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 
 class OAuthServer
 {
@@ -258,7 +260,7 @@ class OAuthServer
         // "authorization_code_key" as a tag for the issued access tokens, this
         // is only relevant for the "authorization code" grant type
         if (is_null($accessTokenKey)) {
-            $accessTokenKey = $this->uriEncode($this->random->get(16));
+            $accessTokenKey = Base64::encode($this->random->get(16));
         }
 
         $expiresAt = date_add(clone $this->dateTime, new DateInterval(sprintf('PT%dS', $this->expiresIn)));
@@ -266,7 +268,7 @@ class OAuthServer
             // (optionally) sign the accessToken so resource servers can verify
             // it came from us
             $secretKey = \Sodium\crypto_sign_secretkey($this->signatureKeyPair);
-            $accessToken = $this->uriEncode(
+            $accessToken = Base64::encode(
                 \Sodium\crypto_sign(
                     json_encode(
                         [
@@ -287,7 +289,7 @@ class OAuthServer
         }
 
         // store it in the db
-        $accessToken = $this->uriEncode($this->random->get(32));
+        $accessToken = Base64::encode($this->random->get(32));
         $this->tokenStorage->storeToken(
             $userId,
             $accessTokenKey,
@@ -314,8 +316,8 @@ class OAuthServer
      */
     private function getAuthorizationCode($userId, $clientId, $scope, $redirectUri, $codeChallenge)
     {
-        $authorizationCodeKey = $this->uriEncode($this->random->get(16));
-        $authorizationCode = $this->uriEncode($this->random->get(32));
+        $authorizationCodeKey = Base64::encode($this->random->get(16));
+        $authorizationCode = Base64::encode($this->random->get(32));
 
         $this->tokenStorage->storeCode(
             $userId,
@@ -370,21 +372,22 @@ class OAuthServer
                 throw new ValidateException('missing "code_verifier" parameter');
             }
 
-            if (0 !== \Sodium\compare($codeInfo['code_challenge'], $this->uriEncode(hash('sha256', $postData['code_verifier'], true)))) {
+            if (0 !== \Sodium\compare($codeInfo['code_challenge'], self::encodeWithoutPadding(hash('sha256', $postData['code_verifier'], true)))) {
                 throw new GrantException('unexpected "code_verifier"');
             }
         }
     }
 
-    private function uriEncode($inputString)
+    /**
+     * Base64url Encoding without Padding.
+     *
+     * @see https://tools.ietf.org/html/rfc7636#appendix-A
+     */
+    private static function encodeWithoutPadding($inputString)
     {
-        return strtr(
-            rtrim(
-                base64_encode($inputString),
-                '='
-            ),
-            '+/',
-            '-_'
+        return rtrim(
+            Base64UrlSafe::encode($inputString),
+            '='
         );
     }
 

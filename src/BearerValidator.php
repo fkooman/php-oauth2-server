@@ -20,7 +20,7 @@ namespace fkooman\OAuth\Server;
 
 use DateTime;
 use fkooman\OAuth\Server\Exception\BearerException;
-use RuntimeException;
+use ParagonIE\ConstantTime\Base64;
 
 class BearerValidator
 {
@@ -95,27 +95,6 @@ class BearerValidator
         ];
     }
 
-    private function uriDecode($inputString)
-    {
-        // undo the URL safe replacement
-        $convertedData = strtr($inputString, '-_', '+/');
-        // restore the padding
-        switch (strlen($convertedData) % 4) {
-            case 0:
-                break;
-            case 2:
-                $convertedData .= '==';
-                break;
-            case 3:
-                $convertedData .= '=';
-                break;
-            default:
-                throw new RuntimeException('invalid base64url string length');
-        }
-
-        return base64_decode($convertedData);
-    }
-
     /**
      * @param string $bearerToken
      */
@@ -125,7 +104,7 @@ class BearerValidator
             throw new BearerException('no public key set to validate the signature');
         }
 
-        if (false === $plainText = \Sodium\crypto_sign_open($this->uriDecode($bearerToken), $this->signPublicKey)) {
+        if (false === $plainText = \Sodium\crypto_sign_open(Base64::decode($bearerToken), $this->signPublicKey)) {
             throw new BearerException('invalid signature');
         }
 

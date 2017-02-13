@@ -130,7 +130,7 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
                 'scope' => 'config',
                 'expires_in' => 3600,
             ],
-            $validator->validate('Bearer jHU2KsvEmZM2YvgR2cmnOl4S_D0sRHvg90EjetiLq7YbTonGMGq7Hb8F_r3cByzMV4gd-jW3sudGKutsun_TCnsiYWNjZXNzX3Rva2VuX2tleSI6ImNtRnVaRzl0WHpFIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDE6MDA6MDAiLCJzY29wZSI6ImNvbmZpZyIsInVzZXJfaWQiOiJmb28ifQ')
+            $validator->validate('Bearer ErQmnSQipyGgRhPFLEXdp/JTW+Uza8kkfPUSFFyJH1UgOLuwxApoLsWiYMXJJzEQxcTSTQkkwCbpWm8jjRjLDHsiYWNjZXNzX3Rva2VuX2tleSI6ImNtRnVaRzl0WHpFPSIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAxOjAwOjAwIiwic2NvcGUiOiJjb25maWciLCJ1c2VyX2lkIjoiZm9vIn0=')
         );
     }
 }
