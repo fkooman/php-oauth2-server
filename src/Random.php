@@ -20,7 +20,7 @@ namespace fkooman\OAuth\Server;
 
 class Random implements RandomInterface
 {
-    public function get($length)
+    public function get($len)
     {
         return \Sodium\bin2hex(
             \Sodium\randombytes_buf($len)
