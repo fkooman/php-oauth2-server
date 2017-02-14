@@ -31,7 +31,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
     private $getClientInfo;
 
     /** @var string */
-    private $signatureKeyPair;
+    private $keyPair;
 
     /** @var Random */
     private $random;
@@ -79,14 +79,14 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         $this->storage = new Storage(new PDO('sqlite::memory:'));
         $this->storage->init();
 
-        $this->signatureKeyPair = base64_decode('2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol');
+        $this->keyPair = base64_decode('2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol');
 
         $this->dateTime = new DateTime('2016-01-01');
     }
 
     public function testAuthorizeToken()
     {
-        $server = new OAuthServer($this->getClientInfo, $this->signatureKeyPair, $this->storage, $this->random, $this->dateTime);
+        $server = new OAuthServer($this->getClientInfo, $this->keyPair, $this->storage, $this->random, $this->dateTime);
         $this->assertSame(
             [
                 'client_id' => 'token-client',
@@ -108,7 +108,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
 
     public function testAuthorizeCode()
     {
-        $server = new OAuthServer($this->getClientInfo, $this->signatureKeyPair, $this->storage, $this->random, $this->dateTime);
+        $server = new OAuthServer($this->getClientInfo, $this->keyPair, $this->storage, $this->random, $this->dateTime);
         $this->assertSame(
             [
                 'client_id' => 'code-client',
@@ -132,7 +132,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
 
     public function testAuthorizeTokenPost()
     {
-        $server = new OAuthServer($this->getClientInfo, $this->signatureKeyPair, $this->storage, $this->random, $this->dateTime);
+        $server = new OAuthServer($this->getClientInfo, $this->keyPair, $this->storage, $this->random, $this->dateTime);
         $this->assertSame(
             'http://example.org/token-cb#access_token=qrCFqzPz4ac7U8%2FfSOa6ReXvDJ6D8zsz1VNK%2FyEHrryWHpHanbHjVgL6Ss%2BpLenWgTVTOHcLLv1aT3D1RTnmAnsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoidG9rZW4tY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9&state=12345&expires_in=3600',
             $server->postAuthorize(
@@ -153,7 +153,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
 
     public function testAuthorizeTokenPostNotApproved()
     {
-        $server = new OAuthServer($this->getClientInfo, $this->signatureKeyPair, $this->storage, $this->random, $this->dateTime);
+        $server = new OAuthServer($this->getClientInfo, $this->keyPair, $this->storage, $this->random, $this->dateTime);
         $this->assertSame(
             'http://example.org/token-cb#error=access_denied&error_description=user+refused+authorization&state=12345',
             $server->postAuthorize(
@@ -174,7 +174,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
 
     public function testAuthorizeCodePost()
     {
-        $server = new OAuthServer($this->getClientInfo, $this->signatureKeyPair, $this->storage, $this->random, $this->dateTime);
+        $server = new OAuthServer($this->getClientInfo, $this->keyPair, $this->storage, $this->random, $this->dateTime);
         $this->assertSame(
             'http://example.org/code-cb?code=eAK58VRxVi1FHxAG6dhSzao2Ty7wKlDHwuFF5G1ilVIdZP9PW6IwpFUb9VsNcFvjgS35wAqtMnky16buhyYxB3sidHlwZSI6ImF1dGhvcml6YXRpb25fY29kZSIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImZvbyIsInJlZGlyZWN0X3VyaSI6Imh0dHA6XC9cL2V4YW1wbGUub3JnXC9jb2RlLWNiIiwiY29kZV9jaGFsbGVuZ2UiOiJFOU1lbGhvYTJPd3ZGckVNVEpndUNIYW9lSzF0OFVSV2J1R0pTc3R3LWNNIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDA6MDU6MDAifQ%3D%3D&state=12345',
             $server->postAuthorize(
@@ -197,7 +197,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
 
     public function testAuthorizeTokenPostRedirectUriWithQuery()
     {
-        $server = new OAuthServer($this->getClientInfo, $this->signatureKeyPair, $this->storage, $this->random, $this->dateTime);
+        $server = new OAuthServer($this->getClientInfo, $this->keyPair, $this->storage, $this->random, $this->dateTime);
         $this->assertSame(
             'http://example.org/code-cb?keep=this&code=PxOQ%2FysqZ65ozJ8aEsMaQfBuK0jJqyr2UPqvWCiUxUWKPz5C009%2Bv3ShcgGwa93VNogtY1%2FSENKlKmCzHgdMBHsidHlwZSI6ImF1dGhvcml6YXRpb25fY29kZSIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQtcXVlcnktcmVkaXJlY3QiLCJzY29wZSI6ImNvbmZpZyIsInJlZGlyZWN0X3VyaSI6Imh0dHA6XC9cL2V4YW1wbGUub3JnXC9jb2RlLWNiP2tlZXA9dGhpcyIsImNvZGVfY2hhbGxlbmdlIjoiRTlNZWxob2EyT3d2RnJFTVRKZ3VDSGFvZUsxdDhVUldidUdKU3N0dy1jTSIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAwOjA1OjAwIn0%3D&state=12345',
             $server->postAuthorize(
@@ -220,7 +220,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
 
     public function testPostToken()
     {
-        $server = new OAuthServer($this->getClientInfo, $this->signatureKeyPair, $this->storage, $this->random, $this->dateTime);
+        $server = new OAuthServer($this->getClientInfo, $this->keyPair, $this->storage, $this->random, $this->dateTime);
         $tokenResponse = $server->postToken(
             [
                 'grant_type' => 'authorization_code',
@@ -244,7 +244,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
 
     public function testPostTokenSecret()
     {
-        $server = new OAuthServer($this->getClientInfo, $this->signatureKeyPair, $this->storage, $this->random, $this->dateTime);
+        $server = new OAuthServer($this->getClientInfo, $this->keyPair, $this->storage, $this->random, $this->dateTime);
         $tokenResponse = $server->postToken(
             [
                 'grant_type' => 'authorization_code',
@@ -275,7 +275,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
      */
     public function testBrokenPostToken()
     {
-        $server = new OAuthServer($this->getClientInfo, $this->signatureKeyPair, $this->storage, $this->random, $this->dateTime);
+        $server = new OAuthServer($this->getClientInfo, $this->keyPair, $this->storage, $this->random, $this->dateTime);
         $server->postToken(
             [
             ],
@@ -290,7 +290,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
      */
     public function testPostTokenSecretInvalid()
     {
-        $server = new OAuthServer($this->getClientInfo, $this->signatureKeyPair, $this->storage, $this->random, $this->dateTime);
+        $server = new OAuthServer($this->getClientInfo, $this->keyPair, $this->storage, $this->random, $this->dateTime);
         $server->postToken(
             [
                 'grant_type' => 'authorization_code',
@@ -309,7 +309,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
      */
     public function testPostReuseCode()
     {
-        $server = new OAuthServer($this->getClientInfo, $this->signatureKeyPair, $this->storage, $this->random, $this->dateTime);
+        $server = new OAuthServer($this->getClientInfo, $this->keyPair, $this->storage, $this->random, $this->dateTime);
         // add random_1 to storage
         $this->storage->storeAuthorization('random_1', 'foo', 'code-client', 'config');
         $tokenResponse = $server->postToken(
@@ -331,7 +331,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
      */
     public function testExpiredCode()
     {
-        $server = new OAuthServer($this->getClientInfo, $this->signatureKeyPair, $this->storage, $this->random, new DateTime('2017-01-01'));
+        $server = new OAuthServer($this->getClientInfo, $this->keyPair, $this->storage, $this->random, new DateTime('2017-01-01'));
         $server->postToken(
             [
                 'grant_type' => 'authorization_code',

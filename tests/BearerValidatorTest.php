@@ -36,8 +36,8 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
         $this->storage->init();
 
         $this->publicKey = [
-            base64_decode('HD9v+gK+84Ij0ugS+G7wmljeLmrWH7j+w4/0L3XLaiU='),
-            base64_decode('Nls2Vq7y+Edv0ympv2juM2qij2XUlOaM7eaC+4pxgzw='),
+            base64_decode('2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol'),
+            base64_decode('tVzWww1BLdujlA7N36ebEsWozIRYBZwgLgkD7t4TrFJxoDZR6mvp+/7fHH9HbqKDpx5CJz6AUcYgwk2hfLybxXGgNlHqa+n7/t8cf0duooOnHkInPoBRxiDCTaF8vJvF'),
         ];
     }
 

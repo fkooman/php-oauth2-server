@@ -32,7 +32,7 @@ class OAuthServer
     private $getClientInfo;
 
     /** @var string */
-    private $signatureKeyPair;
+    private $keyPair;
 
     /** @var Storage */
     private $storage;
@@ -46,10 +46,10 @@ class OAuthServer
     /** @var int */
     private $expiresIn = 3600;
 
-    public function __construct(callable $getClientInfo, $signatureKeyPair, Storage $storage, RandomInterface $random = null, DateTime $dateTime = null)
+    public function __construct(callable $getClientInfo, $keyPair, Storage $storage, RandomInterface $random = null, DateTime $dateTime = null)
     {
         $this->getClientInfo = $getClientInfo;
-        $this->signatureKeyPair = $signatureKeyPair;
+        $this->keyPair = $keyPair;
         $this->storage = $storage;
         if (is_null($random)) {
             $random = new Random();
@@ -129,7 +129,7 @@ class OAuthServer
         // XXX catch RangeException
         $codeData = \Sodium\crypto_sign_open(
             Base64::decode($postData['code']),
-            \Sodium\crypto_sign_publickey($this->signatureKeyPair)
+            \Sodium\crypto_sign_publickey($this->keyPair)
         );
         if (false === $codeData) {
             throw new GrantException('invalid code');
@@ -276,7 +276,7 @@ class OAuthServer
                         'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
                     ]
                 ),
-                \Sodium\crypto_sign_secretkey($this->signatureKeyPair)
+                \Sodium\crypto_sign_secretkey($this->keyPair)
             )
         );
 
@@ -321,7 +321,7 @@ class OAuthServer
                         'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
                     ]
                 ),
-                \Sodium\crypto_sign_secretkey($this->signatureKeyPair)
+                \Sodium\crypto_sign_secretkey($this->keyPair)
             )
         );
     }

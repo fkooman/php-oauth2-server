@@ -32,16 +32,27 @@ class BearerValidator
     private $dateTime;
 
     /** @var string */
-    private $signPublicKey;
+    private $keyPair;
 
-    public function __construct(Storage $storage, $signPublicKey, DateTime $dateTime = null)
+    /** @var array */
+    private $publicKeys = [];
+
+    public function __construct(Storage $storage, $keyPair, DateTime $dateTime = null)
     {
         $this->storage = $storage;
-        $this->signPublicKey = $signPublicKey;
+        $this->keyPair = $keyPair;
         if (is_null($dateTime)) {
             $dateTime = new DateTime();
         }
         $this->dateTime = $dateTime;
+    }
+
+    /**
+     * @param string $publicKey
+     */
+    public function addPublicKey($publicKey)
+    {
+        $this->publicKeys[] = $publicKey;
     }
 
     /**
@@ -74,7 +85,8 @@ class BearerValidator
     private function validateSignedToken($bearerToken)
     {
         try {
-            if (false === $plainText = \Sodium\crypto_sign_open(Base64::decode($bearerToken), $this->signPublicKey)) {
+            if (false === $plainText = \Sodium\crypto_sign_open(Base64::decode($bearerToken), \Sodium\crypto_sign_publickey($this->keyPair))) {
+                // XXX try the additional public keys as well here if set
                 throw new BearerException('invalid signature');
             }
 
