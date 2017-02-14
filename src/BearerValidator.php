@@ -45,7 +45,7 @@ class BearerValidator
     }
 
     /**
-     * @param string $bearerToken
+     * @param string $authorizationHeader
      *
      * @return false|array
      *
