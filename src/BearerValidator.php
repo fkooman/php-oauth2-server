@@ -25,22 +25,22 @@ use RangeException;
 
 class BearerValidator
 {
+    /** @var string */
+    private $keyPair;
+
     /** @var Storage */
     private $storage;
 
     /** @var \DateTime */
     private $dateTime;
 
-    /** @var string */
-    private $keyPair;
-
     /** @var array */
     private $publicKeys = [];
 
-    public function __construct(Storage $storage, $keyPair, DateTime $dateTime = null)
+    public function __construct($keyPair, Storage $storage, DateTime $dateTime = null)
     {
-        $this->storage = $storage;
         $this->keyPair = $keyPair;
+        $this->storage = $storage;
         if (is_null($dateTime)) {
             $dateTime = new DateTime();
         }

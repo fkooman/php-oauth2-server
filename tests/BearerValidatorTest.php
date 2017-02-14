@@ -43,7 +43,7 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
 
     public function testValidToken()
     {
-        $validator = new BearerValidator($this->storage, $this->publicKey[0], new DateTime('2016-01-01'));
+        $validator = new BearerValidator($this->publicKey[0], $this->storage, new DateTime('2016-01-01'));
         $this->assertSame(
             [
                 'user_id' => 'foo',
@@ -56,7 +56,7 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
 
     public function testNoAuth()
     {
-        $validator = new BearerValidator($this->storage, $this->publicKey[0], new DateTime('2016-01-01'));
+        $validator = new BearerValidator($this->publicKey[0], $this->storage, new DateTime('2016-01-01'));
         $this->assertFalse($validator->validate(null));
     }
 
@@ -66,7 +66,7 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidSyntax()
     {
-        $validator = new BearerValidator($this->storage, $this->publicKey[0], new DateTime('2016-01-01'));
+        $validator = new BearerValidator($this->publicKey[0], $this->storage, new DateTime('2016-01-01'));
         $validator->validate('Bearer %%%%');
     }
 
@@ -76,7 +76,7 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testExpiredToken()
     {
-        $validator = new BearerValidator($this->storage, $this->publicKey[0], new DateTime('2017-01-01'));
+        $validator = new BearerValidator($this->publicKey[0], $this->storage, new DateTime('2017-01-01'));
         $validator->validate('Bearer pr/mlAkRzsPXb5X1h3UEeNpLfqFyD550vGrwYc7kuGD01sWJ84DDy4JdlWlFHR4a7dBXPAkS/BPi8Yuc26PqCXsidHlwZSI6ImFjY2Vzc190b2tlbiIsImtleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9');
     }
 
@@ -86,13 +86,13 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidSignatureKey()
     {
-        $validator = new BearerValidator($this->storage, $this->publicKey[1], new DateTime('2016-01-01'));
+        $validator = new BearerValidator($this->publicKey[1], $this->storage, new DateTime('2016-01-01'));
         $validator->validate('Bearer pr/mlAkRzsPXb5X1h3UEeNpLfqFyD550vGrwYc7kuGD01sWJ84DDy4JdlWlFHR4a7dBXPAkS/BPi8Yuc26PqCXsidHlwZSI6ImFjY2Vzc190b2tlbiIsImtleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9');
     }
 
     public function testBasicAuthentication()
     {
-        $validator = new BearerValidator($this->storage, $this->publicKey[0], new DateTime('2016-01-01'));
+        $validator = new BearerValidator($this->publicKey[0], $this->storage, new DateTime('2016-01-01'));
         $this->assertFalse($validator->validate('Basic AAA==='));
     }
 }
