@@ -34,7 +34,7 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
     {
         $this->storage = new Storage(new PDO('sqlite::memory:'));
         $this->storage->init();
-
+        $this->storage->storeAuthorization('random_1', 'foo', 'code-client', 'config');
         $this->publicKey = [
             base64_decode('2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol'),
             base64_decode('tVzWww1BLdujlA7N36ebEsWozIRYBZwgLgkD7t4TrFJxoDZR6mvp+/7fHH9HbqKDpx5CJz6AUcYgwk2hfLybxXGgNlHqa+n7/t8cf0duooOnHkInPoBRxiDCTaF8vJvF'),
@@ -50,7 +50,7 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
                 'scope' => 'config',
                 'expires_in' => 3600,
             ],
-            $validator->validate('Bearer pr/mlAkRzsPXb5X1h3UEeNpLfqFyD550vGrwYc7kuGD01sWJ84DDy4JdlWlFHR4a7dBXPAkS/BPi8Yuc26PqCXsidHlwZSI6ImFjY2Vzc190b2tlbiIsImtleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9')
+            $validator->validate('Bearer znwcwk0WpP1y0qrUSd/J6KToSlXdceGBaliVLhYYjRESQoVZI1aZTX9cRfBfIpOBnMcyTF3Izs9H8918OwiqBHsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAxOjAwOjAwIn0=')
         );
     }
 

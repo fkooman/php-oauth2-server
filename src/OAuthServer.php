@@ -126,18 +126,17 @@ class OAuthServer
         $this->verifyClientCredentials($postData['client_id'], $clientInfo, $authUser, $authPass);
 
         // verify the authorization code
-        // XXX catch RangeException
-        $codeData = \Sodium\crypto_sign_open(
-            Base64::decode($postData['code']),
-            \Sodium\crypto_sign_publickey($this->keyPair)
-        );
-        if (false === $codeData) {
+        $signedCode = Base64::decode($postData['code']);
+        $publicKey = \Sodium\crypto_sign_publickey($this->keyPair);
+        if (false === $jsonCode = \Sodium\crypto_sign_open($signedCode, $publicKey)) {
             throw new GrantException('invalid code');
         }
 
-        // XXX make sure the *type* is not access_token, the format is the same!
-        $codeInfo = json_decode($codeData, true);
-
+        $codeInfo = json_decode($jsonCode, true);
+        // type MUST be "authorization_code"
+        if ('authorization_code' !== $codeInfo['type']) {
+            throw new GrantException('not an authorization code');
+        }
         if ($this->dateTime >= new DateTime($codeInfo['expires_at'])) {
             throw new GrantException('expired code');
         }

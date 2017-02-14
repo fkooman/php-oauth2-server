@@ -85,26 +85,60 @@ class BearerValidator
     private function validateSignedToken($bearerToken)
     {
         try {
-            if (false === $plainText = \Sodium\crypto_sign_open(Base64::decode($bearerToken), \Sodium\crypto_sign_publickey($this->keyPair))) {
-                // XXX try the additional public keys as well here if set
-                throw new BearerException('invalid signature');
+            $signedToken = Base64::decode($bearerToken);
+
+            // try to verify the token with the publicKey from the keyPair
+            $publicKey = \Sodium\crypto_sign_publickey($this->keyPair);
+            $isLocalToken = true;
+            if (false === $jsonToken = \Sodium\crypto_sign_open($signedToken, $publicKey)) {
+                // we were unable to verify the signature with our own keyPair,
+                // attempt with additional publicKeys if they are set
+                $jsonToken = $this->verifyWithPublicKeys($signedToken);
+                $isLocalToken = false;
             }
 
-            $jsonData = json_decode($plainText, true);
-            $expiresAt = new DateTime($jsonData['expires_at']);
+            $tokenInfo = json_decode($jsonToken, true);
+            // type MUST be "access_token"
+            if ('access_token' !== $tokenInfo['type']) {
+                throw new BearerException('not an access token');
+            }
 
+            $expiresAt = new DateTime($tokenInfo['expires_at']);
             if ($this->dateTime >= $expiresAt) {
                 throw new BearerException('token expired');
             }
 
+            if ($isLocalToken) {
+                // if we signed this token ourselves, we also check if there
+                // (still) is an authorization in the DB to make sure that
+                // when a user "revokes" the authorization, access tokens are
+                // no longer valid immediately, instead of waiting for the
+                // access token to expire
+                if (!$this->storage->hasAuthorization($tokenInfo['auth_key'])) {
+                    // authorization does not exist (any longer)
+                    throw new BearerException('invalid token');
+                }
+            }
+
             return [
-                'user_id' => $jsonData['user_id'],
-                'scope' => $jsonData['scope'],
+                'user_id' => $tokenInfo['user_id'],
+                'scope' => $tokenInfo['scope'],
                 'expires_in' => $expiresAt->getTimestamp() - $this->dateTime->getTimestamp(),
             ];
         } catch (RangeException $e) {
             // Base64::decode throws this exception if string is not valid Base64
             throw new BearerException('invalid token format');
         }
+    }
+
+    private function verifyWithPublicKeys($signedToken)
+    {
+        foreach ($this->publicKeys as $publicKey) {
+            if (false !== $jsonToken = \Sodium\crypto_sign_open($signedToken, $publicKey)) {
+                return $jsonToken;
+            }
+        }
+
+        throw new BearerException('invalid signature');
     }
 }
