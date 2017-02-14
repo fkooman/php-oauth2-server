@@ -151,7 +151,7 @@ class OAuthServer
 
         // check if this authorization code was already used for getting an
         // access token in the past
-        if (false !== $this->storage->hasKey($codeInfo['key'])) {
+        if (false !== $this->storage->hasAuthorization($codeInfo['auth_key'])) {
             throw new GrantException('code already used');
         }
 
@@ -159,7 +159,7 @@ class OAuthServer
             $codeInfo['user_id'],
             $postData['client_id'],
             $codeInfo['scope'],
-            $codeInfo['key']
+            $codeInfo['auth_key']
         );
 
         return [
@@ -249,18 +249,18 @@ class OAuthServer
      * @param string      $userId
      * @param string      $clientId
      * @param string      $scope
-     * @param string|null $accessTokenKey
+     * @param string|null $authKey
      *
      * @return array
      */
-    private function getAccessToken($userId, $clientId, $scope, $accessTokenKey)
+    private function getAccessToken($userId, $clientId, $scope, $authKey)
     {
         // for prevention of replays of authorization codes and the revocation
         // of access tokens when an authorization code is replayed, we use the
-        // "authorization_code_key" as a tag for the issued access tokens, this
+        // "auth_key" as a tag for the issued access tokens, this
         // is only relevant for the "authorization code" grant type
-        if (is_null($accessTokenKey)) {
-            $accessTokenKey = $this->random->get(16);
+        if (is_null($authKey)) {
+            $authKey = $this->random->get(16);
         }
 
         $expiresAt = date_add(clone $this->dateTime, new DateInterval(sprintf('PT%dS', $this->expiresIn)));
@@ -269,7 +269,7 @@ class OAuthServer
                 json_encode(
                     [
                         'type' => 'access_token',
-                        'key' => $accessTokenKey, // to bind it to the authorization code
+                        'auth_key' => $authKey, // to bind it to the authorization code
                         'user_id' => $userId,
                         'client_id' => $clientId,
                         'scope' => $scope,
@@ -281,11 +281,11 @@ class OAuthServer
         );
 
         // store it in the db
-        $this->storage->storeKey(
+        $this->storage->storeAuthorization(
+            $authKey,
             $userId,
             $clientId,
-            $scope,
-            $accessTokenKey
+            $scope
         );
 
         return [
@@ -312,7 +312,7 @@ class OAuthServer
                 json_encode(
                     [
                         'type' => 'authorization_code',
-                        'key' => $this->random->get(16),
+                        'auth_key' => $this->random->get(16),
                         'user_id' => $userId,
                         'client_id' => $clientId,
                         'scope' => $scope,
@@ -328,6 +328,7 @@ class OAuthServer
 
     private function verifyCodeInfo(array $postData, array $codeInfo)
     {
+        // XXX more fields to verify?!
         if ($postData['client_id'] !== $codeInfo['client_id']) {
             throw new ValidateException('unexpected "client_id"');
         }

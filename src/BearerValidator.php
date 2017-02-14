@@ -91,6 +91,7 @@ class BearerValidator
                 'expires_in' => $expiresAt->getTimestamp() - $this->dateTime->getTimestamp(),
             ];
         } catch (RangeException $e) {
+            // Base64::decode throws this exception if string is not valid Base64
             throw new BearerException('invalid token format');
         }
     }

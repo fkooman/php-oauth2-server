@@ -35,54 +35,53 @@ class Storage
         $this->db = $db;
     }
 
-    public function hasKey($key)
+    public function hasAuthorization($authKey)
     {
         $stmt = $this->db->prepare(
             'SELECT
                 COUNT(*)
-             FROM keys
+             FROM authorizations
              WHERE
-                key = :key'
+                auth_key = :auth_key'
         );
 
-        $stmt->bindValue(':key', $key, PDO::PARAM_STR);
+        $stmt->bindValue(':auth_key', $authKey, PDO::PARAM_STR);
         $stmt->execute();
 
-        return 1 === $stmt->fetchColumn(0);
+        return 1 === (int) $stmt->fetchColumn(0);
     }
 
-    public function storeKey($userId, $clientId, $scope, $key)
+    public function storeAuthorization($authKey, $userId, $clientId, $scope)
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO keys (
+            'INSERT INTO authorizations (
+                auth_key,
                 user_id,    
                 client_id,
-                scope,
-                key
+                scope
              ) 
              VALUES(
+                :auth_key,
                 :user_id, 
                 :client_id,
-                :scope,
-                :key
+                :scope
              )'
         );
 
+        $stmt->bindValue(':auth_key', $authKey, PDO::PARAM_STR);
         $stmt->bindValue(':user_id', $userId, PDO::PARAM_STR);
         $stmt->bindValue(':client_id', $clientId, PDO::PARAM_STR);
         $stmt->bindValue(':scope', $scope, PDO::PARAM_STR);
-        $stmt->bindValue(':key', $key, PDO::PARAM_STR);
-
         $stmt->execute();
     }
 
-    public function getAuthorizedClients($userId)
+    public function getAuthorizations($userId)
     {
         $stmt = $this->db->prepare(
             'SELECT
                 client_id,
                 scope
-             FROM keys
+             FROM authorizations
              WHERE
                 user_id = :user_id
              GROUP BY client_id, scope'
@@ -94,12 +93,15 @@ class Storage
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function deleteKey($userId, $clientId)
+    public function deleteAuthorization($userId, $clientId)
     {
-        // delete keys(s)
         $stmt = $this->db->prepare(
-            'DELETE FROM keys
-             WHERE user_id = :user_id AND client_id = :client_id'
+            'DELETE FROM
+                authorizations
+             WHERE
+                user_id = :user_id 
+             AND 
+                client_id = :client_id'
         );
 
         $stmt->bindValue(':user_id', $userId, PDO::PARAM_STR);
@@ -110,12 +112,12 @@ class Storage
     public function init()
     {
         $queryList = [
-            'CREATE TABLE IF NOT EXISTS keys (
+            'CREATE TABLE IF NOT EXISTS authorizations (
+                auth_key VARCHAR(255) NOT NULL,
                 user_id VARCHAR(255) NOT NULL,
                 client_id VARCHAR(255) NOT NULL,
                 scope VARCHAR(255) NOT NULL,
-                key VARCHAR(255) NOT NULL,
-                UNIQUE(key)
+                UNIQUE(auth_key)
             )',
         ];
 
