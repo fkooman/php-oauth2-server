@@ -19,12 +19,12 @@ require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
 use fkooman\OAuth\Server\Exception\OAuthException;
 use fkooman\OAuth\Server\OAuthServer;
-use fkooman\OAuth\Server\TokenStorage;
+use fkooman\OAuth\Server\Storage;
 
 try {
     // storage
-    $tokenStorage = new TokenStorage(new PDO(sprintf('sqlite:%s/data/db.sqlite', dirname(__DIR__))));
-    $tokenStorage->init();
+    $storage = new Storage(new PDO(sprintf('sqlite:%s/data/db.sqlite', dirname(__DIR__))));
+    $storage->init();
 
     // client "database"
     $getClientInfo = function ($clientId) {
@@ -47,7 +47,8 @@ try {
     // server
     $oauthServer = new OAuthServer(
         $getClientInfo,
-        $tokenStorage
+        base64_decode('2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol'),
+        $storage
     );
 
     switch ($_SERVER['REQUEST_METHOD']) {

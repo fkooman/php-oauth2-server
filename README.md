@@ -19,9 +19,7 @@ All (optional) OAuth authorization and token requests MUST always be sent.
 - Simplicity
 - Easy integration with your own application and/or framework;
 - Does not enforce a framework on you;
-- Only conforming OAuth 2.0 clients will work, this library will not get out of 
-  its way to deal with clients that blatantly violate the OAuth 2.0 RFC, the 
-  exception may be if a fix does not break conforming clients;
+- Only conforming OAuth 2.0 clients will work;
 - There will be no toggles to shoot yourself in the foot;
 - Uses [libsodium-php](https://github.com/jedisct1/libsodium-php) for secure 
   random strings and timing-safe string compare;

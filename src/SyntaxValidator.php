@@ -41,10 +41,6 @@ class SyntaxValidator
         if (1 !== preg_match('/^[\x20-\x7E]+$/', $code)) {
             throw new ValidateException('invalid "code"');
         }
-        // the codes we generate MUST also contain a dot "."
-        if (false === strpos($code, '.')) {
-            throw new ValidateException('invalid "code"');
-        }
     }
 
     public static function validateGrantType($grantType)

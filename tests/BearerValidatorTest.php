@@ -24,61 +24,40 @@ use PHPUnit_Framework_TestCase;
 
 class BearerValidatorTest extends PHPUnit_Framework_TestCase
 {
-    /** @var TokenStorage */
-    private $tokenStorage;
+    /** @var Storage */
+    private $storage;
+
+    /** @var array */
+    private $publicKey;
 
     public function setUp()
     {
-        $this->tokenStorage = new TokenStorage(new PDO('sqlite::memory:'));
-        $this->tokenStorage->init();
+        $this->storage = new Storage(new PDO('sqlite::memory:'));
+        $this->storage->init();
 
-        $this->tokenStorage->storeToken(
-            'foo',
-            '1234',
-            'abcdefgh',
-            'vpn-companion',
-            'scope',
-            new DateTime('2016-01-01 01:00:00')
-        );
+        $this->publicKey = [
+            base64_decode('HD9v+gK+84Ij0ugS+G7wmljeLmrWH7j+w4/0L3XLaiU='),
+            base64_decode('Nls2Vq7y+Edv0ympv2juM2qij2XUlOaM7eaC+4pxgzw='),
+        ];
     }
 
     public function testValidToken()
     {
-        $validator = new BearerValidator($this->tokenStorage, new DateTime('2016-01-01'));
+        $validator = new BearerValidator($this->storage, $this->publicKey[0], new DateTime('2016-01-01'));
         $this->assertSame(
             [
                 'user_id' => 'foo',
-                'scope' => 'scope',
+                'scope' => 'config',
                 'expires_in' => 3600,
             ],
-            $validator->validate('Bearer 1234.abcdefgh')
+            $validator->validate('Bearer pr/mlAkRzsPXb5X1h3UEeNpLfqFyD550vGrwYc7kuGD01sWJ84DDy4JdlWlFHR4a7dBXPAkS/BPi8Yuc26PqCXsidHlwZSI6ImFjY2Vzc190b2tlbiIsImtleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9')
         );
     }
 
     public function testNoAuth()
     {
-        $validator = new BearerValidator($this->tokenStorage, new DateTime('2016-01-01'));
+        $validator = new BearerValidator($this->storage, $this->publicKey[0], new DateTime('2016-01-01'));
         $this->assertFalse($validator->validate(null));
-    }
-
-    /**
-     * @expectedException \fkooman\OAuth\Server\Exception\BearerException
-     * @expectedExceptionMessage: invalid_token
-     */
-    public function testInvalidAccessTokenKey()
-    {
-        $validator = new BearerValidator($this->tokenStorage, new DateTime('2016-01-01'));
-        $validator->validate('Bearer aaaa.abcdefgh');
-    }
-
-    /**
-     * @expectedException \fkooman\OAuth\Server\Exception\BearerException
-     * @expectedExceptionMessage: invalid_token
-     */
-    public function testInvalidAccessToken()
-    {
-        $validator = new BearerValidator($this->tokenStorage, new DateTime('2016-01-01'));
-        $validator->validate('Bearer 1234.aaaaaaaa');
     }
 
     /**
@@ -87,7 +66,7 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidSyntax()
     {
-        $validator = new BearerValidator($this->tokenStorage, new DateTime('2016-01-01'));
+        $validator = new BearerValidator($this->storage, $this->publicKey[0], new DateTime('2016-01-01'));
         $validator->validate('Bearer %%%%');
     }
 
@@ -97,40 +76,23 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testExpiredToken()
     {
-        $validator = new BearerValidator($this->tokenStorage, new DateTime('2017-01-01'));
-        $validator->validate('Bearer 1234.abcdefgh');
+        $validator = new BearerValidator($this->storage, $this->publicKey[0], new DateTime('2017-01-01'));
+        $validator->validate('Bearer pr/mlAkRzsPXb5X1h3UEeNpLfqFyD550vGrwYc7kuGD01sWJ84DDy4JdlWlFHR4a7dBXPAkS/BPi8Yuc26PqCXsidHlwZSI6ImFjY2Vzc190b2tlbiIsImtleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9');
     }
 
     /**
      * @expectedException \fkooman\OAuth\Server\Exception\BearerException
      * @expectedExceptionMessage: invalid_token
      */
-    public function testNoDot()
+    public function testInvalidSignatureKey()
     {
-        $validator = new BearerValidator($this->tokenStorage, new DateTime('2016-01-01'));
-        $validator->validate('Bearer abcdef');
+        $validator = new BearerValidator($this->storage, $this->publicKey[1], new DateTime('2016-01-01'));
+        $validator->validate('Bearer pr/mlAkRzsPXb5X1h3UEeNpLfqFyD550vGrwYc7kuGD01sWJ84DDy4JdlWlFHR4a7dBXPAkS/BPi8Yuc26PqCXsidHlwZSI6ImFjY2Vzc190b2tlbiIsImtleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9');
     }
 
     public function testBasicAuthentication()
     {
-        $validator = new BearerValidator($this->tokenStorage, new DateTime('2016-01-01'));
+        $validator = new BearerValidator($this->storage, $this->publicKey[0], new DateTime('2016-01-01'));
         $this->assertFalse($validator->validate('Basic AAA==='));
-    }
-
-    public function testSignedBearerToken()
-    {
-        $signatureKeyPair = 'jq7s7JVBhXk02Nn0Hng4+BNcUlwYOPRR9IXngC51XQDYvQHEgaAvFVHewDvRHtTD5uuVk4cfBbKqT10ckGCJ2Ni9AcSBoC8VUd7AO9Ee1MPm65WThx8FsqpPXRyQYInY';
-        $signPublicKey = \Sodium\crypto_sign_publickey(base64_decode($signatureKeyPair));
-
-        $validator = new BearerValidator($this->tokenStorage, new DateTime('2016-01-01'));
-        $validator->setSignPublicKey($signPublicKey);
-        $this->assertSame(
-            [
-                'user_id' => 'foo',
-                'scope' => 'config',
-                'expires_in' => 3600,
-            ],
-            $validator->validate('Bearer ErQmnSQipyGgRhPFLEXdp/JTW+Uza8kkfPUSFFyJH1UgOLuwxApoLsWiYMXJJzEQxcTSTQkkwCbpWm8jjRjLDHsiYWNjZXNzX3Rva2VuX2tleSI6ImNtRnVaRzl0WHpFPSIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAxOjAwOjAwIiwic2NvcGUiOiJjb25maWciLCJ1c2VyX2lkIjoiZm9vIn0=')
-        );
     }
 }

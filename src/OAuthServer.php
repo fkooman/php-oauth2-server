@@ -31,8 +31,11 @@ class OAuthServer
     /** @var callable */
     private $getClientInfo;
 
-    /** @var TokenStorage */
-    private $tokenStorage;
+    /** @var string */
+    private $signatureKeyPair;
+
+    /** @var Storage */
+    private $storage;
 
     /** @var RandomInterface */
     private $random;
@@ -43,13 +46,11 @@ class OAuthServer
     /** @var int */
     private $expiresIn = 3600;
 
-    /** @var string|null */
-    private $signatureKeyPair = null;
-
-    public function __construct(callable $getClientInfo, TokenStorage $tokenStorage, RandomInterface $random = null, DateTime $dateTime = null)
+    public function __construct(callable $getClientInfo, $signatureKeyPair, Storage $storage, RandomInterface $random = null, DateTime $dateTime = null)
     {
         $this->getClientInfo = $getClientInfo;
-        $this->tokenStorage = $tokenStorage;
+        $this->signatureKeyPair = $signatureKeyPair;
+        $this->storage = $storage;
         if (is_null($random)) {
             $random = new Random();
         }
@@ -66,14 +67,6 @@ class OAuthServer
     public function setExpiresIn($expiresIn)
     {
         $this->expiresIn = (int) $expiresIn;
-    }
-
-    /**
-     * @param string $signatureKeyPair
-     */
-    public function setSignatureKeyPair($signatureKeyPair)
-    {
-        $this->signatureKeyPair = $signatureKeyPair;
     }
 
     /**
@@ -132,19 +125,20 @@ class OAuthServer
         // verify credentials if not a public client
         $this->verifyClientCredentials($postData['client_id'], $clientInfo, $authUser, $authPass);
 
-        list($authorizationCodeKey, $authorizationCode) = explode('.', $postData['code']);
-        if (false === $codeInfo = $this->tokenStorage->getCode($authorizationCodeKey)) {
-            throw new GrantException('no such code');
-        }
-
-        if (0 !== \Sodium\compare($codeInfo['authorization_code'], $authorizationCode)) {
+        // verify the authorization code
+        // XXX catch RangeException
+        $codeData = \Sodium\crypto_sign_open(
+            Base64::decode($postData['code']),
+            \Sodium\crypto_sign_publickey($this->signatureKeyPair)
+        );
+        if (false === $codeData) {
             throw new GrantException('invalid code');
         }
 
-        // check for code expiry, it may be at most 5 minutes old
-        $codeTime = new DateTime($codeInfo['issued_at']);
-        $codeTime->add(new DateInterval('PT5M'));
-        if ($this->dateTime >= $codeTime) {
+        // XXX make sure the *type* is not access_token, the format is the same!
+        $codeInfo = json_decode($codeData, true);
+
+        if ($this->dateTime >= new DateTime($codeInfo['expires_at'])) {
             throw new GrantException('expired code');
         }
 
@@ -157,7 +151,7 @@ class OAuthServer
 
         // check if this authorization code was already used for getting an
         // access token in the past
-        if (false !== $this->tokenStorage->getToken($authorizationCodeKey)) {
+        if (false !== $this->storage->hasKey($codeInfo['key'])) {
             throw new GrantException('code already used');
         }
 
@@ -165,7 +159,7 @@ class OAuthServer
             $codeInfo['user_id'],
             $postData['client_id'],
             $codeInfo['scope'],
-            $authorizationCodeKey
+            $codeInfo['key']
         );
 
         return [
@@ -270,43 +264,32 @@ class OAuthServer
         }
 
         $expiresAt = date_add(clone $this->dateTime, new DateInterval(sprintf('PT%dS', $this->expiresIn)));
-        if (!is_null($this->signatureKeyPair)) {
-            // (optionally) sign the accessToken so resource servers can verify
-            // it came from us
-            $secretKey = \Sodium\crypto_sign_secretkey($this->signatureKeyPair);
-            $accessToken = Base64::encode(
-                \Sodium\crypto_sign(
-                    json_encode(
-                        [
-                            'access_token_key' => $accessTokenKey, // to bind it to the authorization code
-                            'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
-                            'scope' => $scope,
-                            'user_id' => $userId,
-                        ]
-                    ),
-                    $secretKey
-                )
-            );
-
-            return [
-                'access_token' => $accessToken,
-                'expires_in' => $this->expiresIn,
-            ];
-        }
+        $accessToken = Base64::encode(
+            \Sodium\crypto_sign(
+                json_encode(
+                    [
+                        'type' => 'access_token',
+                        'key' => $accessTokenKey, // to bind it to the authorization code
+                        'user_id' => $userId,
+                        'client_id' => $clientId,
+                        'scope' => $scope,
+                        'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+                    ]
+                ),
+                \Sodium\crypto_sign_secretkey($this->signatureKeyPair)
+            )
+        );
 
         // store it in the db
-        $accessToken = $this->random->get(32);
-        $this->tokenStorage->storeToken(
+        $this->storage->storeKey(
             $userId,
-            $accessTokenKey,
-            $accessToken,
             $clientId,
             $scope,
-            $expiresAt
+            $accessTokenKey
         );
 
         return [
-            'access_token' => sprintf('%s.%s', $accessTokenKey, $accessToken),
+            'access_token' => $accessToken,
             'expires_in' => $this->expiresIn,
         ];
     }
@@ -322,21 +305,25 @@ class OAuthServer
      */
     private function getAuthorizationCode($userId, $clientId, $scope, $redirectUri, $codeChallenge)
     {
-        $authorizationCodeKey = $this->random->get(16);
-        $authorizationCode = $this->random->get(32);
+        $expiresAt = date_add(clone $this->dateTime, new DateInterval('PT5M'));
 
-        $this->tokenStorage->storeCode(
-            $userId,
-            $authorizationCodeKey,
-            $authorizationCode,
-            $clientId,
-            $scope,
-            $redirectUri,
-            $this->dateTime,
-            $codeChallenge
+        return Base64::encode(
+            \Sodium\crypto_sign(
+                json_encode(
+                    [
+                        'type' => 'authorization_code',
+                        'key' => $this->random->get(16),
+                        'user_id' => $userId,
+                        'client_id' => $clientId,
+                        'scope' => $scope,
+                        'redirect_uri' => $redirectUri,
+                        'code_challenge' => $codeChallenge,
+                        'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+                    ]
+                ),
+                \Sodium\crypto_sign_secretkey($this->signatureKeyPair)
+            )
         );
-
-        return sprintf('%s.%s', $authorizationCodeKey, $authorizationCode);
     }
 
     private function verifyCodeInfo(array $postData, array $codeInfo)

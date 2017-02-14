@@ -21,33 +21,27 @@ namespace fkooman\OAuth\Server;
 use DateTime;
 use fkooman\OAuth\Server\Exception\BearerException;
 use ParagonIE\ConstantTime\Base64;
+use RangeException;
 
 class BearerValidator
 {
-    /** @var TokenStorage */
-    private $tokenStorage;
+    /** @var Storage */
+    private $storage;
 
     /** @var \DateTime */
     private $dateTime;
 
-    /** @var string|null */
-    private $signPublicKey = null;
+    /** @var string */
+    private $signPublicKey;
 
-    public function __construct(TokenStorage $tokenStorage, DateTime $dateTime = null)
+    public function __construct(Storage $storage, $signPublicKey, DateTime $dateTime = null)
     {
-        $this->tokenStorage = $tokenStorage;
+        $this->storage = $storage;
+        $this->signPublicKey = $signPublicKey;
         if (is_null($dateTime)) {
             $dateTime = new DateTime();
         }
         $this->dateTime = $dateTime;
-    }
-
-    /**
-     * @param string $signPublicKey
-     */
-    public function setSignPublicKey($signPublicKey)
-    {
-        $this->signPublicKey = $signPublicKey;
     }
 
     /**
@@ -71,31 +65,7 @@ class BearerValidator
             throw new BearerException('syntax error');
         }
 
-        if (false === strpos($bearerToken, '.')) {
-            // it is possibly a signed token, try that
-            return $this->validateSignedToken($bearerToken);
-        }
-
-        list($accessTokenKey, $accessToken) = explode('.', $bearerToken);
-        $tokenInfo = $this->tokenStorage->getToken($accessTokenKey);
-        if (false === $tokenInfo) {
-            throw new BearerException('token does not exist');
-        }
-
-        if (0 !== \Sodium\compare($tokenInfo['access_token'], $accessToken)) {
-            throw new BearerException('token does not exist');
-        }
-
-        $expiresAt = new DateTime($tokenInfo['expires_at']);
-        if ($this->dateTime >= $expiresAt) {
-            throw new BearerException('token expired');
-        }
-
-        return [
-            'user_id' => $tokenInfo['user_id'],
-            'scope' => $tokenInfo['scope'],
-            'expires_in' => $expiresAt->getTimestamp() - $this->dateTime->getTimestamp(),
-        ];
+        return $this->validateSignedToken($bearerToken);
     }
 
     /**
@@ -103,25 +73,25 @@ class BearerValidator
      */
     private function validateSignedToken($bearerToken)
     {
-        if (is_null($this->signPublicKey)) {
-            throw new BearerException('no public key set to validate the signature');
+        try {
+            if (false === $plainText = \Sodium\crypto_sign_open(Base64::decode($bearerToken), $this->signPublicKey)) {
+                throw new BearerException('invalid signature');
+            }
+
+            $jsonData = json_decode($plainText, true);
+            $expiresAt = new DateTime($jsonData['expires_at']);
+
+            if ($this->dateTime >= $expiresAt) {
+                throw new BearerException('token expired');
+            }
+
+            return [
+                'user_id' => $jsonData['user_id'],
+                'scope' => $jsonData['scope'],
+                'expires_in' => $expiresAt->getTimestamp() - $this->dateTime->getTimestamp(),
+            ];
+        } catch (RangeException $e) {
+            throw new BearerException('invalid token format');
         }
-
-        if (false === $plainText = \Sodium\crypto_sign_open(Base64::decode($bearerToken), $this->signPublicKey)) {
-            throw new BearerException('invalid signature');
-        }
-
-        $jsonData = json_decode($plainText, true);
-        $expiresAt = new DateTime($jsonData['expires_at']);
-
-        if ($this->dateTime >= $expiresAt) {
-            throw new BearerException('token expired');
-        }
-
-        return [
-            'user_id' => $jsonData['user_id'],
-            'scope' => $jsonData['scope'],
-            'expires_in' => $expiresAt->getTimestamp() - $this->dateTime->getTimestamp(),
-        ];
     }
 }

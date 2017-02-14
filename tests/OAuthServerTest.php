@@ -64,16 +64,13 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
             return $oauthClients[$clientId];
         };
 
-        $tokenStorage = new TokenStorage(new PDO('sqlite::memory:'));
-        $tokenStorage->init();
-
-        $tokenStorage->storeCode('foo', 'XYZ', 'abcdefgh', 'code-client', 'config', 'http://example.org/code-cb', new DateTime('2016-01-01'), 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
-        $tokenStorage->storeCode('foo', 'ABC', 'abcdefgh', 'code-client-query-redirect', 'config', 'http://example.org/code-cb?keep=this', new DateTime('2016-01-01'), 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
-        $tokenStorage->storeCode('foo', 'DEF', 'abcdefgh', 'code-client-secret', 'config', 'http://example.org/code-cb', new DateTime('2016-01-01'), 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
+        $storage = new Storage(new PDO('sqlite::memory:'));
+        $storage->init();
 
         $this->server = new OAuthServer(
             $getClientInfo,
-            $tokenStorage,
+            base64_decode('2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol'),
+            $storage,
             $random,
             new DateTime('2016-01-01')
         );
@@ -126,7 +123,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
     public function testAuthorizeTokenPost()
     {
         $this->assertSame(
-            'http://example.org/token-cb#access_token=random_1.random_2&state=12345&expires_in=3600',
+            'http://example.org/token-cb#access_token=H00ay1mgpwxdwx74s%2B8tEsSwo583YTHr7IeEfkuIuSHXLjeAmaHwqXwE8JKNV7En7O6FPsRkpM7zvH0DTgfnDnsidHlwZSI6ImFjY2Vzc190b2tlbiIsImtleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6InRva2VuLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDE6MDA6MDAifQ%3D%3D&state=12345&expires_in=3600',
             $this->server->postAuthorize(
                 [
                     'client_id' => 'token-client',
@@ -166,7 +163,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
     public function testAuthorizeCodePost()
     {
         $this->assertSame(
-            'http://example.org/code-cb?code=random_1.random_2&state=12345',
+            'http://example.org/code-cb?code=shS5ssHi2XceqPNKg8Kgl5C99O%2FBe7AE80NIajiieyu6VO6dGCZpqwwd91vErN1xnPTGcgxGmPCPctcIeqTjAHsidHlwZSI6ImF1dGhvcml6YXRpb25fY29kZSIsImtleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJyZWRpcmVjdF91cmkiOiJodHRwOlwvXC9leGFtcGxlLm9yZ1wvY29kZS1jYiIsImNvZGVfY2hhbGxlbmdlIjoiRTlNZWxob2EyT3d2RnJFTVRKZ3VDSGFvZUsxdDhVUldidUdKU3N0dy1jTSIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAwOjA1OjAwIn0%3D&state=12345',
             $this->server->postAuthorize(
                 [
                     'client_id' => 'code-client',
@@ -188,7 +185,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
     public function testAuthorizeTokenPostRedirectUriWithQuery()
     {
         $this->assertSame(
-            'http://example.org/code-cb?keep=this&code=random_1.random_2&state=12345',
+            'http://example.org/code-cb?keep=this&code=ZX0m9VnrflEC0ObIZ%2Bk3XZVa6Dr%2FaqmGg29dIDYvZmMEmWjIPP6z11A4stwLHkzLOXDOSaDnO6l23%2FME3gpbCHsidHlwZSI6ImF1dGhvcml6YXRpb25fY29kZSIsImtleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50LXF1ZXJ5LXJlZGlyZWN0Iiwic2NvcGUiOiJjb25maWciLCJyZWRpcmVjdF91cmkiOiJodHRwOlwvXC9leGFtcGxlLm9yZ1wvY29kZS1jYj9rZWVwPXRoaXMiLCJjb2RlX2NoYWxsZW5nZSI6IkU5TWVsaG9hMk93dkZyRU1USmd1Q0hhb2VLMXQ4VVJXYnVHSlNzdHctY00iLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMDowNTowMCJ9&state=12345',
             $this->server->postAuthorize(
                 [
                     'client_id' => 'code-client-query-redirect',
@@ -212,7 +209,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         $tokenResponse = $this->server->postToken(
             [
                 'grant_type' => 'authorization_code',
-                'code' => 'XYZ.abcdefgh',
+                'code' => 'shS5ssHi2XceqPNKg8Kgl5C99O/Be7AE80NIajiieyu6VO6dGCZpqwwd91vErN1xnPTGcgxGmPCPctcIeqTjAHsidHlwZSI6ImF1dGhvcml6YXRpb25fY29kZSIsImtleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJyZWRpcmVjdF91cmkiOiJodHRwOlwvXC9leGFtcGxlLm9yZ1wvY29kZS1jYiIsImNvZGVfY2hhbGxlbmdlIjoiRTlNZWxob2EyT3d2RnJFTVRKZ3VDSGFvZUsxdDhVUldidUdKU3N0dy1jTSIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAwOjA1OjAwIn0=',
                 'redirect_uri' => 'http://example.org/code-cb',
                 'client_id' => 'code-client',
                 'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
@@ -222,7 +219,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         );
         $this->assertSame(
             [
-                'access_token' => 'XYZ.random_1',
+                'access_token' => 'pr/mlAkRzsPXb5X1h3UEeNpLfqFyD550vGrwYc7kuGD01sWJ84DDy4JdlWlFHR4a7dBXPAkS/BPi8Yuc26PqCXsidHlwZSI6ImFjY2Vzc190b2tlbiIsImtleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9',
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
@@ -235,7 +232,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         $tokenResponse = $this->server->postToken(
             [
                 'grant_type' => 'authorization_code',
-                'code' => 'DEF.abcdefgh',
+                'code' => 'CQZcqFMFWBOgUmi2ugLwLAkIfyPb1sOhYJdZOefIKDUa5qarG+b0b8PdmJtu1vMnyZtjYY9jclvV6BYpkN4ZCHsidHlwZSI6ImF1dGhvcml6YXRpb25fY29kZSIsImtleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50LXNlY3JldCIsInNjb3BlIjoiY29uZmlnIiwicmVkaXJlY3RfdXJpIjoiaHR0cDpcL1wvZXhhbXBsZS5vcmdcL2NvZGUtY2IiLCJjb2RlX2NoYWxsZW5nZSI6IkU5TWVsaG9hMk93dkZyRU1USmd1Q0hhb2VLMXQ4VVJXYnVHSlNzdHctY00iLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMDowNTowMCJ9',
                 'redirect_uri' => 'http://example.org/code-cb',
                 'client_id' => 'code-client-secret',
             ],
@@ -244,7 +241,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         );
         $this->assertSame(
             [
-                'access_token' => 'DEF.random_1',
+                'access_token' => 'MkDDFOJfV+WyuRBnRQpKmCKS1el6iNFxjcTSIVU2tyyqyRzfaxo8jIP1DFI51wIvvbis3BV70FAY0Eb3hLiJAHsidHlwZSI6ImFjY2Vzc190b2tlbiIsImtleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50LXNlY3JldCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDE6MDA6MDAifQ==',
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
@@ -290,11 +287,8 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
 
     public function testSignedAccessToken()
     {
-        $signatureKeyPair = 'jq7s7JVBhXk02Nn0Hng4+BNcUlwYOPRR9IXngC51XQDYvQHEgaAvFVHewDvRHtTD5uuVk4cfBbKqT10ckGCJ2Ni9AcSBoC8VUd7AO9Ee1MPm65WThx8FsqpPXRyQYInY';
-        $this->server->setSignatureKeyPair(base64_decode($signatureKeyPair));
-
         $this->assertSame(
-            'http://example.org/token-cb#access_token=NBr7mAFjm8jzCU5Q%2BbIW2ngS4M7JBXVzPPqgW7yvbHMe859mnJ712JV7tB%2BjZvRo42iATLdeYrqeZAjJEYmMD3siYWNjZXNzX3Rva2VuX2tleSI6InJhbmRvbV8xIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDE6MDA6MDAiLCJzY29wZSI6ImNvbmZpZyIsInVzZXJfaWQiOiJmb28ifQ%3D%3D&state=12345&expires_in=3600',
+            'http://example.org/token-cb#access_token=H00ay1mgpwxdwx74s%2B8tEsSwo583YTHr7IeEfkuIuSHXLjeAmaHwqXwE8JKNV7En7O6FPsRkpM7zvH0DTgfnDnsidHlwZSI6ImFjY2Vzc190b2tlbiIsImtleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6InRva2VuLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDE6MDA6MDAifQ%3D%3D&state=12345&expires_in=3600',
             $this->server->postAuthorize(
                 [
                     'client_id' => 'token-client',
