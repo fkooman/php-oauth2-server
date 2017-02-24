@@ -16,12 +16,12 @@ All (optional) OAuth authorization and token requests MUST always be sent.
 
 # Features
 
-- Simplicity
+- Simplicity;
 - Easy integration with your own application and/or framework;
-- Does not enforce a framework on you;
+- Does not force a framework on you;
 - Only conforming OAuth 2.0 clients will work;
 - There will be no toggles to shoot yourself in the foot;
 - Uses [libsodium-php](https://github.com/jedisct1/libsodium-php) for secure 
-  random strings and timing-safe string compare;
+  random strings, constant time string compare and encryption/signing of 
+  tokens and authorization codes;
 - Supports [PKCE](https://tools.ietf.org/html/rfc7636);
-- Supports signed access tokens using public key crypto;
