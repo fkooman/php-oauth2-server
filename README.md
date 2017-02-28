@@ -26,4 +26,5 @@ sent.
 - Uses [libsodium-php](https://github.com/jedisct1/libsodium-php) for secure 
   random strings, constant time string compare and encryption/signing of 
   tokens and authorization codes;
-- Supports [PKCE](https://tools.ietf.org/html/rfc7636)
+- Supports [PKCE](https://tools.ietf.org/html/rfc7636);
+- Supports refresh tokens
