@@ -79,6 +79,7 @@ class Storage
     {
         $stmt = $this->db->prepare(
             'SELECT
+                auth_key,
                 client_id,
                 scope
              FROM authorizations
@@ -93,19 +94,16 @@ class Storage
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function deleteAuthorization($userId, $clientId)
+    public function deleteAuthorization($authKey)
     {
         $stmt = $this->db->prepare(
             'DELETE FROM
                 authorizations
              WHERE
-                user_id = :user_id 
-             AND 
-                client_id = :client_id'
+                auth_key = :auth_key'
         );
 
-        $stmt->bindValue(':user_id', $userId, PDO::PARAM_STR);
-        $stmt->bindValue(':client_id', $clientId, PDO::PARAM_STR);
+        $stmt->bindValue(':auth_key', $authKey, PDO::PARAM_STR);
         $stmt->execute();
     }
 

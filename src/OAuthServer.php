@@ -159,7 +159,9 @@ class OAuthServer
         // check if this authorization code was already used for getting an
         // access token in the past
         if (false !== $this->storage->hasAuthorization($codeInfo['auth_key'])) {
-            // XXX delete the authorization
+            // it was used, delete the authorization
+            $this->storage->deleteAuthorization($codeInfo['auth_key']);
+
             throw new GrantException('code already used');
         }
 
