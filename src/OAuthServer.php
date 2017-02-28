@@ -262,7 +262,6 @@ class OAuthServer
     }
 
     /**
-     * @param string $querySeparator
      * @param string $redirectUri
      * @param string $state
      */
@@ -279,7 +278,6 @@ class OAuthServer
     }
 
     /**
-     * @param string $querySeparator
      * @param string $redirectUri
      * @param array  $queryParameters
      */
@@ -475,7 +473,7 @@ class OAuthServer
     }
 
     /**
-     * @param string $clientId
+     * @param array  $clientInfo
      * @param string $redirectUri
      */
     private function validateRedirectUri(array $clientInfo, $redirectUri)
