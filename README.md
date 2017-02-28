@@ -18,8 +18,7 @@ sent.
 # Features
 
 - Simplicity;
-- Only supports "authorization code" flow (currently "implicit grant" is still 
-  there, but it will be gone soon);
+- Only supports "authorization code" flow;
 - Easy integration with your own application and/or framework;
 - Does not force a framework on you;
 - Only conforming OAuth 2.0 clients will work;

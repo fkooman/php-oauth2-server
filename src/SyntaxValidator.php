@@ -57,7 +57,7 @@ class SyntaxValidator
 
     public static function validateResponseType($responseType)
     {
-        if (!in_array($responseType, ['token', 'code'])) {
+        if ('code' !== $responseType) {
             throw new ValidateException('invalid "response_type"');
         }
     }

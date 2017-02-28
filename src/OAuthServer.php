@@ -79,7 +79,7 @@ class OAuthServer
     {
         RequestValidator::validateAuthorizeQueryParameters($getData);
         $clientInfo = $this->getClient($getData['client_id']);
-        $this->validateClient($clientInfo, $getData['response_type'], $getData['redirect_uri']);
+        $this->validateRedirectUri($clientInfo, $getData['redirect_uri']);
         RequestValidator::validatePkceParameters($clientInfo, $getData);
 
         return [
@@ -101,18 +101,11 @@ class OAuthServer
     {
         RequestValidator::validateAuthorizeQueryParameters($getData);
         $clientInfo = $this->getClient($getData['client_id']);
-        $this->validateClient($clientInfo, $getData['response_type'], $getData['redirect_uri']);
+        $this->validateRedirectUri($clientInfo, $getData['redirect_uri']);
         RequestValidator::validatePkceParameters($clientInfo, $getData);
         RequestValidator::validateAuthorizePostParameters($postData);
 
-        switch ($getData['response_type']) {
-            case 'token':
-                return $this->tokenAuthorize($getData, $postData, $userId);
-            case 'code':
-                return $this->codeAuthorize($getData, $postData, $userId);
-            default:
-                throw new ValidateException('invalid "response_type"');
-        }
+        return $this->codeAuthorize($getData, $postData, $userId);
     }
 
     /**
@@ -236,47 +229,10 @@ class OAuthServer
      * @param array  $postData
      * @param string $userId
      */
-    private function tokenAuthorize(array $getData, array $postData, $userId)
-    {
-        if ('no' === $postData['approve']) {
-            return $this->getUserRefused('#', $getData['redirect_uri'], $getData['state']);
-        }
-
-        $authKey = $this->random->get(16);
-        $this->storage->storeAuthorization(
-            $authKey,
-            $userId,
-            $getData['client_id'],
-            $getData['scope']
-        );
-
-        $accessToken = $this->getAccessToken(
-            $userId,
-            $getData['client_id'],
-            $getData['scope'],
-            $authKey
-        );
-
-        return $this->prepareRedirectUri(
-            '#',
-            $getData['redirect_uri'],
-            [
-                'access_token' => $accessToken['access_token'],
-                'state' => $getData['state'],
-                'expires_in' => $accessToken['expires_in'],
-            ]
-        );
-    }
-
-    /**
-     * @param array  $getData
-     * @param array  $postData
-     * @param string $userId
-     */
     private function codeAuthorize(array $getData, array $postData, $userId)
     {
         if ('no' === $postData['approve']) {
-            return $this->getUserRefused('?', $getData['redirect_uri'], $getData['state']);
+            return $this->getUserRefused($getData['redirect_uri'], $getData['state']);
         }
 
         $authKey = $this->random->get(16);
@@ -297,7 +253,6 @@ class OAuthServer
         );
 
         return $this->prepareRedirectUri(
-            '?',
             $getData['redirect_uri'],
             [
                 'code' => $authorizationCode,
@@ -311,10 +266,9 @@ class OAuthServer
      * @param string $redirectUri
      * @param string $state
      */
-    private function getUserRefused($querySeparator, $redirectUri, $state)
+    private function getUserRefused($redirectUri, $state)
     {
         return $this->prepareRedirectUri(
-            $querySeparator,
             $redirectUri,
             [
                 'error' => 'access_denied',
@@ -329,12 +283,10 @@ class OAuthServer
      * @param string $redirectUri
      * @param array  $queryParameters
      */
-    private function prepareRedirectUri($querySeparator, $redirectUri, array $queryParameters)
+    private function prepareRedirectUri($redirectUri, array $queryParameters)
     {
         // if redirectUri already contains '?', the separator becomes '&'
-        if ('?' === $querySeparator && false !== strpos($redirectUri, '?')) {
-            $querySeparator = '&';
-        }
+        $querySeparator = false === strpos($redirectUri, '?') ? '?' : '&';
 
         return sprintf(
             '%s%s%s',
@@ -475,11 +427,6 @@ class OAuthServer
      */
     private function verifyClientCredentials($clientId, array $clientInfo, $authUser, $authPass)
     {
-        // client type MUST be 'code'
-        if ('code' !== $clientInfo['response_type']) {
-            throw new ClientException('client does not support "code" response_type', 400);
-        }
-
         if (array_key_exists('client_secret', $clientInfo)) {
             if ($clientId !== $authUser) {
                 throw new ClientException('"client_id" does not match authenticating user', 401);
@@ -529,15 +476,10 @@ class OAuthServer
 
     /**
      * @param string $clientId
-     * @param string $responseType "token" or "code"
      * @param string $redirectUri
      */
-    private function validateClient(array $clientInfo, $responseType, $redirectUri)
+    private function validateRedirectUri(array $clientInfo, $redirectUri)
     {
-        if ($clientInfo['response_type'] !== $responseType) {
-            throw new ClientException('client does not support this "response_type"', 400);
-        }
-
         if ($clientInfo['redirect_uri'] !== $redirectUri) {
             throw new ClientException('client does not support this "redirect_uri"', 400);
         }
