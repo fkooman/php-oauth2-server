@@ -45,7 +45,12 @@ class SyntaxValidator
 
     public static function validateGrantType($grantType)
     {
-        if ('authorization_code' !== $grantType) {
+        // grant-type = grant-name / URI-reference
+        // grant-name = 1*name-char
+        // name-char  = "-" / "." / "_" / DIGIT / ALPHA
+
+        // we have an explicit whitelist here
+        if ('authorization_code' !== $grantType && 'refresh_token' !== $grantType) {
             throw new ValidateException('invalid "grant_type"');
         }
     }
@@ -109,6 +114,15 @@ class SyntaxValidator
     {
         if (!in_array($approve, ['yes', 'no'])) {
             throw new ValidateException('invalid "approve"');
+        }
+    }
+
+    public static function validateRefreshToken($refreshToken)
+    {
+        // refresh-token = 1*VSCHAR
+        // VSCHAR        = %x20-7E
+        if (1 !== preg_match('/^[\x20-\x7E]+$/', $refreshToken)) {
+            throw new ValidateException('invalid "refresh_token"');
         }
     }
 }

@@ -57,22 +57,21 @@ class RequestValidator
 
     public static function validateTokenPostParameters(array $postData)
     {
-        // REQUIRED
-        foreach (['grant_type', 'code', 'redirect_uri', 'client_id'] as $postParameter) {
-            if (!array_key_exists($postParameter, $postData)) {
-                throw new ValidateException(sprintf('missing "%s" parameter', $postParameter));
-            }
+        // "grant_type" is ALWAYS required
+        if (!array_key_exists('grant_type', $postData)) {
+            throw new ValidateException('missing "grant_type" parameter');
         }
-
-        // check syntax
-        // NOTE: no need to validate the redirect_uri, as we do strict matching
         SyntaxValidator::validateGrantType($postData['grant_type']);
-        SyntaxValidator::validateCode($postData['code']);
-        SyntaxValidator::validateClientId($postData['client_id']);
 
-        // OPTIONAL
-        if (array_key_exists('code_verifier', $postData)) {
-            SyntaxValidator::validateCodeVerifier($postData['code_verifier']);
+        switch ($postData['grant_type']) {
+            case 'authorization_code':
+                self::validateAuthorizationCode($postData);
+                break;
+            case 'refresh_token':
+                self::validateRefreshToken($postData);
+                break;
+            default:
+                throw new ValidateException('invalid "grant_type"');
         }
     }
 
@@ -87,5 +86,35 @@ class RequestValidator
                 throw new ValidateException('missing "code_challenge" parameter');
             }
         }
+    }
+
+    private static function validateAuthorizationCode(array $postData)
+    {
+        foreach (['code', 'redirect_uri', 'client_id'] as $postParameter) {
+            if (!array_key_exists($postParameter, $postData)) {
+                throw new ValidateException(sprintf('missing "%s" parameter', $postParameter));
+            }
+        }
+
+        // check syntax
+        // NOTE: no need to validate the redirect_uri, as we do strict matching
+        SyntaxValidator::validateCode($postData['code']);
+        SyntaxValidator::validateClientId($postData['client_id']);
+
+        // OPTIONAL
+        if (array_key_exists('code_verifier', $postData)) {
+            SyntaxValidator::validateCodeVerifier($postData['code_verifier']);
+        }
+    }
+
+    private static function validateRefreshToken(array $postData)
+    {
+        foreach (['refresh_token', 'scope'] as $postParameter) {
+            if (!array_key_exists($postParameter, $postData)) {
+                throw new ValidateException(sprintf('missing "%s" parameter', $postParameter));
+            }
+        }
+        SyntaxValidator::validateRefreshToken($postData['refresh_token']);
+        SyntaxValidator::validateScope($postData['scope']);
     }
 }
