@@ -12,11 +12,14 @@ the League of Extraordinary Packages! It can be found
 
 # Clients
 
-All (optional) OAuth authorization and token requests MUST always be sent.
+All (optional) OAuth authorization and token request parameters MUST always be
+sent.
 
 # Features
 
 - Simplicity;
+- Only supports "authorization code" flow (currently "implicit grant" is still 
+  there, but it will be gone soon);
 - Easy integration with your own application and/or framework;
 - Does not force a framework on you;
 - Only conforming OAuth 2.0 clients will work;
@@ -24,4 +27,4 @@ All (optional) OAuth authorization and token requests MUST always be sent.
 - Uses [libsodium-php](https://github.com/jedisct1/libsodium-php) for secure 
   random strings, constant time string compare and encryption/signing of 
   tokens and authorization codes;
-- Supports [PKCE](https://tools.ietf.org/html/rfc7636);
+- Supports [PKCE](https://tools.ietf.org/html/rfc7636)
