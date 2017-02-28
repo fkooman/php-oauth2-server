@@ -289,6 +289,9 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
 
     public function testRefreshToken()
     {
+        // the authorization MUST exist for the refresh token to work
+        $this->storage->storeAuthorization('random_1', 'foo', 'code-client', 'config');
+
         $server = new OAuthServer($this->getClientInfo, $this->keyPair, $this->storage, $this->random, $this->dateTime);
         $tokenResponse = $server->postToken(
             [

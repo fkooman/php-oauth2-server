@@ -165,6 +165,15 @@ class OAuthServer
             throw new GrantException('code already used');
         }
 
+        // as soon as we get an access token we store the authorization and
+        // make it impossible for this authorization code to be reused again
+        $this->storage->storeAuthorization(
+            $codeInfo['auth_key'],
+            $codeInfo['user_id'],
+            $postData['client_id'],
+            $codeInfo['scope']
+        );
+
         $accessToken = $this->getAccessToken(
             $codeInfo['user_id'],
             $postData['client_id'],
@@ -238,13 +247,6 @@ class OAuthServer
         }
 
         $authKey = $this->random->get(16);
-        $this->storage->storeAuthorization(
-            $authKey,
-            $userId,
-            $getData['client_id'],
-            $getData['scope']
-        );
-
         $authorizationCode = $this->getAuthorizationCode(
             $userId,
             $getData['client_id'],
@@ -416,6 +418,11 @@ class OAuthServer
         // XXX more fields to verify?!
         if ($postData['scope'] !== $refreshTokenInfo['scope']) {
             throw new ValidateException('unexpected "scope"');
+        }
+
+        // make sure the authorization still exists
+        if (!$this->storage->hasAuthorization($refreshTokenInfo['auth_key'])) {
+            throw new GrantException('refresh_token is no longer authorized');
         }
     }
 
