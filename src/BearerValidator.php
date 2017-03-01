@@ -69,6 +69,7 @@ class BearerValidator
             }
 
             return [
+                'auth_key' => $tokenInfo['auth_key'],
                 'user_id' => $tokenInfo['user_id'],
                 'scope' => $tokenInfo['scope'],
                 'expires_in' => $expiresAt->getTimestamp() - $this->dateTime->getTimestamp(),

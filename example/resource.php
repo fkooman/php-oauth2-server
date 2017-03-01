@@ -17,66 +17,44 @@
  */
 require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
-use fkooman\OAuth\Server\Exception\OAuthException;
-use fkooman\OAuth\Server\OAuthServer;
+use fkooman\OAuth\Server\BearerLocalValidator;
+use fkooman\OAuth\Server\Exception\BearerException;
 use fkooman\OAuth\Server\Storage;
 
-function sendCacheHeaders()
-{
-    header('Cache-Control: no-store');
-    header('Pragma: no-cache');
-}
-
 try {
-    // storage
     $storage = new Storage(new PDO(sprintf('sqlite:%s/data/db.sqlite', dirname(__DIR__))));
     $storage->init();
 
-    // client "database"
-    $getClientInfo = function ($clientId) {
-        $oauthClients = require 'clients.php';
-        if (!array_key_exists($clientId, $oauthClients)) {
-            return false;
-        }
-
-        return $oauthClients[$clientId];
-    };
-
-    // server
-    $oauthServer = new OAuthServer(
-        $getClientInfo,
+    $bearerValidator = new BearerLocalValidator(
         '2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol',
         $storage
     );
 
     switch ($_SERVER['REQUEST_METHOD']) {
-        case 'POST':
-            $authUser = array_key_exists('PHP_AUTH_USER', $_SERVER) ? $_SERVER['PHP_AUTH_USER'] : null;
-            $authPass = array_key_exists('PHP_AUTH_PW', $_SERVER) ? $_SERVER['PHP_AUTH_PW'] : null;
-
+        case 'GET':
+            $authorizationHeader = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : null;
+            $tokenInfo = $bearerValidator->validate($authorizationHeader);
             http_response_code(200);
             header('Content-Type: application/json');
-            sendCacheHeaders();
-            echo json_encode($oauthServer->postToken($_POST, $authUser, $authPass));
+            echo json_encode(
+                ['user_id' => $tokenInfo['user_id']]
+            );
             break;
         default:
             http_response_code(405);
             header('Content-Type: application/json');
-            sendCacheHeaders();
-            header('Allow: POST');
+            header('Allow: GET');
             echo json_encode(['error' => 'invalid_request', 'error_description' => 'Method Not Allowed']);
     }
-} catch (OAuthException $e) {
+} catch (BearerException $e) {
     http_response_code($e->getCode());
     header('Content-Type: application/json');
-    sendCacheHeaders();
     if (401 === $e->getCode()) {
-        header('WWW-Authenticate: Basic realm="OAuth');
+        header(sprintf('WWW-Authenticate: Bearer error="%s"', $e->getMessage()));
     }
     echo json_encode(['error' => $e->getMessage(), 'error_description' => $e->getDescription()]);
 } catch (Exception $e) {
     http_response_code(500);
     header('Content-Type: application/json');
-    sendCacheHeaders();
     echo json_encode(['error' => 'server_error', 'error_description' => $e->getMessage()]);
 }

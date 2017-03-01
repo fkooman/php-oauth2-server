@@ -18,7 +18,9 @@
 
 namespace fkooman\OAuth\Server;
 
+use DateTime;
 use PDO;
+use PDOException;
 
 class Storage
 {
@@ -33,6 +35,37 @@ class Storage
         }
 
         $this->db = $db;
+    }
+
+    public function logAuthKey($authKey, DateTime $dateTime)
+    {
+        // we will attempt to store the authKey in the database, there is a
+        // duplicate contraint, so it will fail if the identical authKey is
+        // already there
+        //
+        // we will also store the datetime, so we can cleanup the table
+        //
+        try {
+            $stmt = $this->db->prepare(
+                'INSERT INTO auth_key_log (
+                    auth_key,
+                    date_time
+                 ) 
+                 VALUES(
+                    :auth_key,
+                    :date_time
+                 )'
+            );
+
+            $stmt->bindValue(':auth_key', $authKey, PDO::PARAM_STR);
+            $stmt->bindValue(':date_time', $dateTime->format('Y-m-d H:i:s'), PDO::PARAM_STR);
+            $stmt->execute();
+
+            return true;
+        } catch (PDOException $e) {
+            // insert failed, so this is a replay of the authorization code
+            return false;
+        }
     }
 
     public function hasAuthorization($authKey)
@@ -105,6 +138,9 @@ class Storage
 
         $stmt->bindValue(':auth_key', $authKey, PDO::PARAM_STR);
         $stmt->execute();
+
+        // XXX we could also remove the entry from the auth_key_log here
+        // as reuse of the code has no impact anymore
     }
 
     public function init()
@@ -115,6 +151,11 @@ class Storage
                 user_id VARCHAR(255) NOT NULL,
                 client_id VARCHAR(255) NOT NULL,
                 scope VARCHAR(255) NOT NULL,
+                UNIQUE(auth_key)
+            )',
+            'CREATE TABLE IF NOT EXISTS auth_key_log (
+                auth_key VARCHAR(255) NOT NULL,
+                date_time VARCHAR(255) NOT NULL,
                 UNIQUE(auth_key)
             )',
         ];

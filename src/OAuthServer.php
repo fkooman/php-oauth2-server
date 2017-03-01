@@ -146,7 +146,7 @@ class OAuthServer
             throw new GrantException('not an authorization code');
         }
         if ($this->dateTime >= new DateTime($codeInfo['expires_at'])) {
-            throw new GrantException('expired code');
+            throw new GrantException('expired authorization code');
         }
 
         // parameters in POST body need to match the parameters stored with
@@ -156,23 +156,17 @@ class OAuthServer
         // verify code_verifier if public client
         $this->verifyCodeVerifier($clientInfo, $codeInfo, $postData);
 
-        // check if this authorization code was already used for getting an
-        // access token in the past
-        if (false !== $this->storage->hasAuthorization($codeInfo['auth_key'])) {
-            // it was used, delete the authorization
-            $this->storage->deleteAuthorization($codeInfo['auth_key']);
-
-            throw new GrantException('code already used');
+        // 1. check if the authorization is still there
+        if (false === $this->storage->hasAuthorization($codeInfo['auth_key'])) {
+            throw new GrantException('authorization code is no longer authorized');
         }
 
-        // as soon as we get an access token we store the authorization and
-        // make it impossible for this authorization code to be reused again
-        $this->storage->storeAuthorization(
-            $codeInfo['user_id'],
-            $postData['client_id'],
-            $codeInfo['scope'],
-            $codeInfo['auth_key']
-        );
+        // 2. make sure the authKey was not used before
+        if (false === $this->storage->logAuthKey($codeInfo['auth_key'], $this->dateTime)) {
+            // authKey was used before, delete authorization according to spec
+            $this->storage->deleteAuthorization($codeInfo['auth_key']);
+            throw new GrantException('authorization code is being reused');
+        }
 
         $accessToken = $this->getAccessToken(
             $codeInfo['user_id'],
@@ -254,6 +248,13 @@ class OAuthServer
         }
 
         $authKey = $this->random->get(16);
+        $this->storage->storeAuthorization(
+            $userId,
+            $getData['client_id'],
+            $getData['scope'],
+            $authKey
+        );
+
         $authorizationCode = $this->getAuthorizationCode(
             $userId,
             $getData['client_id'],

@@ -39,6 +39,7 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
         $validator = new BearerValidator($this->publicKeys, new DateTime('2016-01-01'));
         $this->assertSame(
             [
+                'auth_key' => 'random_1',
                 'user_id' => 'foo',
                 'scope' => 'config',
                 'expires_in' => 3600,
