@@ -33,9 +33,6 @@ class BearerLocalValidator extends BearerValidator
     /** @var Storage */
     private $storage;
 
-    /** @var \DateTime */
-    private $dateTime;
-
     public function __construct($keyPair, Storage $storage, DateTime $dateTime = null)
     {
         $this->storage = $storage;
