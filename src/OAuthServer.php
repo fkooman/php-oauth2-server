@@ -168,10 +168,10 @@ class OAuthServer
         // as soon as we get an access token we store the authorization and
         // make it impossible for this authorization code to be reused again
         $this->storage->storeAuthorization(
-            $codeInfo['auth_key'],
             $codeInfo['user_id'],
             $postData['client_id'],
-            $codeInfo['scope']
+            $codeInfo['scope'],
+            $codeInfo['auth_key']
         );
 
         $accessToken = $this->getAccessToken(
@@ -243,7 +243,14 @@ class OAuthServer
     private function codeAuthorize(array $getData, array $postData, $userId)
     {
         if ('no' === $postData['approve']) {
-            return $this->getUserRefused($getData['redirect_uri'], $getData['state']);
+            return $this->prepareRedirectUri(
+                $getData['redirect_uri'],
+                [
+                    'error' => 'access_denied',
+                    'error_description' => 'user refused authorization',
+                    'state' => $getData['state'],
+                ]
+            );
         }
 
         $authKey = $this->random->get(16);
@@ -261,22 +268,6 @@ class OAuthServer
             [
                 'code' => $authorizationCode,
                 'state' => $getData['state'],
-            ]
-        );
-    }
-
-    /**
-     * @param string $redirectUri
-     * @param string $state
-     */
-    private function getUserRefused($redirectUri, $state)
-    {
-        return $this->prepareRedirectUri(
-            $redirectUri,
-            [
-                'error' => 'access_denied',
-                'error_description' => 'user refused authorization',
-                'state' => $state,
             ]
         );
     }
@@ -371,6 +362,7 @@ class OAuthServer
      */
     private function getAuthorizationCode($userId, $clientId, $scope, $redirectUri, $authKey, $codeChallenge)
     {
+        // authorization codes expire after 5 minutes
         $expiresAt = date_add(clone $this->dateTime, new DateInterval('PT5M'));
 
         return Base64::encode(

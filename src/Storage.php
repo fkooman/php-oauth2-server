@@ -51,12 +51,12 @@ class Storage
         return 1 === (int) $stmt->fetchColumn(0);
     }
 
-    public function storeAuthorization($authKey, $userId, $clientId, $scope)
+    public function storeAuthorization($userId, $clientId, $scope, $authKey)
     {
         $stmt = $this->db->prepare(
             'INSERT INTO authorizations (
                 auth_key,
-                user_id,    
+                user_id,
                 client_id,
                 scope
              ) 

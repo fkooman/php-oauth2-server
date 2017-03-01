@@ -19,31 +19,24 @@
 namespace fkooman\OAuth\Server;
 
 use DateTime;
-use PDO;
 use PHPUnit_Framework_TestCase;
 
 class BearerValidatorTest extends PHPUnit_Framework_TestCase
 {
-    /** @var Storage */
-    private $storage;
-
     /** @var array */
-    private $publicKey;
+    private $publicKeys;
 
     public function setUp()
     {
-        $this->storage = new Storage(new PDO('sqlite::memory:'));
-        $this->storage->init();
-        $this->storage->storeAuthorization('random_1', 'foo', 'code-client', 'config');
-        $this->publicKey = [
-            base64_decode('2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol'),
-            base64_decode('tVzWww1BLdujlA7N36ebEsWozIRYBZwgLgkD7t4TrFJxoDZR6mvp+/7fHH9HbqKDpx5CJz6AUcYgwk2hfLybxXGgNlHqa+n7/t8cf0duooOnHkInPoBRxiDCTaF8vJvF'),
+        $this->publicKeys = [
+            base64_decode('HD9v+gK+84Ij0ugS+G7wmljeLmrWH7j+w4/0L3XLaiU='),
+            base64_decode('caA2Uepr6fv+3xx/R26ig6ceQic+gFHGIMJNoXy8m8U='),
         ];
     }
 
     public function testValidToken()
     {
-        $validator = new BearerValidator($this->publicKey[0], $this->storage, new DateTime('2016-01-01'));
+        $validator = new BearerValidator($this->publicKeys, new DateTime('2016-01-01'));
         $this->assertSame(
             [
                 'user_id' => 'foo',
@@ -54,10 +47,14 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
         );
     }
 
+    /**
+     * @expectedException \fkooman\OAuth\Server\Exception\BearerException
+     * @expectedExceptionMessage: invalid_token
+     */
     public function testNoAuth()
     {
-        $validator = new BearerValidator($this->publicKey[0], $this->storage, new DateTime('2016-01-01'));
-        $this->assertFalse($validator->validate(null));
+        $validator = new BearerValidator($this->publicKeys, new DateTime('2016-01-01'));
+        $validator->validate(null);
     }
 
     /**
@@ -66,7 +63,7 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidSyntax()
     {
-        $validator = new BearerValidator($this->publicKey[0], $this->storage, new DateTime('2016-01-01'));
+        $validator = new BearerValidator($this->publicKeys, new DateTime('2016-01-01'));
         $validator->validate('Bearer %%%%');
     }
 
@@ -76,7 +73,7 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testExpiredToken()
     {
-        $validator = new BearerValidator($this->publicKey[0], $this->storage, new DateTime('2017-01-01'));
+        $validator = new BearerValidator($this->publicKeys, new DateTime('2017-01-01'));
         $validator->validate('Bearer pr/mlAkRzsPXb5X1h3UEeNpLfqFyD550vGrwYc7kuGD01sWJ84DDy4JdlWlFHR4a7dBXPAkS/BPi8Yuc26PqCXsidHlwZSI6ImFjY2Vzc190b2tlbiIsImtleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9');
     }
 
@@ -86,13 +83,17 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidSignatureKey()
     {
-        $validator = new BearerValidator($this->publicKey[1], $this->storage, new DateTime('2016-01-01'));
+        $validator = new BearerValidator([$this->publicKeys[1]], new DateTime('2016-01-01'));
         $validator->validate('Bearer pr/mlAkRzsPXb5X1h3UEeNpLfqFyD550vGrwYc7kuGD01sWJ84DDy4JdlWlFHR4a7dBXPAkS/BPi8Yuc26PqCXsidHlwZSI6ImFjY2Vzc190b2tlbiIsImtleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9');
     }
 
+    /**
+     * @expectedException \fkooman\OAuth\Server\Exception\BearerException
+     * @expectedExceptionMessage: invalid_token
+     */
     public function testBasicAuthentication()
     {
-        $validator = new BearerValidator($this->publicKey[0], $this->storage, new DateTime('2016-01-01'));
+        $validator = new BearerValidator($this->publicKeys, new DateTime('2016-01-01'));
         $this->assertFalse($validator->validate('Basic AAA==='));
     }
 }

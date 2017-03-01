@@ -45,10 +45,6 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         $this->random->method('get')->will($this->onConsecutiveCalls('random_1', 'random_2'));
 
         $oauthClients = [
-            'token-client' => [
-                'redirect_uri' => 'http://example.org/token-cb',
-                'display_name' => 'Token Client',
-            ],
             'code-client' => [
                 'redirect_uri' => 'http://example.org/code-cb',
                 'display_name' => 'Code Client',
@@ -245,7 +241,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
     {
         $server = new OAuthServer($this->getClientInfo, $this->keyPair, $this->storage, $this->random, $this->dateTime);
         // add random_1 to storage
-        $this->storage->storeAuthorization('random_1', 'foo', 'code-client', 'config');
+        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
         $tokenResponse = $server->postToken(
             [
                 'grant_type' => 'authorization_code',
@@ -290,7 +286,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
     public function testRefreshToken()
     {
         // the authorization MUST exist for the refresh token to work
-        $this->storage->storeAuthorization('random_1', 'foo', 'code-client', 'config');
+        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
 
         $server = new OAuthServer($this->getClientInfo, $this->keyPair, $this->storage, $this->random, $this->dateTime);
         $tokenResponse = $server->postToken(
