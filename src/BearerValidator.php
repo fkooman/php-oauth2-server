@@ -82,7 +82,7 @@ class BearerValidator
     private function tryPublicKeys($signedBearerToken)
     {
         foreach ($this->publicKeys as $publicKey) {
-            if (false !== $jsonToken = \Sodium\crypto_sign_open($signedBearerToken, $publicKey)) {
+            if (false !== $jsonToken = \Sodium\crypto_sign_open($signedBearerToken, Base64::decode($publicKey))) {
                 return $jsonToken;
             }
         }

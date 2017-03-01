@@ -49,7 +49,7 @@ class OAuthServer
     public function __construct(callable $getClientInfo, $keyPair, Storage $storage, RandomInterface $random = null, DateTime $dateTime = null)
     {
         $this->getClientInfo = $getClientInfo;
-        $this->keyPair = $keyPair;
+        $this->keyPair = Base64::decode($keyPair);
         $this->storage = $storage;
         if (is_null($random)) {
             $random = new Random();

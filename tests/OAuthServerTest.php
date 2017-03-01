@@ -71,7 +71,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         $this->storage = new Storage(new PDO('sqlite::memory:'));
         $this->storage->init();
 
-        $this->keyPair = base64_decode('2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol');
+        $this->keyPair = '2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol';
 
         $this->dateTime = new DateTime('2016-01-01');
     }

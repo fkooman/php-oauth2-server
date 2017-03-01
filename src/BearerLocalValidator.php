@@ -20,6 +20,7 @@ namespace fkooman\OAuth\Server;
 
 use DateTime;
 use fkooman\OAuth\Server\Exception\BearerException;
+use ParagonIE\ConstantTime\Base64;
 
 /**
  * In addition to verifying the public key of the Bearer token, this will also
@@ -36,7 +37,7 @@ class BearerLocalValidator extends BearerValidator
     public function __construct($keyPair, Storage $storage, DateTime $dateTime = null)
     {
         $this->storage = $storage;
-        $publicKey = \Sodium\crypto_sign_publickey($keyPair);
+        $publicKey = Base64::encode(\Sodium\crypto_sign_publickey(Base64::decode($keyPair)));
         parent::__construct([$publicKey], $dateTime);
     }
 

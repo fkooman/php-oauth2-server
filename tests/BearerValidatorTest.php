@@ -29,8 +29,8 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
     public function setUp()
     {
         $this->publicKeys = [
-            base64_decode('HD9v+gK+84Ij0ugS+G7wmljeLmrWH7j+w4/0L3XLaiU='),
-            base64_decode('caA2Uepr6fv+3xx/R26ig6ceQic+gFHGIMJNoXy8m8U='),
+            'HD9v+gK+84Ij0ugS+G7wmljeLmrWH7j+w4/0L3XLaiU=',
+            'caA2Uepr6fv+3xx/R26ig6ceQic+gFHGIMJNoXy8m8U=',
         ];
     }
 
