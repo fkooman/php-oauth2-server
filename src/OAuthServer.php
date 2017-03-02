@@ -46,6 +46,13 @@ class OAuthServer
     /** @var int */
     private $expiresIn = 3600;
 
+    /**
+     * @param callable             $getClientInfo
+     * @param string               $keyPair       Base64 encoded output of crypto_sign_keypair()
+     * @param Storage              $storage
+     * @param RandomInterface|null $random
+     * @param DateTime|null        $dateTime
+     */
     public function __construct(callable $getClientInfo, $keyPair, Storage $storage, RandomInterface $random = null, DateTime $dateTime = null)
     {
         $this->getClientInfo = $getClientInfo;
@@ -72,6 +79,8 @@ class OAuthServer
     /**
      * Validates the request from the client and returns verified data to
      * show an authorization dialog.
+     *
+     * @param array $getData
      *
      * @return array
      */
@@ -110,8 +119,8 @@ class OAuthServer
 
     /**
      * @param array       $postData
-     * @param string|null $authUser
-     * @param string|null $authPass
+     * @param string|null $authUser the Basic Authentication username of the OAuth client
+     * @param string|null $authPass the Basic Authentication password of the OAuth client
      *
      * @return array
      */
@@ -128,6 +137,11 @@ class OAuthServer
         }
     }
 
+    /**
+     * @param array       $postData
+     * @param string|null $authUser the Basic Authentication username of the OAuth client
+     * @param string|null $authPass the Basic Authentication password of the OAuth client
+     */
     private function postTokenAuthorizationCode(array $postData, $authUser, $authPass)
     {
         $clientInfo = $this->getClient($postData['client_id']);
@@ -162,6 +176,8 @@ class OAuthServer
         }
 
         // 2. make sure the authKey was not used before
+        // XXX but what is the code is used after it expired? it probably
+        // should still invalidate the authorization?
         if (false === $this->storage->logAuthKey($codeInfo['auth_key'], $this->dateTime)) {
             // authKey was used before, delete authorization according to spec
             $this->storage->deleteAuthorization($codeInfo['auth_key']);
@@ -190,6 +206,11 @@ class OAuthServer
         ];
     }
 
+    /**
+     * @param array       $postData
+     * @param string|null $authUser the Basic Authentication username of the OAuth client
+     * @param string|null $authPass the Basic Authentication password of the OAuth client
+     */
     private function postTokenRefreshToken(array $postData, $authUser, $authPass)
     {
         // verify the refresh code
@@ -207,9 +228,6 @@ class OAuthServer
 
         $clientInfo = $this->getClient($refreshTokenInfo['client_id']);
         $this->verifyClientCredentials($refreshTokenInfo['client_id'], $clientInfo, $authUser, $authPass);
-
-        // XXX make sure the authorization still exists before accepting the
-        // refresh token!
 
         // parameters in POST body need to match the parameters stored with
         // the refresh token

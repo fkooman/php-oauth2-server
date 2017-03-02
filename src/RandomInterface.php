@@ -21,9 +21,7 @@ namespace fkooman\OAuth\Server;
 interface RandomInterface
 {
     /**
-     * Get a randomly generated crypto secure string.
-     *
-     * @param $length int the length (in bytes) of the random string
+     * @param int $length length in bytes of requested random string
      */
     public function get($length);
 }

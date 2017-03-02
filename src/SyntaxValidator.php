@@ -22,6 +22,9 @@ use fkooman\OAuth\Server\Exception\ValidateException;
 
 class SyntaxValidator
 {
+    /**
+     * @param string $clientId
+     */
     public static function validateClientId($clientId)
     {
         // client-id  = *VSCHAR
@@ -33,6 +36,8 @@ class SyntaxValidator
 
     /**
      * Validate the authorization code.
+     *
+     * @param string $code
      */
     public static function validateCode($code)
     {
@@ -43,6 +48,9 @@ class SyntaxValidator
         }
     }
 
+    /**
+     * @param string $grantType
+     */
     public static function validateGrantType($grantType)
     {
         // grant-type = grant-name / URI-reference
@@ -55,6 +63,9 @@ class SyntaxValidator
         }
     }
 
+    /**
+     * @param string $responseType
+     */
     public static function validateResponseType($responseType)
     {
         if ('code' !== $responseType) {
@@ -62,6 +73,9 @@ class SyntaxValidator
         }
     }
 
+    /**
+     * @param string $scope
+     */
     public static function validateScope($scope)
     {
         // scope       = scope-token *( SP scope-token )
@@ -74,6 +88,9 @@ class SyntaxValidator
         }
     }
 
+    /**
+     * @param string $state
+     */
     public static function validateState($state)
     {
         // state      = 1*VSCHAR
@@ -83,6 +100,9 @@ class SyntaxValidator
         }
     }
 
+    /**
+     * @param string $codeChallengeMethod
+     */
     public static function validateCodeChallengeMethod($codeChallengeMethod)
     {
         if ('S256' !== $codeChallengeMethod) {
@@ -90,6 +110,9 @@ class SyntaxValidator
         }
     }
 
+    /**
+     * @param string $codeVerifier
+     */
     public static function validateCodeVerifier($codeVerifier)
     {
         // code-verifier = 43*128unreserved
@@ -101,6 +124,9 @@ class SyntaxValidator
         }
     }
 
+    /**
+     * @param string $codeChallenge
+     */
     public static function validateCodeChallenge($codeChallenge)
     {
         // it seems the length of the codeChallenge is always 43 because it is
@@ -110,6 +136,9 @@ class SyntaxValidator
         }
     }
 
+    /**
+     * @param string $approve
+     */
     public static function validateApprove($approve)
     {
         if (!in_array($approve, ['yes', 'no'])) {
@@ -117,6 +146,9 @@ class SyntaxValidator
         }
     }
 
+    /**
+     * @param string $refreshToken
+     */
     public static function validateRefreshToken($refreshToken)
     {
         // refresh-token = 1*VSCHAR

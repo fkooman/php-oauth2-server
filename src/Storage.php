@@ -37,6 +37,10 @@ class Storage
         $this->db = $db;
     }
 
+    /**
+     * @param string   $authKey
+     * @param DateTime $dateTime
+     */
     public function logAuthKey($authKey, DateTime $dateTime)
     {
         // we will attempt to store the authKey in the database, there is a
@@ -68,6 +72,9 @@ class Storage
         }
     }
 
+    /**
+     * @param string $authKey
+     */
     public function hasAuthorization($authKey)
     {
         $stmt = $this->db->prepare(
@@ -84,6 +91,12 @@ class Storage
         return 1 === (int) $stmt->fetchColumn(0);
     }
 
+    /**
+     * @param string $userId
+     * @param string $clientId
+     * @param string $scope
+     * @param string $authKey
+     */
     public function storeAuthorization($userId, $clientId, $scope, $authKey)
     {
         $stmt = $this->db->prepare(
@@ -108,6 +121,9 @@ class Storage
         $stmt->execute();
     }
 
+    /**
+     * @param string $userId
+     */
     public function getAuthorizations($userId)
     {
         $stmt = $this->db->prepare(
@@ -127,6 +143,9 @@ class Storage
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * @param string $authKey
+     */
     public function deleteAuthorization($authKey)
     {
         $stmt = $this->db->prepare(
