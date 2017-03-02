@@ -77,8 +77,8 @@ class OAuthServer
     }
 
     /**
-     * Validates the request from the client and returns verified data to
-     * show an authorization dialog.
+     * Validates the authorization request from the client and returns verified
+     * data to show an authorization dialog.
      *
      * @param array $getData
      *
@@ -86,10 +86,7 @@ class OAuthServer
      */
     public function getAuthorize(array $getData)
     {
-        RequestValidator::validateAuthorizeQueryParameters($getData);
-        $clientInfo = $this->getClient($getData['client_id']);
-        $this->validateRedirectUri($clientInfo, $getData['redirect_uri']);
-        RequestValidator::validatePkceParameters($clientInfo, $getData);
+        $clientInfo = $this->validateAuthorizeRequest($getData);
 
         return [
             'client_id' => $getData['client_id'],
@@ -100,171 +97,35 @@ class OAuthServer
     }
 
     /**
+     * Handles POST request to the "/authorize" endpoint of the OAuth server.
+     *
+     * This is typically the "form submit" on the "authorize dialog" shown in
+     * the browser that the user then accepts or rejects.
+     *
      * @param array  $getData
      * @param array  $postData
      * @param string $userId
      *
-     * @return string the redirect_uri
+     * @return string the parameterized redirect URI
      */
     public function postAuthorize(array $getData, array $postData, $userId)
     {
-        RequestValidator::validateAuthorizeQueryParameters($getData);
-        $clientInfo = $this->getClient($getData['client_id']);
-        $this->validateRedirectUri($clientInfo, $getData['redirect_uri']);
-        RequestValidator::validatePkceParameters($clientInfo, $getData);
+        $this->validateAuthorizeRequest($getData);
         RequestValidator::validateAuthorizePostParameters($postData);
 
-        return $this->codeAuthorize($getData, $postData, $userId);
-    }
-
-    /**
-     * @param array       $postData
-     * @param string|null $authUser the Basic Authentication username of the OAuth client
-     * @param string|null $authPass the Basic Authentication password of the OAuth client
-     *
-     * @return array
-     */
-    public function postToken(array $postData, $authUser, $authPass)
-    {
-        RequestValidator::validateTokenPostParameters($postData);
-        switch ($postData['grant_type']) {
-            case 'authorization_code':
-                return $this->postTokenAuthorizationCode($postData, $authUser, $authPass);
-            case 'refresh_token':
-                return $this->postTokenRefreshToken($postData, $authUser, $authPass);
-            default:
-                throw new ValidateException('invalid "grant_type"');
-        }
-    }
-
-    /**
-     * @param array       $postData
-     * @param string|null $authUser the Basic Authentication username of the OAuth client
-     * @param string|null $authPass the Basic Authentication password of the OAuth client
-     */
-    private function postTokenAuthorizationCode(array $postData, $authUser, $authPass)
-    {
-        $clientInfo = $this->getClient($postData['client_id']);
-        $this->verifyClientCredentials($postData['client_id'], $clientInfo, $authUser, $authPass);
-
-        // verify the authorization code
-        $signedCode = Base64::decode($postData['code']);
-        $publicKey = \Sodium\crypto_sign_publickey($this->keyPair);
-        if (false === $jsonCode = \Sodium\crypto_sign_open($signedCode, $publicKey)) {
-            throw new GrantException('invalid code');
-        }
-
-        $codeInfo = json_decode($jsonCode, true);
-        // type MUST be "authorization_code"
-        if ('authorization_code' !== $codeInfo['type']) {
-            throw new GrantException('not an authorization code');
-        }
-        if ($this->dateTime >= new DateTime($codeInfo['expires_at'])) {
-            throw new GrantException('expired authorization code');
-        }
-
-        // parameters in POST body need to match the parameters stored with
-        // the code
-        $this->verifyCodeInfo($postData, $codeInfo);
-
-        // verify code_verifier if public client
-        $this->verifyCodeVerifier($clientInfo, $codeInfo, $postData);
-
-        // 1. check if the authorization is still there
-        if (false === $this->storage->hasAuthorization($codeInfo['auth_key'])) {
-            throw new GrantException('authorization code is no longer authorized');
-        }
-
-        // 2. make sure the authKey was not used before
-        // XXX but what is the code is used after it expired? it probably
-        // should still invalidate the authorization?
-        if (false === $this->storage->logAuthKey($codeInfo['auth_key'], $this->dateTime)) {
-            // authKey was used before, delete authorization according to spec
-            $this->storage->deleteAuthorization($codeInfo['auth_key']);
-            throw new GrantException('authorization code is being reused');
-        }
-
-        $accessToken = $this->getAccessToken(
-            $codeInfo['user_id'],
-            $postData['client_id'],
-            $codeInfo['scope'],
-            $codeInfo['auth_key']
-        );
-
-        $refreshToken = $this->getRefreshToken(
-            $codeInfo['user_id'],
-            $postData['client_id'],
-            $codeInfo['scope'],
-            $codeInfo['auth_key']
-        );
-
-        return [
-            'access_token' => $accessToken['access_token'],
-            'refresh_token' => $refreshToken,
-            'token_type' => 'bearer',
-            'expires_in' => $accessToken['expires_in'],
-        ];
-    }
-
-    /**
-     * @param array       $postData
-     * @param string|null $authUser the Basic Authentication username of the OAuth client
-     * @param string|null $authPass the Basic Authentication password of the OAuth client
-     */
-    private function postTokenRefreshToken(array $postData, $authUser, $authPass)
-    {
-        // verify the refresh code
-        $signedRefreshToken = Base64::decode($postData['refresh_token']);
-        $publicKey = \Sodium\crypto_sign_publickey($this->keyPair);
-        if (false === $jsonRefreshToken = \Sodium\crypto_sign_open($signedRefreshToken, $publicKey)) {
-            throw new GrantException('invalid refresh_token');
-        }
-
-        $refreshTokenInfo = json_decode($jsonRefreshToken, true);
-        // type MUST be "refresh_token"
-        if ('refresh_token' !== $refreshTokenInfo['type']) {
-            throw new GrantException('not a refresh token');
-        }
-
-        $clientInfo = $this->getClient($refreshTokenInfo['client_id']);
-        $this->verifyClientCredentials($refreshTokenInfo['client_id'], $clientInfo, $authUser, $authPass);
-
-        // parameters in POST body need to match the parameters stored with
-        // the refresh token
-        $this->verifyRefreshTokenInfo($postData, $refreshTokenInfo);
-
-        $accessToken = $this->getAccessToken(
-            $refreshTokenInfo['user_id'],
-            $refreshTokenInfo['client_id'],
-            $postData['scope'],
-            $refreshTokenInfo['auth_key']
-        );
-
-        return [
-            'access_token' => $accessToken['access_token'],
-            'token_type' => 'bearer',
-            'expires_in' => $accessToken['expires_in'],
-        ];
-    }
-
-    /**
-     * @param array  $getData
-     * @param array  $postData
-     * @param string $userId
-     */
-    private function codeAuthorize(array $getData, array $postData, $userId)
-    {
         if ('no' === $postData['approve']) {
+            // user did not approve, tell OAuth client
             return $this->prepareRedirectUri(
                 $getData['redirect_uri'],
                 [
                     'error' => 'access_denied',
-                    'error_description' => 'user refused authorization',
                     'state' => $getData['state'],
                 ]
             );
         }
 
+        // every "authorization" has a unique key that is bound to the
+        // authorization code, access tokens(s) and refresh token
         $authKey = $this->random->get(16);
         $this->storage->storeAuthorization(
             $userId,
@@ -292,18 +153,172 @@ class OAuthServer
     }
 
     /**
+     * Handles POST request to the "/token" endpoint of the OAuth server.
+     *
+     * @param array       $postData
+     * @param string|null $authUser BasicAuth user in case of secret client, null if public client
+     * @param string|null $authPass BasicAuth pass in case of secret client, null if public client
+     *
+     * @return array
+     */
+    public function postToken(array $postData, $authUser, $authPass)
+    {
+        RequestValidator::validateTokenPostParameters($postData);
+
+        switch ($postData['grant_type']) {
+            case 'authorization_code':
+                return $this->postTokenAuthorizationCode($postData, $authUser, $authPass);
+            case 'refresh_token':
+                return $this->postTokenRefreshToken($postData, $authUser, $authPass);
+            default:
+                throw new ValidateException('invalid "grant_type"');
+        }
+    }
+
+    /**
+     * Validate the request to the "/authorize" endpoint.
+     *
+     * @param array $getData
+     *
+     * @return array the client info
+     */
+    private function validateAuthorizeRequest(array $getData)
+    {
+        RequestValidator::validateAuthorizeQueryParameters($getData);
+        $clientInfo = $this->getClient($getData['client_id']);
+        // make sure the provided redirect URI is supported by the client
+        if ($clientInfo['redirect_uri'] !== $getData['redirect_uri']) {
+            throw new ClientException('client does not support this "redirect_uri"', 400);
+        }
+        // public clients require PKCE
+        if (!array_key_exists('client_secret', $clientInfo)) {
+            RequestValidator::validatePkceParameters($getData);
+        }
+
+        return $clientInfo;
+    }
+
+    /**
+     * @param array       $postData
+     * @param string|null $authUser BasicAuth user in case of secret client, null if public client
+     * @param string|null $authPass BasicAuth pass in case of secret client, null if public client
+     */
+    private function postTokenAuthorizationCode(array $postData, $authUser, $authPass)
+    {
+        $clientInfo = $this->getClient($postData['client_id']);
+        $this->verifyClientCredentials($postData['client_id'], $clientInfo, $authUser, $authPass);
+
+        // verify the authorization code
+        $signedCode = Base64::decode($postData['code']);
+        $publicKey = \Sodium\crypto_sign_publickey($this->keyPair);
+        if (false === $jsonCode = \Sodium\crypto_sign_open($signedCode, $publicKey)) {
+            throw new GrantException('"code" has invalid signature');
+        }
+
+        $codeInfo = json_decode($jsonCode, true);
+        if ('authorization_code' !== $codeInfo['type']) {
+            throw new GrantException('"code" is not of type authorization_code');
+        }
+
+        // check authorization code expiry
+        if ($this->dateTime >= new DateTime($codeInfo['expires_at'])) {
+            throw new GrantException('"authorization_code" is expired');
+        }
+
+        // parameters in POST body need to match the parameters stored with
+        // the code
+        $this->verifyCodeInfo($postData, $codeInfo);
+
+        // verify code_verifier (iff public client)
+        $this->verifyCodeVerifier($clientInfo, $codeInfo, $postData);
+
+        // 1. check if the authorization is still there
+        if (false === $this->storage->hasAuthorization($codeInfo['auth_key'])) {
+            throw new GrantException('"authorization_code" is no longer authorized');
+        }
+
+        // 2. make sure the authKey was not used before
+        if (false === $this->storage->logAuthKey($codeInfo['auth_key'])) {
+            // authKey was used before, delete authorization according to spec
+            // so refresh_tokens and access_tokens can no longer be used
+            $this->storage->deleteAuthorization($codeInfo['auth_key']);
+
+            throw new GrantException('"authorization_code" reuse');
+        }
+
+        $accessToken = $this->getAccessToken(
+            $codeInfo['user_id'],
+            $postData['client_id'],
+            $codeInfo['scope'],
+            $codeInfo['auth_key']
+        );
+
+        $refreshToken = $this->getRefreshToken(
+            $codeInfo['user_id'],
+            $postData['client_id'],
+            $codeInfo['scope'],
+            $codeInfo['auth_key']
+        );
+
+        return [
+            'access_token' => $accessToken,
+            'refresh_token' => $refreshToken,
+            'token_type' => 'bearer',
+            'expires_in' => $this->expiresIn,
+        ];
+    }
+
+    /**
+     * @param array       $postData
+     * @param string|null $authUser BasicAuth user in case of secret client, null if public client
+     * @param string|null $authPass BasicAuth pass in case of secret client, null if public client
+     */
+    private function postTokenRefreshToken(array $postData, $authUser, $authPass)
+    {
+        // verify the refresh code
+        $signedRefreshToken = Base64::decode($postData['refresh_token']);
+        $publicKey = \Sodium\crypto_sign_publickey($this->keyPair);
+        if (false === $jsonRefreshToken = \Sodium\crypto_sign_open($signedRefreshToken, $publicKey)) {
+            throw new GrantException('"refresh_token" has invalid signature');
+        }
+
+        $refreshTokenInfo = json_decode($jsonRefreshToken, true);
+        if ('refresh_token' !== $refreshTokenInfo['type']) {
+            throw new GrantException('"refresh_token" is not of type refresh_token');
+        }
+
+        $clientInfo = $this->getClient($refreshTokenInfo['client_id']);
+        $this->verifyClientCredentials($refreshTokenInfo['client_id'], $clientInfo, $authUser, $authPass);
+
+        // parameters in POST body need to match the parameters stored with
+        // the refresh token
+        $this->verifyRefreshTokenInfo($postData, $refreshTokenInfo);
+
+        $accessToken = $this->getAccessToken(
+            $refreshTokenInfo['user_id'],
+            $refreshTokenInfo['client_id'],
+            $postData['scope'],
+            $refreshTokenInfo['auth_key']
+        );
+
+        return [
+            'access_token' => $accessToken,
+            'token_type' => 'bearer',
+            'expires_in' => $this->expiresIn,
+        ];
+    }
+
+    /**
      * @param string $redirectUri
      * @param array  $queryParameters
      */
     private function prepareRedirectUri($redirectUri, array $queryParameters)
     {
-        // if redirectUri already contains '?', the separator becomes '&'
-        $querySeparator = false === strpos($redirectUri, '?') ? '?' : '&';
-
         return sprintf(
             '%s%s%s',
             $redirectUri,
-            $querySeparator,
+            // use '&' as separator when redirectUri already contains a '?'
+            false === strpos($redirectUri, '?') ? '?' : '&',
             http_build_query($queryParameters)
         );
     }
@@ -314,7 +329,7 @@ class OAuthServer
      * @param string $scope
      * @param string $authKey
      *
-     * @return array
+     * @return string
      */
     private function getAccessToken($userId, $clientId, $scope, $authKey)
     {
@@ -322,12 +337,13 @@ class OAuthServer
         // of access tokens when an authorization code is replayed, we use the
         // "auth_key" as a tag for the issued access tokens
         $expiresAt = date_add(clone $this->dateTime, new DateInterval(sprintf('PT%dS', $this->expiresIn)));
-        $accessToken = Base64::encode(
+
+        return Base64::encode(
             \Sodium\crypto_sign(
                 json_encode(
                     [
                         'type' => 'access_token',
-                        'auth_key' => $authKey, // to bind it to the authorization code
+                        'auth_key' => $authKey, // to bind it to the authorization
                         'user_id' => $userId,
                         'client_id' => $clientId,
                         'scope' => $scope,
@@ -337,11 +353,6 @@ class OAuthServer
                 \Sodium\crypto_sign_secretkey($this->keyPair)
             )
         );
-
-        return [
-            'access_token' => $accessToken,
-            'expires_in' => $this->expiresIn,
-        ];
     }
 
     /**
@@ -359,7 +370,7 @@ class OAuthServer
                 json_encode(
                     [
                         'type' => 'refresh_token',
-                        'auth_key' => $authKey, // to bind it to the authorization code
+                        'auth_key' => $authKey, // to bind it to the authorization
                         'user_id' => $userId,
                         'client_id' => $clientId,
                         'scope' => $scope,
@@ -409,8 +420,6 @@ class OAuthServer
      */
     private function verifyCodeInfo(array $postData, array $codeInfo)
     {
-        // XXX more fields to verify?!
-        // XXX ValidateException is correct here?
         if ($postData['client_id'] !== $codeInfo['client_id']) {
             throw new ValidateException('unexpected "client_id"');
         }
@@ -426,7 +435,6 @@ class OAuthServer
      */
     private function verifyRefreshTokenInfo(array $postData, array $refreshTokenInfo)
     {
-        // XXX more fields to verify?!
         if ($postData['scope'] !== $refreshTokenInfo['scope']) {
             throw new ValidateException('unexpected "scope"');
         }
@@ -451,11 +459,11 @@ class OAuthServer
             }
 
             if (!is_string($authPass)) {
-                throw new ClientException('invalid credentials (no client_secret)', 401);
+                throw new ClientException('invalid credentials (no authenticating pass)', 401);
             }
 
             if (0 !== \Sodium\compare($clientInfo['client_secret'], $authPass)) {
-                throw new ClientException('invalid credentials (invalid client_secret)', 401);
+                throw new ClientException('invalid credentials (invalid authenticating pass)', 401);
             }
         }
     }
@@ -464,16 +472,35 @@ class OAuthServer
      * @param array $clientInfo
      * @param array $codeInfo
      * @param array $postData
+     *
+     * @see https://tools.ietf.org/html/rfc7636#appendix-A
      */
     private function verifyCodeVerifier(array $clientInfo, array $codeInfo, array $postData)
     {
+        // only for public clients
         if (!array_key_exists('client_secret', $clientInfo)) {
             if (!array_key_exists('code_verifier', $postData)) {
                 throw new ValidateException('missing "code_verifier" parameter');
             }
 
-            if (0 !== \Sodium\compare($codeInfo['code_challenge'], self::encodeWithoutPadding(hash('sha256', $postData['code_verifier'], true)))) {
-                throw new GrantException('unexpected "code_verifier"');
+            // constant time compare of the code_challenge compared to the
+            // expected value
+            $cmp = \Sodium\compare(
+                $codeInfo['code_challenge'],
+                rtrim(
+                    Base64UrlSafe::encode(
+                        hash(
+                            'sha256',
+                            $postData['code_verifier'],
+                            true
+                        )
+                    ),
+                    '='
+                )
+            );
+
+            if (0 !== $cmp) {
+                throw new GrantException('invalid "code_verifier"');
             }
         }
     }
@@ -490,29 +517,5 @@ class OAuthServer
         }
 
         return $clientInfo;
-    }
-
-    /**
-     * @param array  $clientInfo
-     * @param string $redirectUri
-     */
-    private function validateRedirectUri(array $clientInfo, $redirectUri)
-    {
-        if ($clientInfo['redirect_uri'] !== $redirectUri) {
-            throw new ClientException('client does not support this "redirect_uri"', 400);
-        }
-    }
-
-    /**
-     * Base64url Encoding without Padding.
-     *
-     * @see https://tools.ietf.org/html/rfc7636#appendix-A
-     */
-    private static function encodeWithoutPadding($inputString)
-    {
-        return rtrim(
-            Base64UrlSafe::encode($inputString),
-            '='
-        );
     }
 }
