@@ -17,14 +17,23 @@ sent.
 
 # Features
 
-- Simplicity;
-- Only supports "authorization code" flow;
+- Supports PHP >= 5.4;
+- Simple;
+- Only supports _Authorization Code Grant_;
 - Easy integration with your own application and/or framework;
 - Does not force a framework on you;
-- Only conforming OAuth 2.0 clients will work;
 - There will be no toggles to shoot yourself in the foot;
-- Uses [libsodium-php](https://github.com/jedisct1/libsodium-php) for secure 
-  random strings, constant time string compare and encryption/signing of 
-  tokens and authorization codes;
+- Uses [libsodium-php](https://github.com/jedisct1/libsodium-php) for:
+  - CSPRNG;
+  - constant time string compare;
+  - public key crypto signatures;
 - Supports [PKCE](https://tools.ietf.org/html/rfc7636);
 - Supports refresh tokens
+
+# Using
+
+See the `example/` directory.
+
+# License
+
+[AGPLv3+](LICENSE).
