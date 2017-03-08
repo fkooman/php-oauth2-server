@@ -19,7 +19,7 @@ sent.
 
 - Supports PHP >= 5.4;
 - Simple;
-- Only supports _Authorization Code Grant_;
+- Only supports _Authorization Code Grant_ and _Implicit Grant_;
 - Easy integration with your own application and/or framework;
 - Does not force a framework on you;
 - There will be no toggles to shoot yourself in the foot;

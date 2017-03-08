@@ -116,6 +116,7 @@ class OAuthServer
         if ('no' === $postData['approve']) {
             // user did not approve, tell OAuth client
             return $this->prepareRedirectUri(
+                'token' === $getData['response_type'], // use fragment
                 $getData['redirect_uri'],
                 [
                     'error' => 'access_denied',
@@ -134,22 +135,46 @@ class OAuthServer
             $authKey
         );
 
-        $authorizationCode = $this->getAuthorizationCode(
-            $userId,
-            $getData['client_id'],
-            $getData['scope'],
-            $getData['redirect_uri'],
-            $authKey,
-            array_key_exists('code_challenge', $getData) ? $getData['code_challenge'] : null
-        );
+        if ('code' === $getData['response_type']) {
+            // return authorization code
+            $authorizationCode = $this->getAuthorizationCode(
+                $userId,
+                $getData['client_id'],
+                $getData['scope'],
+                $getData['redirect_uri'],
+                $authKey,
+                array_key_exists('code_challenge', $getData) ? $getData['code_challenge'] : null
+            );
 
-        return $this->prepareRedirectUri(
-            $getData['redirect_uri'],
-            [
-                'code' => $authorizationCode,
-                'state' => $getData['state'],
-            ]
-        );
+            return $this->prepareRedirectUri(
+                false,
+                $getData['redirect_uri'],
+                [
+                    'code' => $authorizationCode,
+                    'state' => $getData['state'],
+                ]
+            );
+        } else {
+            // "token"
+            // return access token
+            $accessToken = $this->getAccessToken(
+                $userId,
+                $getData['client_id'],
+                $getData['scope'],
+                $authKey
+            );
+
+            return $this->prepareRedirectUri(
+                true,
+                $getData['redirect_uri'],
+                [
+                    'access_token' => $accessToken,
+                    'token_type' => 'bearer',
+                    'expires_in' => $this->expiresIn,
+                    'state' => $getData['state'],
+                ]
+            );
+        }
     }
 
     /**
@@ -190,9 +215,15 @@ class OAuthServer
         if ($clientInfo['redirect_uri'] !== $getData['redirect_uri']) {
             throw new ClientException('client does not support this "redirect_uri"', 400);
         }
-        // public clients require PKCE
-        if (!array_key_exists('client_secret', $clientInfo)) {
-            RequestValidator::validatePkceParameters($getData);
+        // make sure the response_type is supported by the client
+        if ($clientInfo['response_type'] !== $getData['response_type']) {
+            throw new ClientException('client does not support this "response_type"', 400);
+        }
+        if ('token' !== $clientInfo['response_type']) {
+            // public code clients require PKCE
+            if (!array_key_exists('client_secret', $clientInfo)) {
+                RequestValidator::validatePkceParameters($getData);
+            }
         }
 
         return $clientInfo;
@@ -309,16 +340,24 @@ class OAuthServer
     }
 
     /**
+     * @param bool   $useFragment
      * @param string $redirectUri
      * @param array  $queryParameters
      */
-    private function prepareRedirectUri($redirectUri, array $queryParameters)
+    private function prepareRedirectUri($useFragment, $redirectUri, array $queryParameters)
     {
+        if ($useFragment) {
+            // for "token" flow we use fragment
+            $querySeparator = '#';
+        } else {
+            // use '&' as separator when redirectUri already contains a '?'
+            $querySeparator = false === strpos($redirectUri, '?') ? '?' : '&';
+        }
+
         return sprintf(
             '%s%s%s',
             $redirectUri,
-            // use '&' as separator when redirectUri already contains a '?'
-            false === strpos($redirectUri, '?') ? '?' : '&',
+            $querySeparator,
             http_build_query($queryParameters)
         );
     }
