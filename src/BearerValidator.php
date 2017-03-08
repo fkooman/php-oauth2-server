@@ -35,6 +35,10 @@ class BearerValidator
     /** @var array */
     private $publicKeys;
 
+    /**
+     * @param array          $publicKeys
+     * @param \DateTime|null $dateTime
+     */
     public function __construct(array $publicKeys, DateTime $dateTime = null)
     {
         $this->publicKeys = $publicKeys;
