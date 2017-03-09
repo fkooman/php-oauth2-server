@@ -43,7 +43,7 @@ try {
         $storage
     );
 
-    // XXX take this from $_SERVER variable
+    // XXX use user authentication information
     $userId = 'foo';
 
     switch ($_SERVER['REQUEST_METHOD']) {
