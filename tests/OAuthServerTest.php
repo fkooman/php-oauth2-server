@@ -298,7 +298,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         $server = new OAuthServer($this->getClientInfo, $this->keyPair, $this->storage, $this->random, $this->dateTime);
         // add random_1 to storage
         $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
-        $this->storage->logAuthKey('random_1', new DateTime('2016-01-01'));
+        $this->storage->logAuthKey('random_1');
         $server->postToken(
             [
                 'grant_type' => 'authorization_code',
