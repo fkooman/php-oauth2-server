@@ -21,12 +21,6 @@ use fkooman\OAuth\Server\Exception\OAuthException;
 use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\Storage;
 
-function sendCacheHeaders()
-{
-    header('Cache-Control: no-store');
-    header('Pragma: no-cache');
-}
-
 try {
     // storage
     $storage = new Storage(new PDO(sprintf('sqlite:%s/data/db.sqlite', dirname(__DIR__))));
@@ -56,20 +50,23 @@ try {
 
             http_response_code(200);
             header('Content-Type: application/json');
-            sendCacheHeaders();
+            header('Cache-Control: no-store');
+            header('Pragma: no-cache');
             echo json_encode($oauthServer->postToken($_POST, $authUser, $authPass));
             break;
         default:
             http_response_code(405);
             header('Content-Type: application/json');
-            sendCacheHeaders();
+            header('Cache-Control: no-store');
+            header('Pragma: no-cache');
             header('Allow: POST');
             echo json_encode(['error' => 'invalid_request', 'error_description' => 'Method Not Allowed']);
     }
 } catch (OAuthException $e) {
     http_response_code($e->getCode());
     header('Content-Type: application/json');
-    sendCacheHeaders();
+    header('Cache-Control: no-store');
+    header('Pragma: no-cache');
     if (401 === $e->getCode()) {
         header('WWW-Authenticate: Basic realm="OAuth');
     }
@@ -77,6 +74,7 @@ try {
 } catch (Exception $e) {
     http_response_code(500);
     header('Content-Type: application/json');
-    sendCacheHeaders();
+    header('Cache-Control: no-store');
+    header('Pragma: no-cache');
     echo json_encode(['error' => 'server_error', 'error_description' => $e->getMessage()]);
 }
