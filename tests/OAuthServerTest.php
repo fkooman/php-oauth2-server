@@ -16,9 +16,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace fkooman\OAuth\Server;
+namespace fkooman\OAuth\Server\Tests;
 
 use DateTime;
+use fkooman\OAuth\Server\OAuthServer;
+use fkooman\OAuth\Server\Storage;
 use PDO;
 use PHPUnit_Framework_TestCase;
 
@@ -33,7 +35,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
     /** @var string */
     private $keyPair;
 
-    /** @var Random */
+    /** @var \fkooman\OAuth\Server\Random */
     private $random;
 
     /** @var \DateTime */

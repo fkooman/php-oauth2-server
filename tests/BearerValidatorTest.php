@@ -16,9 +16,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace fkooman\OAuth\Server;
+namespace fkooman\OAuth\Server\Tests;
 
 use DateTime;
+use fkooman\OAuth\Server\BearerValidator;
 use PHPUnit_Framework_TestCase;
 
 class BearerValidatorTest extends PHPUnit_Framework_TestCase
