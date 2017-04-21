@@ -36,4 +36,4 @@ See the `example/` directory.
 
 # License
 
-[AGPLv3+](LICENSE).
+[MIT](LICENSE).
