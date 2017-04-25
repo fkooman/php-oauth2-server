@@ -49,6 +49,9 @@ try {
         $storage
     );
 
+    // expire a token after 30 seconds
+    $oauthServer->setExpiresIn(30);
+
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'POST':
             $authUser = array_key_exists('PHP_AUTH_USER', $_SERVER) ? $_SERVER['PHP_AUTH_USER'] : null;

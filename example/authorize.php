@@ -49,6 +49,9 @@ try {
         $storage
     );
 
+    // expire a token after 30 seconds
+    $oauthServer->setExpiresIn(30);
+
     // XXX use user authentication information
     $userId = 'foo';
 
