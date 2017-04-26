@@ -34,14 +34,14 @@ use ParagonIE\ConstantTime\Base64UrlSafe;
 
 class OAuthServer
 {
+    /** @var Storage */
+    private $storage;
+
     /** @var callable */
     private $getClientInfo;
 
     /** @var string */
     private $keyPair;
-
-    /** @var Storage */
-    private $storage;
 
     /** @var RandomInterface */
     private $random;
@@ -57,11 +57,11 @@ class OAuthServer
      * @param string   $keyPair       Base64 encoded output of crypto_sign_keypair()
      * @param Storage  $storage
      */
-    public function __construct(callable $getClientInfo, $keyPair, Storage $storage)
+    public function __construct(Storage $storage, callable $getClientInfo, $keyPair)
     {
+        $this->storage = $storage;
         $this->getClientInfo = $getClientInfo;
         $this->keyPair = Base64::decode($keyPair);
-        $this->storage = $storage;
         $this->random = new Random();
         $this->dateTime = new DateTime();
     }
