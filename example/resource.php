@@ -23,7 +23,7 @@
  */
 require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
-use fkooman\OAuth\Server\BearerLocalValidator;
+use fkooman\OAuth\Server\BearerValidator;
 use fkooman\OAuth\Server\Exception\BearerException;
 use fkooman\OAuth\Server\Storage;
 
@@ -31,9 +31,9 @@ try {
     $storage = new Storage(new PDO(sprintf('sqlite:%s/data/db.sqlite', dirname(__DIR__))));
     $storage->init();
 
-    $bearerValidator = new BearerLocalValidator(
-        '2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol',
-        $storage
+    $bearerValidator = new BearerValidator(
+        $storage,
+        '2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol'
     );
 
     switch ($_SERVER['REQUEST_METHOD']) {

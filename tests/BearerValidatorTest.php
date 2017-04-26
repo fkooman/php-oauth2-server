@@ -26,24 +26,29 @@ namespace fkooman\OAuth\Server\Tests;
 
 use DateTime;
 use fkooman\OAuth\Server\BearerValidator;
+use fkooman\OAuth\Server\Storage;
+use PDO;
 use PHPUnit_Framework_TestCase;
 
 class BearerValidatorTest extends PHPUnit_Framework_TestCase
 {
-    /** @var array */
-    private $publicKeys;
+    /** @var \fkooman\OAuth\Server\BearerValidator */
+    private $validator;
+
+    /** @var \fkooman\OAuth\Server\Storage */
+    private $storage;
 
     public function setUp()
     {
-        $this->publicKeys = [
-            'HD9v+gK+84Ij0ugS+G7wmljeLmrWH7j+w4/0L3XLaiU=',
-            'caA2Uepr6fv+3xx/R26ig6ceQic+gFHGIMJNoXy8m8U=',
-        ];
+        $this->storage = new Storage(new PDO('sqlite::memory:'));
+        $this->storage->init();
+        $this->validator = new BearerValidator($this->storage, '2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol');
+        $this->validator->setDateTime(new DateTime('2016-01-01'));
     }
 
     public function testValidToken()
     {
-        $validator = new BearerValidator($this->publicKeys, new DateTime('2016-01-01'));
+        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
         $this->assertSame(
             [
                 'auth_key' => 'random_1',
@@ -51,18 +56,22 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
                 'scope' => 'config',
                 'expires_in' => 3600,
             ],
-            $validator->validate('Bearer znwcwk0WpP1y0qrUSd/J6KToSlXdceGBaliVLhYYjRESQoVZI1aZTX9cRfBfIpOBnMcyTF3Izs9H8918OwiqBHsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAxOjAwOjAwIn0=')
+            $this->validator->validate('Bearer znwcwk0WpP1y0qrUSd/J6KToSlXdceGBaliVLhYYjRESQoVZI1aZTX9cRfBfIpOBnMcyTF3Izs9H8918OwiqBHsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAxOjAwOjAwIn0=')
         );
     }
 
-    /**
-     * @expectedException \fkooman\OAuth\Server\Exception\BearerException
-     * @expectedExceptionMessage: invalid_token
-     */
-    public function testNoAuth()
+    public function testValidPublicKeyToken()
     {
-        $validator = new BearerValidator($this->publicKeys, new DateTime('2016-01-01'));
-        $validator->validate(null);
+        $this->validator->setPublicKeys(['Jb+A8dkDCXwH2LWyKX6H6BmJearfrH/SGVXSqjL2QNs=']);
+        $this->assertSame(
+            [
+                'auth_key' => 'random_1',
+                'user_id' => 'foo',
+                'scope' => 'config',
+                'expires_in' => 3600,
+            ],
+            $this->validator->validate('Bearer BMrr3RdJgGSRxzDyC/89mfcrpH7eva9czHp4s4FH8YjsNp9p8w2K32+sI6e1FKIGrTuu/R0H6B6oQzrIyJ7FAHsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoidG9rZW4tY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9')
+        );
     }
 
     /**
@@ -71,8 +80,7 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidSyntax()
     {
-        $validator = new BearerValidator($this->publicKeys, new DateTime('2016-01-01'));
-        $validator->validate('Bearer %%%%');
+        $this->validator->validate('Bearer %%%%');
     }
 
     /**
@@ -81,8 +89,8 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testExpiredToken()
     {
-        $validator = new BearerValidator($this->publicKeys, new DateTime('2017-01-01'));
-        $validator->validate('Bearer pr/mlAkRzsPXb5X1h3UEeNpLfqFyD550vGrwYc7kuGD01sWJ84DDy4JdlWlFHR4a7dBXPAkS/BPi8Yuc26PqCXsidHlwZSI6ImFjY2Vzc190b2tlbiIsImtleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9');
+        $this->validator->setDateTime(new DateTime('2017-01-01'));
+        $this->validator->validate('Bearer znwcwk0WpP1y0qrUSd/J6KToSlXdceGBaliVLhYYjRESQoVZI1aZTX9cRfBfIpOBnMcyTF3Izs9H8918OwiqBHsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAxOjAwOjAwIn0=');
     }
 
     /**
@@ -91,8 +99,7 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testInvalidSignatureKey()
     {
-        $validator = new BearerValidator([$this->publicKeys[1]], new DateTime('2016-01-01'));
-        $validator->validate('Bearer pr/mlAkRzsPXb5X1h3UEeNpLfqFyD550vGrwYc7kuGD01sWJ84DDy4JdlWlFHR4a7dBXPAkS/BPi8Yuc26PqCXsidHlwZSI6ImFjY2Vzc190b2tlbiIsImtleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9');
+        $this->validator->validate('Bearer qrCFqzPz4ac7U8%2FfSOa6ReXvDJ6D8zsz1VNK%2FyEHrryWHpHanbHjVgL6Ss%2BpLenWgTVTOHcLLv1aT3D1RTnmAnsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoidG9rZW4tY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9');
     }
 
     /**
@@ -101,7 +108,6 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
      */
     public function testBasicAuthentication()
     {
-        $validator = new BearerValidator($this->publicKeys, new DateTime('2016-01-01'));
-        $this->assertFalse($validator->validate('Basic AAA==='));
+        $this->validator->validate('Basic AAA===');
     }
 }

@@ -76,6 +76,8 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         $this->storage->init();
 
         $keyPair = '2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol';
+//        $keyPair = 'eRhExASYhfQqJTu7MMXgHxQBrFrEL7cwLY4gExBmPt4rZ9+UNp/SqilGa/7GK3NvLog02JoaAgELNZb6aVLlWitn35Q2n9KqKUZr/sYrc28uiDTYmhoCAQs1lvppUuVa';
+//        $keyPair = 'jWylcGT3PD1wOKZQN3VN5LfFAlXKAIZn3pOBdioPUuElv4Dx2QMJfAfYtbIpfofoGYl5qt+sf9IZVdKqMvZA2yW/gPHZAwl8B9i1sil+h+gZiXmq36x/0hlV0qoy9kDb';
 
         $this->server = new OAuthServer($getClientInfo, $keyPair, $this->storage);
         $this->server->setDateTime(new DateTime('2016-01-01'));

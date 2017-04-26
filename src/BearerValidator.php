@@ -29,29 +29,51 @@ use fkooman\OAuth\Server\Exception\BearerException;
 use ParagonIE\ConstantTime\Base64;
 use RangeException;
 
-/**
- * Use this class if you want to validate Bearer tokens on a different machine
- * as the OAuth Server.
- */
 class BearerValidator
 {
+    /** @var Storage */
+    private $storage;
+
+    /** @var string */
+    private $publicKey;
+
+    /** @var array */
+    private $publicKeys = [];
+
     /** @var \DateTime */
     private $dateTime;
 
-    /** @var array */
-    private $publicKeys;
+    /**
+     * @param Storage $storage
+     * @param string  $keyPair the Base64 encoded keyPair
+     */
+    public function __construct(Storage $storage, $keyPair)
+    {
+        $this->storage = $storage;
+        $this->publicKey = \Sodium\crypto_sign_publickey(Base64::decode($keyPair));
+        $this->dateTime = new DateTime();
+    }
 
     /**
-     * @param array          $publicKeys
-     * @param \DateTime|null $dateTime
+     * @param DateTime $dateTime
      */
-    public function __construct(array $publicKeys, DateTime $dateTime = null)
+    public function setDateTime(DateTime $dateTime)
     {
-        $this->publicKeys = $publicKeys;
-        if (is_null($dateTime)) {
-            $dateTime = new DateTime();
-        }
         $this->dateTime = $dateTime;
+    }
+
+    /**
+     * Set additional public keys to use for access_token validation. These are
+     * _NOT_ validated in the database.
+     *
+     * @param array $publicKeys the Base64 encoded public key(s)
+     */
+    public function setPublicKeys(array $publicKeys)
+    {
+        $this->publicKeys = [];
+        foreach ($publicKeys as $publicKey) {
+            $this->publicKeys[] = Base64::decode($publicKey);
+        }
     }
 
     /**
@@ -65,42 +87,64 @@ class BearerValidator
         try {
             $bearerToken = substr($authorizationHeader, 7);
             $signedBearerToken = Base64::decode($bearerToken);
-            $jsonToken = $this->tryPublicKeys($signedBearerToken);
-            $tokenInfo = json_decode($jsonToken, true);
 
-            // type MUST be "access_token"
-            if ('access_token' !== $tokenInfo['type']) {
-                throw new BearerException('not an access token');
+            // make sure access_token is signed by us
+            if (false !== $jsonToken = \Sodium\crypto_sign_open($signedBearerToken, $this->publicKey)) {
+                // as it is signed by us, it MUST exist in the DB as well,
+                // otherwise it was revoked...
+                $tokenInfo = $this->validateTokenInfo(json_decode($jsonToken, true));
+                if (!$this->storage->hasAuthorization($tokenInfo['auth_key'])) {
+                    throw new BearerException('authorization no longer exists, invalid token');
+                }
+
+                return $tokenInfo;
             }
 
-            $expiresAt = new DateTime($tokenInfo['expires_at']);
-            if ($this->dateTime >= $expiresAt) {
-                throw new BearerException('token expired');
+            // it was not our signature, maybe it is one of the OPTIONAL
+            // additionally configured public keys
+            foreach ($this->publicKeys as $publicKey) {
+                if (false !== $jsonToken = \Sodium\crypto_sign_open($signedBearerToken, $publicKey)) {
+                    return $this->validateTokenInfo(json_decode($jsonToken, true));
+                }
             }
 
-            return [
-                'auth_key' => $tokenInfo['auth_key'],
-                'user_id' => $tokenInfo['user_id'],
-                'scope' => $tokenInfo['scope'],
-                'expires_in' => $expiresAt->getTimestamp() - $this->dateTime->getTimestamp(),
-            ];
+            // non of the additional public keys (if they were set) were able
+            // to validate the token
+            throw new BearerException('invalid signature');
         } catch (RangeException $e) {
             // Base64::decode throws this exception if string is not valid Base64
             throw new BearerException('invalid token format');
         }
     }
 
-    private function tryPublicKeys($signedBearerToken)
+    /**
+     * @param array $tokenInfo
+     *
+     * @return array
+     */
+    private function validateTokenInfo(array $tokenInfo)
     {
-        foreach ($this->publicKeys as $publicKey) {
-            if (false !== $jsonToken = \Sodium\crypto_sign_open($signedBearerToken, Base64::decode($publicKey))) {
-                return $jsonToken;
-            }
+        // type MUST be "access_token"
+        if ('access_token' !== $tokenInfo['type']) {
+            throw new BearerException('not an access token');
         }
 
-        throw new BearerException('invalid signature');
+        $expiresAt = new DateTime($tokenInfo['expires_at']);
+        if ($this->dateTime >= $expiresAt) {
+            throw new BearerException('token expired');
+        }
+
+        return [
+            'auth_key' => $tokenInfo['auth_key'],
+            'user_id' => $tokenInfo['user_id'],
+            'scope' => $tokenInfo['scope'],
+            'expires_in' => $expiresAt->getTimestamp() - $this->dateTime->getTimestamp(),
+        ];
     }
 
+    /**
+     * @param string $bearerCredentials
+     */
     private static function validateBearerCredentials($bearerCredentials)
     {
         // b64token    = 1*( ALPHA / DIGIT /
