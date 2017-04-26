@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright (c) 2017 François Kooman <fkooman@tuxed.net>.
+ * Copyright (c) 2016, 2017 François Kooman <fkooman@tuxed.net>.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,14 +22,22 @@
  * SOFTWARE.
  */
 
-namespace fkooman\OAuth\Server;
+namespace fkooman\OAuth\Server\Tests;
 
-interface RandomInterface
+use fkooman\OAuth\Server\RandomInterface;
+
+class TestRandom implements RandomInterface
 {
+    /** @var int */
+    private $counter = 1;
+
     /**
-     * @param int $length
+     * Get a randomly generated crypto secure string.
      *
-     * @return string
+     * @param $len int the length (in bytes) of the random string
      */
-    public function get($length);
+    public function get($length)
+    {
+        return sprintf('random_%d', $this->counter++);
+    }
 }

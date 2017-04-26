@@ -27,7 +27,9 @@ namespace fkooman\OAuth\Server;
 class Random implements RandomInterface
 {
     /**
-     * @param int $length length in bytes of requested random string
+     * @param int $length
+     *
+     * @return string
      */
     public function get($length)
     {

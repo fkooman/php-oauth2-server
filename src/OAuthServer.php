@@ -53,33 +53,35 @@ class OAuthServer
     private $expiresIn = 3600;
 
     /**
-     * @param callable             $getClientInfo
-     * @param string               $keyPair       Base64 encoded output of crypto_sign_keypair()
-     * @param Storage              $storage
-     * @param RandomInterface|null $random
-     * @param DateTime|null        $dateTime
+     * @param callable $getClientInfo
+     * @param string   $keyPair       Base64 encoded output of crypto_sign_keypair()
+     * @param Storage  $storage
      */
-    public function __construct(callable $getClientInfo, $keyPair, Storage $storage, RandomInterface $random = null, DateTime $dateTime = null)
+    public function __construct(callable $getClientInfo, $keyPair, Storage $storage)
     {
         $this->getClientInfo = $getClientInfo;
         $this->keyPair = Base64::decode($keyPair);
         $this->storage = $storage;
-        if (is_null($random)) {
-            $random = new Random();
-        }
+        $this->random = new Random();
+        $this->dateTime = new DateTime();
+    }
+
+    public function setRandom(RandomInterface $random)
+    {
         $this->random = $random;
-        if (is_null($dateTime)) {
-            $dateTime = new DateTime();
-        }
+    }
+
+    public function setDateTime(DateTime $dateTime)
+    {
         $this->dateTime = $dateTime;
     }
 
     /**
-     * @param int $expiresIn the time in seconds an access token will be valid
+     * @param int $expiresIn the time (in seconds) an access token will be valid
      */
     public function setExpiresIn($expiresIn)
     {
-        $this->expiresIn = (int) $expiresIn;
+        $this->expiresIn = $expiresIn;
     }
 
     /**
