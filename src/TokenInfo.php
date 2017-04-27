@@ -44,11 +44,10 @@ class TokenInfo
     private $tokenIssuer = null;
 
     /**
-     * @param string      $authKey
-     * @param string      $userId
-     * @param string      $scope
-     * @param \DateTime   $expiresAt
-     * @param string|null $tokenIssuer
+     * @param string    $authKey
+     * @param string    $userId
+     * @param string    $scope
+     * @param \DateTime $expiresAt
      */
     public function __construct($authKey, $userId, $scope, DateTime $expiresAt)
     {
