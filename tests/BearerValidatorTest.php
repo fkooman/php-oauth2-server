@@ -49,29 +49,27 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
     public function testValidToken()
     {
         $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
-        $this->assertSame(
-            [
-                'auth_key' => 'random_1',
-                'user_id' => 'foo',
-                'scope' => 'config',
-                'expires_in' => 3600,
-            ],
-            $this->validator->validate('Bearer znwcwk0WpP1y0qrUSd/J6KToSlXdceGBaliVLhYYjRESQoVZI1aZTX9cRfBfIpOBnMcyTF3Izs9H8918OwiqBHsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAxOjAwOjAwIn0=')
-        );
+        $tokenInfo = $this->validator->validate('Bearer znwcwk0WpP1y0qrUSd/J6KToSlXdceGBaliVLhYYjRESQoVZI1aZTX9cRfBfIpOBnMcyTF3Izs9H8918OwiqBHsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAxOjAwOjAwIn0=');
+        $this->assertSame('random_1', $tokenInfo->getAuthKey());
+        $this->assertSame('foo', $tokenInfo->getUserId());
+        $this->assertSame('config', $tokenInfo->getScope());
+        $this->assertSame(3600, $tokenInfo->getExpiresIn(new DateTime('2016-01-01')));
+        $this->assertNull($tokenInfo->getIssuer());
     }
 
     public function testValidPublicKeyToken()
     {
-        $this->validator->setPublicKeys(['Jb+A8dkDCXwH2LWyKX6H6BmJearfrH/SGVXSqjL2QNs=']);
-        $this->assertSame(
+        $this->validator->setPublicKeys(
             [
-                'auth_key' => 'random_1',
-                'user_id' => 'foo',
-                'scope' => 'config',
-                'expires_in' => 3600,
-            ],
-            $this->validator->validate('Bearer BMrr3RdJgGSRxzDyC/89mfcrpH7eva9czHp4s4FH8YjsNp9p8w2K32+sI6e1FKIGrTuu/R0H6B6oQzrIyJ7FAHsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoidG9rZW4tY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9')
+                'https://issuer.example.org/' => 'Jb+A8dkDCXwH2LWyKX6H6BmJearfrH/SGVXSqjL2QNs=',
+            ]
         );
+        $tokenInfo = $this->validator->validate('Bearer BMrr3RdJgGSRxzDyC/89mfcrpH7eva9czHp4s4FH8YjsNp9p8w2K32+sI6e1FKIGrTuu/R0H6B6oQzrIyJ7FAHsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoidG9rZW4tY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9');
+        $this->assertSame('random_1', $tokenInfo->getAuthKey());
+        $this->assertSame('foo', $tokenInfo->getUserId());
+        $this->assertSame('config', $tokenInfo->getScope());
+        $this->assertSame(3600, $tokenInfo->getExpiresIn(new DateTime('2016-01-01')));
+        $this->assertSame('https://issuer.example.org/', $tokenInfo->getIssuer());
     }
 
     /**

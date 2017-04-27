@@ -26,6 +26,7 @@ namespace fkooman\OAuth\Server;
 
 use DateTime;
 use fkooman\OAuth\Server\Exception\BearerException;
+use InvalidArgumentException;
 use ParagonIE\ConstantTime\Base64;
 use RangeException;
 
@@ -71,15 +72,18 @@ class BearerValidator
     public function setPublicKeys(array $publicKeys)
     {
         $this->publicKeys = [];
-        foreach ($publicKeys as $publicKey) {
-            $this->publicKeys[] = Base64::decode($publicKey);
+        foreach ($publicKeys as $tokenIssuer => $publicKey) {
+            if (!is_string($tokenIssuer)) {
+                throw new InvalidArgumentException('tokenIssuer MUST be string');
+            }
+            $this->publicKeys[$tokenIssuer] = Base64::decode($publicKey);
         }
     }
 
     /**
      * @param string $authorizationHeader
      *
-     * @return array
+     * @return TokenInfo
      */
     public function validate($authorizationHeader)
     {
@@ -93,7 +97,7 @@ class BearerValidator
                 // as it is signed by us, it MUST exist in the DB as well,
                 // otherwise it was revoked...
                 $tokenInfo = $this->validateTokenInfo(json_decode($jsonToken, true));
-                if (!$this->storage->hasAuthorization($tokenInfo['auth_key'])) {
+                if (!$this->storage->hasAuthorization($tokenInfo->getAuthKey())) {
                     throw new BearerException('authorization no longer exists, invalid token');
                 }
 
@@ -102,9 +106,12 @@ class BearerValidator
 
             // it was not our signature, maybe it is one of the OPTIONAL
             // additionally configured public keys
-            foreach ($this->publicKeys as $publicKey) {
+            foreach ($this->publicKeys as $tokenIssuer => $publicKey) {
                 if (false !== $jsonToken = \Sodium\crypto_sign_open($signedBearerToken, $publicKey)) {
-                    return $this->validateTokenInfo(json_decode($jsonToken, true));
+                    $tokenInfo = $this->validateTokenInfo(json_decode($jsonToken, true));
+                    $tokenInfo->setIssuer($tokenIssuer);
+
+                    return $tokenInfo;
                 }
             }
 
@@ -120,7 +127,7 @@ class BearerValidator
     /**
      * @param array $tokenInfo
      *
-     * @return array
+     * @return TokenInfo
      */
     private function validateTokenInfo(array $tokenInfo)
     {
@@ -134,12 +141,12 @@ class BearerValidator
             throw new BearerException('token expired');
         }
 
-        return [
-            'auth_key' => $tokenInfo['auth_key'],
-            'user_id' => $tokenInfo['user_id'],
-            'scope' => $tokenInfo['scope'],
-            'expires_in' => $expiresAt->getTimestamp() - $this->dateTime->getTimestamp(),
-        ];
+        return new TokenInfo(
+            $tokenInfo['auth_key'],
+            $tokenInfo['user_id'],
+            $tokenInfo['scope'],
+            $expiresAt
+        );
     }
 
     /**
