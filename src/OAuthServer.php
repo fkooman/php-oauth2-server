@@ -501,6 +501,9 @@ class OAuthServer
     private function verifyClientCredentials($clientId, array $clientInfo, $authUser, $authPass)
     {
         if (array_key_exists('client_secret', $clientInfo)) {
+            if (is_null($authUser)) {
+                throw new ClientException('invalid credentials (no authenticating user)', 401);
+            }
             if ($clientId !== $authUser) {
                 throw new ClientException('"client_id" does not match authenticating user', 401);
             }
