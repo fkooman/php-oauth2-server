@@ -61,7 +61,7 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
     {
         $this->validator->setPublicKeys(
             [
-                'https://issuer.example.org/' => 'Jb+A8dkDCXwH2LWyKX6H6BmJearfrH/SGVXSqjL2QNs=',
+                'issuer.example.org' => 'Jb+A8dkDCXwH2LWyKX6H6BmJearfrH/SGVXSqjL2QNs=',
             ]
         );
         $tokenInfo = $this->validator->validate('Bearer BMrr3RdJgGSRxzDyC/89mfcrpH7eva9czHp4s4FH8YjsNp9p8w2K32+sI6e1FKIGrTuu/R0H6B6oQzrIyJ7FAHsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoidG9rZW4tY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9');
@@ -69,7 +69,7 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
         $this->assertSame('foo', $tokenInfo->getUserId());
         $this->assertSame('config', $tokenInfo->getScope());
         $this->assertSame(3600, $tokenInfo->getExpiresIn(new DateTime('2016-01-01')));
-        $this->assertSame('https://issuer.example.org/', $tokenInfo->getIssuer());
+        $this->assertSame('issuer.example.org', $tokenInfo->getIssuer());
     }
 
     /**

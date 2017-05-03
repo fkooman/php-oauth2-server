@@ -53,9 +53,9 @@ class OAuthServer
     private $expiresIn = 3600;
 
     /**
+     * @param Storage  $storage
      * @param callable $getClientInfo
      * @param string   $keyPair       Base64 encoded output of crypto_sign_keypair()
-     * @param Storage  $storage
      */
     public function __construct(Storage $storage, callable $getClientInfo, $keyPair)
     {
