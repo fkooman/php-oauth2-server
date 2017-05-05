@@ -43,7 +43,7 @@ try {
             http_response_code(200);
             header('Content-Type: application/json');
             echo json_encode(
-                ['user_id' => $tokenInfo['user_id']]
+                ['user_id' => $tokenInfo->getUserId()]
             );
             break;
         default:
