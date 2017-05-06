@@ -280,7 +280,7 @@ class OAuthServer
         if (false === $this->storage->logAuthKey($codeInfo['auth_key'])) {
             // authKey was used before, delete authorization according to spec
             // so refresh_tokens and access_tokens can no longer be used
-            $this->storage->deleteAuthorization($codeInfo['auth_key']);
+            $this->storage->deleteAuthKey($codeInfo['auth_key']);
 
             throw new GrantException('"authorization_code" reuse');
         }

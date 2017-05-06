@@ -147,7 +147,7 @@ class Storage
     /**
      * @param string $authKey
      */
-    public function deleteAuthorization($authKey)
+    public function deleteAuthKey($authKey)
     {
         $stmt = $this->db->prepare(
             'DELETE FROM
@@ -157,6 +157,28 @@ class Storage
         );
 
         $stmt->bindValue(':auth_key', $authKey, PDO::PARAM_STR);
+        $stmt->execute();
+    }
+
+    /**
+     * @param string $userId
+     * @param string $clientId
+     * @param string $scope
+     */
+    public function deleteAuthorization($userId, $clientId, $scope)
+    {
+        $stmt = $this->db->prepare(
+            'DELETE FROM
+                authorizations
+             WHERE
+                user_id = :user_id,
+                client_id = :client_id
+                scope = :scope'
+        );
+
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_STR);
+        $stmt->bindValue(':client_id', $clientId, PDO::PARAM_STR);
+        $stmt->bindValue(':scope', $scope, PDO::PARAM_STR);
         $stmt->execute();
     }
 
