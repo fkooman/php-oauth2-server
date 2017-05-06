@@ -171,8 +171,10 @@ class Storage
             'DELETE FROM
                 authorizations
              WHERE
-                user_id = :user_id,
+                user_id = :user_id
+             AND
                 client_id = :client_id
+             AND
                 scope = :scope'
         );
 

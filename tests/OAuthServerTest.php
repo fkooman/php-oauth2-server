@@ -346,4 +346,15 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
             $tokenResponse
         );
     }
+
+    public function testDeleteAuthorization()
+    {
+        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
+        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_2');
+        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_3');
+        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_4');
+        $this->assertSame(1, count($this->storage->getAuthorizations('foo')));
+        $this->storage->deleteAuthorization('foo', 'code-client', 'config');
+        $this->assertSame(0, count($this->storage->getAuthorizations('foo')));
+    }
 }
