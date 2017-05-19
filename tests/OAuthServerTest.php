@@ -316,6 +316,11 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
         );
     }
 
+    public function testGetPublicKey()
+    {
+        $this->assertSame('HD9v+gK+84Ij0ugS+G7wmljeLmrWH7j+w4/0L3XLaiU=', $this->server->getPublicKey());
+    }
+
     public function testAccessTokenAsCode()
     {
     }

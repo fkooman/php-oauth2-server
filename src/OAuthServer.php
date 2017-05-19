@@ -85,6 +85,14 @@ class OAuthServer
     }
 
     /**
+     * @return string
+     */
+    public function getPublicKey()
+    {
+        return Base64::encode(\Sodium\crypto_sign_publickey($this->keyPair));
+    }
+
+    /**
      * Validates the authorization request from the client and returns verified
      * data to show an authorization dialog.
      *

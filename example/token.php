@@ -77,7 +77,7 @@ try {
     header('Cache-Control: no-store');
     header('Pragma: no-cache');
     if (401 === $e->getCode()) {
-        header('WWW-Authenticate: Basic realm="OAuth');
+        header('WWW-Authenticate: Basic realm="OAuth"');
     }
     echo json_encode(['error' => $e->getMessage(), 'error_description' => $e->getDescription()]);
 } catch (Exception $e) {
