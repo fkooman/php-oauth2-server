@@ -59,7 +59,7 @@ class BearerValidatorTest extends PHPUnit_Framework_TestCase
 
     public function testValidPublicKeyToken()
     {
-        $this->validator->setPublicKeys(
+        $this->validator->setForeignKeys(
             [
                 'issuer.example.org' => 'Jb+A8dkDCXwH2LWyKX6H6BmJearfrH/SGVXSqjL2QNs=',
             ]

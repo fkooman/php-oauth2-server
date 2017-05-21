@@ -39,7 +39,7 @@ class BearerValidator
     private $publicKey;
 
     /** @var array */
-    private $publicKeys = [];
+    private $foreignKeys = [];
 
     /** @var \DateTime */
     private $dateTime;
@@ -67,16 +67,16 @@ class BearerValidator
      * Set additional public keys to use for access_token validation. These are
      * _NOT_ validated in the database.
      *
-     * @param array $publicKeys the Base64 encoded public key(s)
+     * @param array $foreignKeys the Base64 encoded public key(s)
      */
-    public function setPublicKeys(array $publicKeys)
+    public function setForeignKeys(array $foreignKeys)
     {
-        $this->publicKeys = [];
-        foreach ($publicKeys as $tokenIssuer => $publicKey) {
+        $this->foreignKeys = [];
+        foreach ($foreignKeys as $tokenIssuer => $publicKey) {
             if (!is_string($tokenIssuer)) {
                 throw new InvalidArgumentException('tokenIssuer MUST be string');
             }
-            $this->publicKeys[$tokenIssuer] = Base64::decode($publicKey);
+            $this->foreignKeys[$tokenIssuer] = Base64::decode($publicKey);
         }
     }
 
@@ -106,7 +106,7 @@ class BearerValidator
 
             // it was not our signature, maybe it is one of the OPTIONAL
             // additionally configured public keys
-            foreach ($this->publicKeys as $tokenIssuer => $publicKey) {
+            foreach ($this->foreignKeys as $tokenIssuer => $publicKey) {
                 if (false !== $jsonToken = \Sodium\crypto_sign_open($signedBearerToken, $publicKey)) {
                     $tokenInfo = $this->validateTokenInfo(json_decode($jsonToken, true));
                     $tokenInfo->setIssuer($tokenIssuer);
