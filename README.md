@@ -1,4 +1,3 @@
-[![Build Status](https://travis-ci.org/fkooman/php-oauth2-server.svg?branch=master)](https://travis-ci.org/fkooman/php-oauth2-server)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/fkooman/php-oauth2-server/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/fkooman/php-oauth2-server/?branch=master)
 
 # Introduction
