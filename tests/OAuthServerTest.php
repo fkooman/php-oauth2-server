@@ -62,6 +62,11 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
                 'redirect_uri' => 'http://example.org/token-cb',
                 'display_name' => 'Token Client',
             ],
+            'loopback' => [
+                'response_type' => 'code',
+                'redirect_uri' => 'http://127.0.0.1:{PORT}/cb',
+                'display_name' => 'Loopback Client',
+            ],
         ];
 
         $getClientInfo = function ($clientId) use ($oauthClients) {
@@ -349,6 +354,21 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
                 'expires_in' => 3600,
             ],
             $tokenResponse
+        );
+    }
+
+    public function testLoopbackClient()
+    {
+        $this->server->getAuthorize(
+            [
+                'client_id' => 'loopback',
+                'redirect_uri' => 'http://127.0.0.1:12345/cb',
+                'response_type' => 'code',
+                'scope' => 'config',
+                'state' => '12345',
+                'code_challenge_method' => 'S256',
+                'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+            ]
         );
     }
 

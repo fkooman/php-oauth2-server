@@ -227,10 +227,12 @@ class OAuthServer
     {
         RequestValidator::validateAuthorizeQueryParameters($getData);
         $clientInfo = $this->getClient($getData['client_id']);
+
         // make sure the provided redirect URI is supported by the client
-        if ($clientInfo['redirect_uri'] !== $getData['redirect_uri']) {
+        if (!self::validateRedirectUri($clientInfo, $getData)) {
             throw new ClientException('client does not support this "redirect_uri"', 400);
         }
+
         // make sure the response_type is supported by the client
         if ($clientInfo['response_type'] !== $getData['response_type']) {
             throw new ClientException('client does not support this "response_type"', 400);
@@ -575,5 +577,48 @@ class OAuthServer
         }
 
         return $clientInfo;
+    }
+
+    private static function validateRedirectUri(array $clientInfo, array $getData)
+    {
+        $clientRedirectUriList = (array) $clientInfo['redirect_uri'];
+        $requestRedirectUri = $getData['redirect_uri'];
+
+        if (in_array($requestRedirectUri, $clientRedirectUriList)) {
+            return true;
+        }
+
+        // parsing is NOT great... but don't see how to avoid it here, we need
+        // to accept all ports and both IPv4 and IPv6 for loopback entries
+        foreach ($clientRedirectUriList as $clientRedirectUri) {
+            if (0 === strpos($clientRedirectUri, 'http://127.0.0.1:{PORT}/')) {
+                // IPv4
+                if (self::portMatch($clientRedirectUri, $requestRedirectUri)) {
+                    return true;
+                }
+            }
+
+            if (0 === strpos($clientRedirectUri, 'http://[::1]:{PORT}/')) {
+                // IPv6
+                if (self::portMatch($clientRedirectUri, $requestRedirectUri)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static function portMatch($clientRedirectUri, $requestRedirectUri)
+    {
+        if (false === $port = parse_url($requestRedirectUri, PHP_URL_PORT)) {
+            return false;
+        }
+        if (!is_int($port) || 1024 > $port || 65535 < $port) {
+            return false;
+        }
+        $clientRedirectUriWithPort = str_replace('{PORT}', $port, $clientRedirectUri);
+
+        return $requestRedirectUri === $clientRedirectUriWithPort;
     }
 }
