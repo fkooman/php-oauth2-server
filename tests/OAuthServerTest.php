@@ -25,6 +25,7 @@
 namespace fkooman\OAuth\Server\Tests;
 
 use DateTime;
+use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\Storage;
 use PDO;
@@ -74,7 +75,7 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
                 return false;
             }
 
-            return $oauthClients[$clientId];
+            return new ClientInfo($oauthClients[$clientId]);
         };
 
         $this->storage = new Storage(new PDO('sqlite::memory:'));

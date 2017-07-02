@@ -106,7 +106,7 @@ class OAuthServer
 
         return [
             'client_id' => $getData['client_id'],
-            'display_name' => $clientInfo['display_name'],
+            'display_name' => $clientInfo->getDisplayName(),
             'scope' => $getData['scope'],
             'redirect_uri' => $getData['redirect_uri'],
         ];
@@ -221,7 +221,7 @@ class OAuthServer
      *
      * @param array $getData
      *
-     * @return array the client info
+     * @return ClientInfo
      */
     private function validateAuthorizeRequest(array $getData)
     {
@@ -229,17 +229,17 @@ class OAuthServer
         $clientInfo = $this->getClient($getData['client_id']);
 
         // make sure the provided redirect URI is supported by the client
-        if (!self::validateRedirectUri($clientInfo, $getData)) {
+        if (!$clientInfo->isValidRedirectUri($getData['redirect_uri'])) {
             throw new ClientException('client does not support this "redirect_uri"', 400);
         }
 
         // make sure the response_type is supported by the client
-        if ($clientInfo['response_type'] !== $getData['response_type']) {
+        if ($clientInfo->getResponseType() !== $getData['response_type']) {
             throw new ClientException('client does not support this "response_type"', 400);
         }
-        if ('token' !== $clientInfo['response_type']) {
+        if ('token' !== $clientInfo->getResponseType()) {
             // public code clients require PKCE
-            if (!array_key_exists('client_secret', $clientInfo)) {
+            if (is_null($clientInfo->getSecret())) {
                 RequestValidator::validatePkceParameters($getData);
             }
         }
@@ -504,13 +504,13 @@ class OAuthServer
 
     /**
      * @param string      $clientId
-     * @param array       $clientInfo
+     * @param ClientInfo  $clientInfo
      * @param string|null $authUser
      * @param string|null $authPass
      */
-    private function verifyClientCredentials($clientId, array $clientInfo, $authUser, $authPass)
+    private function verifyClientCredentials($clientId, ClientInfo $clientInfo, $authUser, $authPass)
     {
-        if (array_key_exists('client_secret', $clientInfo)) {
+        if (!is_null($clientInfo->getSecret())) {
             if (is_null($authUser)) {
                 throw new ClientException('invalid credentials (no authenticating user)', 401);
             }
@@ -522,23 +522,23 @@ class OAuthServer
                 throw new ClientException('invalid credentials (no authenticating pass)', 401);
             }
 
-            if (0 !== \Sodium\compare($clientInfo['client_secret'], $authPass)) {
+            if (0 !== \Sodium\compare($clientInfo->getSecret(), $authPass)) {
                 throw new ClientException('invalid credentials (invalid authenticating pass)', 401);
             }
         }
     }
 
     /**
-     * @param array $clientInfo
-     * @param array $codeInfo
-     * @param array $postData
+     * @param ClientInfo $clientInfo
+     * @param array      $codeInfo
+     * @param array      $postData
      *
      * @see https://tools.ietf.org/html/rfc7636#appendix-A
      */
-    private function verifyCodeVerifier(array $clientInfo, array $codeInfo, array $postData)
+    private function verifyCodeVerifier(ClientInfo $clientInfo, array $codeInfo, array $postData)
     {
         // only for public clients
-        if (!array_key_exists('client_secret', $clientInfo)) {
+        if (is_null($clientInfo->getSecret())) {
             if (!array_key_exists('code_verifier', $postData)) {
                 throw new ValidateException('missing "code_verifier" parameter');
             }
@@ -568,7 +568,7 @@ class OAuthServer
     /**
      * @param string $clientId
      *
-     * @return array
+     * @return ClientInfo
      */
     private function getClient($clientId)
     {
@@ -577,48 +577,5 @@ class OAuthServer
         }
 
         return $clientInfo;
-    }
-
-    private static function validateRedirectUri(array $clientInfo, array $getData)
-    {
-        $clientRedirectUriList = (array) $clientInfo['redirect_uri'];
-        $requestRedirectUri = $getData['redirect_uri'];
-
-        if (in_array($requestRedirectUri, $clientRedirectUriList)) {
-            return true;
-        }
-
-        // parsing is NOT great... but don't see how to avoid it here, we need
-        // to accept all ports and both IPv4 and IPv6 for loopback entries
-        foreach ($clientRedirectUriList as $clientRedirectUri) {
-            if (0 === strpos($clientRedirectUri, 'http://127.0.0.1:{PORT}/')) {
-                // IPv4
-                if (self::portMatch($clientRedirectUri, $requestRedirectUri)) {
-                    return true;
-                }
-            }
-
-            if (0 === strpos($clientRedirectUri, 'http://[::1]:{PORT}/')) {
-                // IPv6
-                if (self::portMatch($clientRedirectUri, $requestRedirectUri)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private static function portMatch($clientRedirectUri, $requestRedirectUri)
-    {
-        if (false === $port = parse_url($requestRedirectUri, PHP_URL_PORT)) {
-            return false;
-        }
-        if (!is_int($port) || 1024 > $port || 65535 < $port) {
-            return false;
-        }
-        $clientRedirectUriWithPort = str_replace('{PORT}', $port, $clientRedirectUri);
-
-        return $requestRedirectUri === $clientRedirectUriWithPort;
     }
 }
