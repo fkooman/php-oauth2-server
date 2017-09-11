@@ -31,7 +31,7 @@ class ClientInfo
     /** @var string|null */
     private $displayName = null;
 
-    /** @var string[] */
+    /** @var array */
     private $redirectUriList;
 
     /** @var string */
@@ -135,7 +135,7 @@ class ClientInfo
         if (!is_int($port) || 1024 > $port || 65535 < $port) {
             return false;
         }
-        $clientRedirectUriWithPort = str_replace('{PORT}', $port, $clientRedirectUri);
+        $clientRedirectUriWithPort = str_replace('{PORT}', (string) $port, $clientRedirectUri);
 
         return $redirectUri === $clientRedirectUriWithPort;
     }
