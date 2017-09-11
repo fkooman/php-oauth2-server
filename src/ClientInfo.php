@@ -127,11 +127,11 @@ class ClientInfo
      */
     private static function portMatch($clientRedirectUri, $redirectUri)
     {
-        // XXX we really should not parse...this is bad
+        // there should be a better way...
         if (false === $port = parse_url($redirectUri, PHP_URL_PORT)) {
             return false;
         }
-        // XXX are these really the ports a non-root user can bind to?
+        // only allow non-root ports
         if (!is_int($port) || 1024 > $port || 65535 < $port) {
             return false;
         }
