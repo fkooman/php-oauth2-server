@@ -34,7 +34,7 @@ class TestRandom implements RandomInterface
     /**
      * Get a randomly generated crypto secure string.
      *
-     * @param $len int the length (in bytes) of the random string
+     * @param mixed $length the length (in bytes) of the random string
      */
     public function get($length)
     {

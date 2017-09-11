@@ -66,11 +66,17 @@ class OAuthServer
         $this->dateTime = new DateTime();
     }
 
+    /**
+     * @return void
+     */
     public function setRandom(RandomInterface $random)
     {
         $this->random = $random;
     }
 
+    /**
+     * @return void
+     */
     public function setDateTime(DateTime $dateTime)
     {
         $this->dateTime = $dateTime;
@@ -78,6 +84,8 @@ class OAuthServer
 
     /**
      * @param int $expiresIn the time (in seconds) an access token will be valid
+     *
+     * @return void
      */
     public function setExpiresIn($expiresIn)
     {
@@ -170,27 +178,26 @@ class OAuthServer
                     'state' => $getData['state'],
                 ]
             );
-        } else {
-            // "token"
-            // return access token
-            $accessToken = $this->getAccessToken(
-                $userId,
-                $getData['client_id'],
-                $getData['scope'],
-                $authKey
-            );
-
-            return $this->prepareRedirectUri(
-                true,
-                $getData['redirect_uri'],
-                [
-                    'access_token' => $accessToken,
-                    'token_type' => 'bearer',
-                    'expires_in' => $this->expiresIn,
-                    'state' => $getData['state'],
-                ]
-            );
         }
+        // "token"
+        // return access token
+        $accessToken = $this->getAccessToken(
+            $userId,
+            $getData['client_id'],
+            $getData['scope'],
+            $authKey
+        );
+
+        return $this->prepareRedirectUri(
+            true,
+            $getData['redirect_uri'],
+            [
+                'access_token' => $accessToken,
+                'token_type' => 'bearer',
+                'expires_in' => $this->expiresIn,
+                'state' => $getData['state'],
+            ]
+        );
     }
 
     /**
@@ -239,7 +246,7 @@ class OAuthServer
         }
         if ('token' !== $clientInfo->getResponseType()) {
             // public code clients require PKCE
-            if (is_null($clientInfo->getSecret())) {
+            if (null === $clientInfo->getSecret()) {
                 RequestValidator::validatePkceParameters($getData);
             }
         }
@@ -251,6 +258,9 @@ class OAuthServer
      * @param array       $postData
      * @param string|null $authUser BasicAuth user in case of secret client, null if public client
      * @param string|null $authPass BasicAuth pass in case of secret client, null if public client
+     *
+     * @return array<string:mixed>
+     * @psalm-return array{access_token:string, refresh_token:string, token_type:string, expires_in:int}
      */
     private function postTokenAuthorizationCode(array $postData, $authUser, $authPass)
     {
@@ -321,6 +331,9 @@ class OAuthServer
      * @param array       $postData
      * @param string|null $authUser BasicAuth user in case of secret client, null if public client
      * @param string|null $authPass BasicAuth pass in case of secret client, null if public client
+     *
+     * @return array<string:mixed>
+     * @psalm-return array{access_token:string, token_type:string, expires_in:int}
      */
     private function postTokenRefreshToken(array $postData, $authUser, $authPass)
     {
@@ -361,6 +374,8 @@ class OAuthServer
      * @param bool   $useFragment
      * @param string $redirectUri
      * @param array  $queryParameters
+     *
+     * @return string
      */
     private function prepareRedirectUri($useFragment, $redirectUri, array $queryParameters)
     {
@@ -443,6 +458,7 @@ class OAuthServer
      * @param string      $clientId
      * @param string      $scope
      * @param string      $redirectUri
+     * @param string      $authKey
      * @param string|null $codeChallenge required for "public" clients
      *
      * @return string
@@ -474,6 +490,8 @@ class OAuthServer
     /**
      * @param array $postData
      * @param array $codeInfo
+     *
+     * @return void
      */
     private function verifyCodeInfo(array $postData, array $codeInfo)
     {
@@ -489,6 +507,8 @@ class OAuthServer
     /**
      * @param array $postData
      * @param array $refreshTokenInfo
+     *
+     * @return void
      */
     private function verifyRefreshTokenInfo(array $postData, array $refreshTokenInfo)
     {
@@ -507,11 +527,13 @@ class OAuthServer
      * @param ClientInfo  $clientInfo
      * @param string|null $authUser
      * @param string|null $authPass
+     *
+     * @return void
      */
     private function verifyClientCredentials($clientId, ClientInfo $clientInfo, $authUser, $authPass)
     {
-        if (!is_null($clientInfo->getSecret())) {
-            if (is_null($authUser)) {
+        if (null !== $clientInfo->getSecret()) {
+            if (null === $authUser) {
                 throw new ClientException('invalid credentials (no authenticating user)', 401);
             }
             if ($clientId !== $authUser) {
@@ -533,12 +555,14 @@ class OAuthServer
      * @param array      $codeInfo
      * @param array      $postData
      *
-     * @see https://tools.ietf.org/html/rfc7636#appendix-A
+     * @see    https://tools.ietf.org/html/rfc7636#appendix-A
+     *
+     * @return void
      */
     private function verifyCodeVerifier(ClientInfo $clientInfo, array $codeInfo, array $postData)
     {
         // only for public clients
-        if (is_null($clientInfo->getSecret())) {
+        if (null === $clientInfo->getSecret()) {
             if (!array_key_exists('code_verifier', $postData)) {
                 throw new ValidateException('missing "code_verifier" parameter');
             }

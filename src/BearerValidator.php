@@ -57,6 +57,8 @@ class BearerValidator
 
     /**
      * @param DateTime $dateTime
+     *
+     * @return void
      */
     public function setDateTime(DateTime $dateTime)
     {
@@ -68,6 +70,8 @@ class BearerValidator
      * _NOT_ validated in the database.
      *
      * @param array $foreignKeys the Base64 encoded public key(s)
+     *
+     * @return void
      */
     public function setForeignKeys(array $foreignKeys)
     {
@@ -151,6 +155,8 @@ class BearerValidator
 
     /**
      * @param string $bearerCredentials
+     *
+     * @return void
      */
     private static function validateBearerCredentials($bearerCredentials)
     {

@@ -59,6 +59,8 @@ class TokenInfo
 
     /**
      * @param string $tokenIssuer
+     *
+     * @return void
      */
     public function setIssuer($tokenIssuer)
     {

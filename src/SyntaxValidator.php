@@ -30,6 +30,8 @@ class SyntaxValidator
 {
     /**
      * @param string $clientId
+     *
+     * @return void
      */
     public static function validateClientId($clientId)
     {
@@ -44,6 +46,8 @@ class SyntaxValidator
      * Validate the authorization code.
      *
      * @param string $code
+     *
+     * @return void
      */
     public static function validateCode($code)
     {
@@ -56,6 +60,8 @@ class SyntaxValidator
 
     /**
      * @param string $grantType
+     *
+     * @return void
      */
     public static function validateGrantType($grantType)
     {
@@ -71,6 +77,8 @@ class SyntaxValidator
 
     /**
      * @param string $responseType
+     *
+     * @return void
      */
     public static function validateResponseType($responseType)
     {
@@ -81,6 +89,8 @@ class SyntaxValidator
 
     /**
      * @param string $scope
+     *
+     * @return void
      */
     public static function validateScope($scope)
     {
@@ -96,6 +106,8 @@ class SyntaxValidator
 
     /**
      * @param string $state
+     *
+     * @return void
      */
     public static function validateState($state)
     {
@@ -108,6 +120,8 @@ class SyntaxValidator
 
     /**
      * @param string $codeChallengeMethod
+     *
+     * @return void
      */
     public static function validateCodeChallengeMethod($codeChallengeMethod)
     {
@@ -118,6 +132,8 @@ class SyntaxValidator
 
     /**
      * @param string $codeVerifier
+     *
+     * @return void
      */
     public static function validateCodeVerifier($codeVerifier)
     {
@@ -132,6 +148,8 @@ class SyntaxValidator
 
     /**
      * @param string $codeChallenge
+     *
+     * @return void
      */
     public static function validateCodeChallenge($codeChallenge)
     {
@@ -144,16 +162,20 @@ class SyntaxValidator
 
     /**
      * @param string $approve
+     *
+     * @return void
      */
     public static function validateApprove($approve)
     {
-        if (!in_array($approve, ['yes', 'no'])) {
+        if (!in_array($approve, ['yes', 'no'], true)) {
             throw new ValidateException('invalid "approve"');
         }
     }
 
     /**
      * @param string $refreshToken
+     *
+     * @return void
      */
     public static function validateRefreshToken($refreshToken)
     {

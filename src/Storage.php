@@ -44,6 +44,8 @@ class Storage
 
     /**
      * @param string $authKey
+     *
+     * @return bool
      */
     public function logAuthKey($authKey)
     {
@@ -75,6 +77,8 @@ class Storage
 
     /**
      * @param string $authKey
+     *
+     * @return bool
      */
     public function hasAuthorization($authKey)
     {
@@ -97,6 +101,8 @@ class Storage
      * @param string $clientId
      * @param string $scope
      * @param string $authKey
+     *
+     * @return void
      */
     public function storeAuthorization($userId, $clientId, $scope, $authKey)
     {
@@ -124,6 +130,8 @@ class Storage
 
     /**
      * @param string $userId
+     *
+     * @return array
      */
     public function getAuthorizations($userId)
     {
@@ -146,6 +154,8 @@ class Storage
 
     /**
      * @param string $authKey
+     *
+     * @return void
      */
     public function deleteAuthKey($authKey)
     {
@@ -164,6 +174,8 @@ class Storage
      * @param string $userId
      * @param string $clientId
      * @param string $scope
+     *
+     * @return void
      */
     public function deleteAuthorization($userId, $clientId, $scope)
     {
@@ -184,6 +196,9 @@ class Storage
         $stmt->execute();
     }
 
+    /**
+     * @return void
+     */
     public function init()
     {
         $queryList = [

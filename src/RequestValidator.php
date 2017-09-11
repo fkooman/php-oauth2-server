@@ -28,6 +28,9 @@ use fkooman\OAuth\Server\Exception\ValidateException;
 
 class RequestValidator
 {
+    /**
+     * @return void
+     */
     public static function validateAuthorizeQueryParameters(array $getData)
     {
         // REQUIRED
@@ -52,6 +55,9 @@ class RequestValidator
         }
     }
 
+    /**
+     * @return void
+     */
     public static function validateAuthorizePostParameters(array $postData)
     {
         if (!array_key_exists('approve', $postData)) {
@@ -61,6 +67,9 @@ class RequestValidator
         SyntaxValidator::validateApprove($postData['approve']);
     }
 
+    /**
+     * @return void
+     */
     public static function validateTokenPostParameters(array $postData)
     {
         // "grant_type" is ALWAYS required
@@ -81,6 +90,9 @@ class RequestValidator
         }
     }
 
+    /**
+     * @return void
+     */
     public static function validatePkceParameters(array $getData)
     {
         if (!array_key_exists('code_challenge_method', $getData)) {
@@ -91,6 +103,9 @@ class RequestValidator
         }
     }
 
+    /**
+     * @return void
+     */
     private static function validateAuthorizationCode(array $postData)
     {
         foreach (['code', 'redirect_uri', 'client_id'] as $postParameter) {
@@ -110,6 +125,9 @@ class RequestValidator
         }
     }
 
+    /**
+     * @return void
+     */
     private static function validateRefreshToken(array $postData)
     {
         foreach (['refresh_token', 'scope'] as $postParameter) {
