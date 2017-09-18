@@ -51,7 +51,7 @@ class BearerValidator
     public function __construct(Storage $storage, $keyPair)
     {
         $this->storage = $storage;
-        $this->publicKey = \Sodium\crypto_sign_publickey(Base64::decode($keyPair));
+        $this->publicKey = SodiumCompat::crypto_sign_publickey(Base64::decode($keyPair));
         $this->dateTime = new DateTime();
     }
 
@@ -97,7 +97,7 @@ class BearerValidator
             $signedBearerToken = Base64::decode($bearerToken);
 
             // make sure access_token is signed by us
-            if (false !== $jsonToken = \Sodium\crypto_sign_open($signedBearerToken, $this->publicKey)) {
+            if (false !== $jsonToken = SodiumCompat::crypto_sign_open($signedBearerToken, $this->publicKey)) {
                 // as it is signed by us, it MUST exist in the DB as well,
                 // otherwise it was revoked...
                 $tokenInfo = $this->validateTokenInfo(json_decode($jsonToken, true));
@@ -111,7 +111,7 @@ class BearerValidator
             // it was not our signature, maybe it is one of the OPTIONAL
             // additionally configured public keys
             foreach ($this->foreignKeys as $tokenIssuer => $publicKey) {
-                if (false !== $jsonToken = \Sodium\crypto_sign_open($signedBearerToken, $publicKey)) {
+                if (false !== $jsonToken = SodiumCompat::crypto_sign_open($signedBearerToken, $publicKey)) {
                     $tokenInfo = $this->validateTokenInfo(json_decode($jsonToken, true));
                     $tokenInfo->setIssuer($tokenIssuer);
 

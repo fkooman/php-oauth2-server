@@ -22,12 +22,16 @@ sent.
 - Easy integration with your own application and/or framework;
 - Does not force a framework on you;
 - There will be no toggles to shoot yourself in the foot;
-- Uses [libsodium-php](https://github.com/jedisct1/libsodium-php) for:
-  - CSPRNG;
-  - constant time string compare;
-  - public key crypto signatures;
 - Supports [PKCE](https://tools.ietf.org/html/rfc7636);
 - Supports refresh tokens
+
+# Requirements
+
+This library uses libsodium, either the PECL 
+[module]((https://github.com/jedisct1/libsodium-php), `php-libsodium` or the 
+native Sodium module in PHP >= 7.2, `php-sodium`. You MUST have one of them 
+installed in order to use this library, even though `composer.json` mentions
+both of them as `suggest`.
 
 # Using
 

@@ -97,7 +97,7 @@ class OAuthServer
      */
     public function getPublicKey()
     {
-        return Base64::encode(\Sodium\crypto_sign_publickey($this->keyPair));
+        return Base64::encode(SodiumCompat::crypto_sign_publickey($this->keyPair));
     }
 
     /**
@@ -269,8 +269,8 @@ class OAuthServer
 
         // verify the authorization code
         $signedCode = Base64::decode($postData['code']);
-        $publicKey = \Sodium\crypto_sign_publickey($this->keyPair);
-        if (false === $jsonCode = \Sodium\crypto_sign_open($signedCode, $publicKey)) {
+        $publicKey = SodiumCompat::crypto_sign_publickey($this->keyPair);
+        if (false === $jsonCode = SodiumCompat::crypto_sign_open($signedCode, $publicKey)) {
             throw new GrantException('"code" has invalid signature');
         }
 
@@ -339,8 +339,8 @@ class OAuthServer
     {
         // verify the refresh code
         $signedRefreshToken = Base64::decode($postData['refresh_token']);
-        $publicKey = \Sodium\crypto_sign_publickey($this->keyPair);
-        if (false === $jsonRefreshToken = \Sodium\crypto_sign_open($signedRefreshToken, $publicKey)) {
+        $publicKey = SodiumCompat::crypto_sign_publickey($this->keyPair);
+        if (false === $jsonRefreshToken = SodiumCompat::crypto_sign_open($signedRefreshToken, $publicKey)) {
             throw new GrantException('"refresh_token" has invalid signature');
         }
 
@@ -411,7 +411,7 @@ class OAuthServer
         $expiresAt = date_add(clone $this->dateTime, new DateInterval(sprintf('PT%dS', $this->expiresIn)));
 
         return Base64::encode(
-            \Sodium\crypto_sign(
+            SodiumCompat::crypto_sign(
                 json_encode(
                     [
                         'type' => 'access_token',
@@ -422,7 +422,7 @@ class OAuthServer
                         'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
                     ]
                 ),
-                \Sodium\crypto_sign_secretkey($this->keyPair)
+                SodiumCompat::crypto_sign_secretkey($this->keyPair)
             )
         );
     }
@@ -438,7 +438,7 @@ class OAuthServer
     private function getRefreshToken($userId, $clientId, $scope, $authKey)
     {
         return Base64::encode(
-            \Sodium\crypto_sign(
+            SodiumCompat::crypto_sign(
                 json_encode(
                     [
                         'type' => 'refresh_token',
@@ -448,7 +448,7 @@ class OAuthServer
                         'scope' => $scope,
                     ]
                 ),
-                \Sodium\crypto_sign_secretkey($this->keyPair)
+                SodiumCompat::crypto_sign_secretkey($this->keyPair)
             )
         );
     }
@@ -469,7 +469,7 @@ class OAuthServer
         $expiresAt = date_add(clone $this->dateTime, new DateInterval('PT5M'));
 
         return Base64::encode(
-            \Sodium\crypto_sign(
+            SodiumCompat::crypto_sign(
                 json_encode(
                     [
                         'type' => 'authorization_code',
@@ -482,7 +482,7 @@ class OAuthServer
                         'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
                     ]
                 ),
-                \Sodium\crypto_sign_secretkey($this->keyPair)
+                SodiumCompat::crypto_sign_secretkey($this->keyPair)
             )
         );
     }
@@ -532,7 +532,8 @@ class OAuthServer
      */
     private function verifyClientCredentials($clientId, ClientInfo $clientInfo, $authUser, $authPass)
     {
-        if (null !== $clientInfo->getSecret()) {
+        $clientSecret = $clientInfo->getSecret();
+        if (null !== $clientSecret) {
             if (null === $authUser) {
                 throw new ClientException('invalid credentials (no authenticating user)', 401);
             }
@@ -544,7 +545,7 @@ class OAuthServer
                 throw new ClientException('invalid credentials (no authenticating pass)', 401);
             }
 
-            if (0 !== \Sodium\compare($clientInfo->getSecret(), $authPass)) {
+            if (false === hash_equals($clientSecret, $authPass)) {
                 throw new ClientException('invalid credentials (invalid authenticating pass)', 401);
             }
         }
@@ -555,7 +556,7 @@ class OAuthServer
      * @param array      $codeInfo
      * @param array      $postData
      *
-     * @see    https://tools.ietf.org/html/rfc7636#appendix-A
+     * @see https://tools.ietf.org/html/rfc7636#appendix-A
      *
      * @return void
      */
@@ -569,7 +570,7 @@ class OAuthServer
 
             // constant time compare of the code_challenge compared to the
             // expected value
-            $cmp = \Sodium\compare(
+            if (false === hash_equals(
                 $codeInfo['code_challenge'],
                 rtrim(
                     Base64UrlSafe::encode(
@@ -581,9 +582,7 @@ class OAuthServer
                     ),
                     '='
                 )
-            );
-
-            if (0 !== $cmp) {
+            )) {
                 throw new GrantException('invalid "code_verifier"');
             }
         }

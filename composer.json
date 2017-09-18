@@ -18,14 +18,19 @@
         "ext-date": "*",
         "ext-hash": "*",
         "ext-json": "*",
-        "ext-libsodium": "*",
         "ext-pcre": "*",
         "ext-pdo": "*",
         "paragonie/constant_time_encoding": "^1|^2",
-        "php": ">=5.4"
+        "paragonie/random_compat": "^1|^2",
+        "php": ">=5.4",
+        "symfony/polyfill-php56": "^1"
     },
     "require-dev": {
         "phpunit/phpunit": "^5"
+    },
+    "suggest": {
+        "ext-libsodium": "PHP < 7.2 sodium implementation",
+        "ext-sodium": "PHP >= 7.2 sodium implementation"
     },
     "type": "library"
 }

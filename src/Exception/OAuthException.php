@@ -31,6 +31,11 @@ class OAuthException extends Exception
     /** @var string */
     protected $description;
 
+    /**
+     * @param string $message
+     * @param string $description
+     * @param int    $code
+     */
     public function __construct($message, $description, $code = 0, Exception $previous = null)
     {
         $this->description = $description;

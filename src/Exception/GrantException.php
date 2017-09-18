@@ -28,6 +28,10 @@ use Exception;
 
 class GrantException extends OAuthException
 {
+    /**
+     * @param string $message
+     * @param int    $code
+     */
     public function __construct($message, $code = 400, Exception $previous = null)
     {
         parent::__construct('invalid_grant', $message, $code, $previous);

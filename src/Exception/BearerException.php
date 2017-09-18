@@ -28,6 +28,10 @@ use Exception;
 
 class BearerException extends OAuthException
 {
+    /**
+     * @param string $message
+     * @param int    $code
+     */
     public function __construct($message, $code = 401, Exception $previous = null)
     {
         parent::__construct('invalid_token', $message, $code, $previous);

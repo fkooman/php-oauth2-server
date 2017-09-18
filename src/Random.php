@@ -24,6 +24,8 @@
 
 namespace fkooman\OAuth\Server;
 
+use ParagonIE\ConstantTime\Hex;
+
 class Random implements RandomInterface
 {
     /**
@@ -33,8 +35,8 @@ class Random implements RandomInterface
      */
     public function get($length)
     {
-        return \Sodium\bin2hex(
-            \Sodium\randombytes_buf($length)
+        return Hex::encode(
+            random_bytes($length)
         );
     }
 }
