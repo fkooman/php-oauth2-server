@@ -32,9 +32,9 @@ class TestRandom implements RandomInterface
     private $counter = 1;
 
     /**
-     * Get a randomly generated crypto secure string.
+     * @param int $length
      *
-     * @param mixed $length the length (in bytes) of the random string
+     * @return string
      */
     public function get($length)
     {
