@@ -20,6 +20,7 @@
         "ext-json": "*",
         "ext-pcre": "*",
         "ext-pdo": "*",
+        "ext-spl": "*",
         "paragonie/constant_time_encoding": "^1|^2",
         "paragonie/random_compat": "^1|^2",
         "php": ">=5.4",
