@@ -28,7 +28,7 @@ sent.
 # Requirements
 
 This library uses libsodium, either the PECL 
-[module]((https://github.com/jedisct1/libsodium-php), `php-libsodium` or the 
+[module](https://github.com/jedisct1/libsodium-php), `php-libsodium` or the 
 native Sodium module in PHP >= 7.2, `php-sodium`. You MUST have one of them 
 installed in order to use this library, even though `composer.json` mentions
 both of them as `suggest`.
