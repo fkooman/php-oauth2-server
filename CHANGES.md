@@ -1,6 +1,6 @@
 # ChangeLog
 
-## 1.1.0 (TBD)
+## 1.1.0 (2017-09-18)
 - introduce PHP >= 7.2 compatibilty by using `SodiumCompat` wrapper;
 - only use crypto functionality from Sodium, use polyfills for the rest;
 - fix issues found by [Psalm](https://getpsalm.org/) and 
