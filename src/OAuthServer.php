@@ -259,8 +259,7 @@ class OAuthServer
      * @param string|null $authUser BasicAuth user in case of secret client, null if public client
      * @param string|null $authPass BasicAuth pass in case of secret client, null if public client
      *
-     * @return array<string:mixed>
-     * @psalm-return array{access_token:string, refresh_token:string, token_type:string, expires_in:int}
+     * @return array
      */
     private function postTokenAuthorizationCode(array $postData, $authUser, $authPass)
     {
@@ -332,8 +331,7 @@ class OAuthServer
      * @param string|null $authUser BasicAuth user in case of secret client, null if public client
      * @param string|null $authPass BasicAuth pass in case of secret client, null if public client
      *
-     * @return array<string:mixed>
-     * @psalm-return array{access_token:string, token_type:string, expires_in:int}
+     * @return array
      */
     private function postTokenRefreshToken(array $postData, $authUser, $authPass)
     {
