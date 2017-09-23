@@ -570,6 +570,8 @@ class OAuthServer
             // expected value
             if (false === hash_equals(
                 $codeInfo['code_challenge'],
+                // https://github.com/paragonie/constant_time_encoding/issues/9
+                // it's unknown if rtrim() is cache-timing-safe.
                 rtrim(
                     Base64UrlSafe::encode(
                         hash(
