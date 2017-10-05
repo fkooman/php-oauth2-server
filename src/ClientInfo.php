@@ -24,7 +24,7 @@
 
 namespace fkooman\OAuth\Server;
 
-use RuntimeException;
+use fkooman\OAuth\Server\Exception\ServerException;
 
 class ClientInfo
 {
@@ -46,12 +46,12 @@ class ClientInfo
     public function __construct(array $clientInfo)
     {
         if (!array_key_exists('redirect_uri', $clientInfo)) {
-            throw new RuntimeException('"redirect_uri" not in client database');
+            throw new ServerException('"redirect_uri" not in client database');
         }
         $this->redirectUriList = (array) $clientInfo['redirect_uri'];
 
         if (!array_key_exists('response_type', $clientInfo)) {
-            throw new RuntimeException('"response_type" not in client database');
+            throw new ServerException('"response_type" not in client database');
         }
         $this->responseType = $clientInfo['response_type'];
 

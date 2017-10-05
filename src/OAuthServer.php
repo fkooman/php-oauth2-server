@@ -28,6 +28,7 @@ use DateInterval;
 use DateTime;
 use fkooman\OAuth\Server\Exception\ClientException;
 use fkooman\OAuth\Server\Exception\GrantException;
+use fkooman\OAuth\Server\Exception\ServerException;
 use fkooman\OAuth\Server\Exception\ValidateException;
 use ParagonIE\ConstantTime\Base64;
 use ParagonIE\ConstantTime\Base64UrlSafe;
@@ -408,18 +409,24 @@ class OAuthServer
         // "auth_key" as a tag for the issued access tokens
         $expiresAt = date_add(clone $this->dateTime, new DateInterval(sprintf('PT%dS', $this->expiresIn)));
 
+        $jsonString = json_encode(
+            [
+                'type' => 'access_token',
+                'auth_key' => $authKey, // to bind it to the authorization
+                'user_id' => $userId,
+                'client_id' => $clientId,
+                'scope' => $scope,
+                'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+            ]
+        );
+
+        if (false === $jsonString) {
+            throw new ServerException('unable to encode JSON');
+        }
+
         return Base64::encode(
             SodiumCompat::crypto_sign(
-                json_encode(
-                    [
-                        'type' => 'access_token',
-                        'auth_key' => $authKey, // to bind it to the authorization
-                        'user_id' => $userId,
-                        'client_id' => $clientId,
-                        'scope' => $scope,
-                        'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
-                    ]
-                ),
+                $jsonString,
                 SodiumCompat::crypto_sign_secretkey($this->keyPair)
             )
         );
@@ -435,17 +442,23 @@ class OAuthServer
      */
     private function getRefreshToken($userId, $clientId, $scope, $authKey)
     {
+        $jsonString = json_encode(
+            [
+                'type' => 'refresh_token',
+                'auth_key' => $authKey, // to bind it to the authorization
+                'user_id' => $userId,
+                'client_id' => $clientId,
+                'scope' => $scope,
+            ]
+        );
+
+        if (false === $jsonString) {
+            throw new ServerException('unable to encode JSON');
+        }
+
         return Base64::encode(
             SodiumCompat::crypto_sign(
-                json_encode(
-                    [
-                        'type' => 'refresh_token',
-                        'auth_key' => $authKey, // to bind it to the authorization
-                        'user_id' => $userId,
-                        'client_id' => $clientId,
-                        'scope' => $scope,
-                    ]
-                ),
+                $jsonString,
                 SodiumCompat::crypto_sign_secretkey($this->keyPair)
             )
         );
@@ -466,20 +479,26 @@ class OAuthServer
         // authorization codes expire after 5 minutes
         $expiresAt = date_add(clone $this->dateTime, new DateInterval('PT5M'));
 
+        $jsonString = json_encode(
+            [
+                'type' => 'authorization_code',
+                'auth_key' => $authKey,
+                'user_id' => $userId,
+                'client_id' => $clientId,
+                'scope' => $scope,
+                'redirect_uri' => $redirectUri,
+                'code_challenge' => $codeChallenge,
+                'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+            ]
+        );
+
+        if (false === $jsonString) {
+            throw new ServerException('unable to encode JSON');
+        }
+
         return Base64::encode(
             SodiumCompat::crypto_sign(
-                json_encode(
-                    [
-                        'type' => 'authorization_code',
-                        'auth_key' => $authKey,
-                        'user_id' => $userId,
-                        'client_id' => $clientId,
-                        'scope' => $scope,
-                        'redirect_uri' => $redirectUri,
-                        'code_challenge' => $codeChallenge,
-                        'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
-                    ]
-                ),
+                $jsonString,
                 SodiumCompat::crypto_sign_secretkey($this->keyPair)
             )
         );
