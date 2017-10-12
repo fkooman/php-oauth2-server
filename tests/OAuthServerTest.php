@@ -58,11 +58,6 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
                 'display_name' => 'Code Client',
                 'client_secret' => '123456',
             ],
-            'token-client' => [
-                'response_type' => 'token',
-                'redirect_uri' => 'http://example.org/token-cb',
-                'display_name' => 'Token Client',
-            ],
             'loopback' => [
                 'response_type' => 'code',
                 'redirect_uri' => 'http://127.0.0.1:{PORT}/cb',
@@ -146,47 +141,6 @@ class OAuthServerTest extends PHPUnit_Framework_TestCase
                     'state' => '12345',
                     'code_challenge_method' => 'S256',
                     'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-                ],
-                [
-                    'approve' => 'yes',
-                ],
-                'foo'
-            )
-        );
-    }
-
-    public function testAuthorizeToken()
-    {
-        $this->assertSame(
-            [
-                'client_id' => 'token-client',
-                'display_name' => 'Token Client',
-                'scope' => 'config',
-                'redirect_uri' => 'http://example.org/token-cb',
-            ],
-            $this->server->getAuthorize(
-                [
-                    'client_id' => 'token-client',
-                    'redirect_uri' => 'http://example.org/token-cb',
-                    'response_type' => 'token',
-                    'scope' => 'config',
-                    'state' => '12345',
-                ]
-            )
-        );
-    }
-
-    public function testAuthorizeTokenPost()
-    {
-        $this->assertSame(
-            'http://example.org/token-cb#access_token=qrCFqzPz4ac7U8%2FfSOa6ReXvDJ6D8zsz1VNK%2FyEHrryWHpHanbHjVgL6Ss%2BpLenWgTVTOHcLLv1aT3D1RTnmAnsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoidG9rZW4tY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9&token_type=bearer&expires_in=3600&state=12345',
-            $this->server->postAuthorize(
-                [
-                    'client_id' => 'token-client',
-                    'redirect_uri' => 'http://example.org/token-cb',
-                    'response_type' => 'token',
-                    'scope' => 'config',
-                    'state' => '12345',
                 ],
                 [
                     'approve' => 'yes',

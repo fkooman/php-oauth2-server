@@ -141,7 +141,6 @@ class OAuthServer
         if ('no' === $postData['approve']) {
             // user did not approve, tell OAuth client
             return $this->prepareRedirectUri(
-                'token' === $getData['response_type'], // use fragment
                 $getData['redirect_uri'],
                 [
                     'error' => 'access_denied',
@@ -160,42 +159,20 @@ class OAuthServer
             $authKey
         );
 
-        if ('code' === $getData['response_type']) {
-            // return authorization code
-            $authorizationCode = $this->getAuthorizationCode(
-                $userId,
-                $getData['client_id'],
-                $getData['scope'],
-                $getData['redirect_uri'],
-                $authKey,
-                array_key_exists('code_challenge', $getData) ? $getData['code_challenge'] : null
-            );
-
-            return $this->prepareRedirectUri(
-                false,
-                $getData['redirect_uri'],
-                [
-                    'code' => $authorizationCode,
-                    'state' => $getData['state'],
-                ]
-            );
-        }
-        // "token"
-        // return access token
-        $accessToken = $this->getAccessToken(
+        // return authorization code
+        $authorizationCode = $this->getAuthorizationCode(
             $userId,
             $getData['client_id'],
             $getData['scope'],
-            $authKey
+            $getData['redirect_uri'],
+            $authKey,
+            array_key_exists('code_challenge', $getData) ? $getData['code_challenge'] : null
         );
 
         return $this->prepareRedirectUri(
-            true,
             $getData['redirect_uri'],
             [
-                'access_token' => $accessToken,
-                'token_type' => 'bearer',
-                'expires_in' => $this->expiresIn,
+                'code' => $authorizationCode,
                 'state' => $getData['state'],
             ]
         );
@@ -241,15 +218,8 @@ class OAuthServer
             throw new ClientException('client does not support this "redirect_uri"', 400);
         }
 
-        // make sure the response_type is supported by the client
-        if ($clientInfo->getResponseType() !== $getData['response_type']) {
-            throw new ClientException('client does not support this "response_type"', 400);
-        }
-        if ('token' !== $clientInfo->getResponseType()) {
-            // public code clients require PKCE
-            if (null === $clientInfo->getSecret()) {
-                RequestValidator::validatePkceParameters($getData);
-            }
+        if (null === $clientInfo->getSecret()) {
+            RequestValidator::validatePkceParameters($getData);
         }
 
         return $clientInfo;
@@ -370,26 +340,17 @@ class OAuthServer
     }
 
     /**
-     * @param bool   $useFragment
      * @param string $redirectUri
      * @param array  $queryParameters
      *
      * @return string
      */
-    private function prepareRedirectUri($useFragment, $redirectUri, array $queryParameters)
+    private function prepareRedirectUri($redirectUri, array $queryParameters)
     {
-        if ($useFragment) {
-            // for "token" flow we use fragment
-            $querySeparator = '#';
-        } else {
-            // use '&' as separator when redirectUri already contains a '?'
-            $querySeparator = false === strpos($redirectUri, '?') ? '?' : '&';
-        }
-
         return sprintf(
             '%s%s%s',
             $redirectUri,
-            $querySeparator,
+            false === strpos($redirectUri, '?') ? '?' : '&',
             http_build_query($queryParameters)
         );
     }

@@ -34,9 +34,6 @@ class ClientInfo
     /** @var array */
     private $redirectUriList;
 
-    /** @var string */
-    private $responseType;
-
     /** @var string|null */
     private $clientSecret = null;
 
@@ -49,11 +46,6 @@ class ClientInfo
             throw new ServerException('"redirect_uri" not in client database');
         }
         $this->redirectUriList = (array) $clientInfo['redirect_uri'];
-
-        if (!array_key_exists('response_type', $clientInfo)) {
-            throw new ServerException('"response_type" not in client database');
-        }
-        $this->responseType = $clientInfo['response_type'];
 
         if (array_key_exists('display_name', $clientInfo)) {
             $this->displayName = $clientInfo['display_name'];
@@ -69,14 +61,6 @@ class ClientInfo
     public function getDisplayName()
     {
         return $this->displayName;
-    }
-
-    /**
-     * @return string
-     */
-    public function getResponseType()
-    {
-        return $this->responseType;
     }
 
     /**

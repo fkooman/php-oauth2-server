@@ -1,6 +1,7 @@
 # ChangeLog
 
-## 1.1.1 (TBD)
+## 2.0.0 (TBD)
+- remove "implicit grant" support, only support "autorization code"
 - fix some additional Psalm warnings
 - introduce ServerException
 
