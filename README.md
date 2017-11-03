@@ -1,5 +1,3 @@
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/fkooman/php-oauth2-server/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/fkooman/php-oauth2-server/?branch=master)
-
 # Introduction
 This is a very simple OAuth 2.0 server for integration in your own application. 
 It has minimal dependencies, but still tries to be secure. The main purpose is 
