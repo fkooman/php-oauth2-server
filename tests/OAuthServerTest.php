@@ -29,9 +29,9 @@ use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\Storage;
 use PDO;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 
-class OAuthServerTest extends PHPUnit_Framework_TestCase
+class OAuthServerTest extends TestCase
 {
     /** @var \fkooman\OAuth\Server\Storage */
     private $storage;

@@ -28,9 +28,9 @@ use DateTime;
 use fkooman\OAuth\Server\BearerValidator;
 use fkooman\OAuth\Server\Storage;
 use PDO;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 
-class BearerValidatorTest extends PHPUnit_Framework_TestCase
+class BearerValidatorTest extends TestCase
 {
     /** @var \fkooman\OAuth\Server\BearerValidator */
     private $validator;
