@@ -77,7 +77,7 @@ try {
             $response->send();
     }
 } catch (OAuthException $e) {
-    $e->getResponse()->send();
+    $e->getTokenResponse()->send();
 } catch (Exception $e) {
     $response = new TokenResponse(
         [

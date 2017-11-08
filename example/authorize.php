@@ -74,10 +74,12 @@ try {
             $authorizeResponse->send();
     }
 } catch (OAuthException $e) {
-    // XXX we need to make a getResponse and getAuthorizeResponse or something,
-    // or use different exceptions!
-    $e->getResponse()->send();
+    $e->getAuthorizeResponse()->send();
 } catch (Exception $e) {
-    $authorizeResponse = new AuthorizeResponse(sprintf('[500] %s', $e->getMessage()), [], 500);
+    $authorizeResponse = new AuthorizeResponse(
+        sprintf('[500] %s', $e->getMessage()),
+        [],
+        500
+    );
     $authorizeResponse->send();
 }
