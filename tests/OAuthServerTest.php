@@ -164,6 +164,15 @@ class OAuthServerTest extends TestCase
             null,
             null
         );
+        $this->assertSame(200, $tokenResponse->getStatusCode());
+        $this->assertSame(
+            [
+                'Cache-Control' => 'no-store',
+                'Pragma' => 'no-cache',
+                'Content-Type' => 'application/json',
+            ],
+            $tokenResponse->getHeaders()
+        );
         $this->assertSame(
             [
                 'access_token' => 'znwcwk0WpP1y0qrUSd/J6KToSlXdceGBaliVLhYYjRESQoVZI1aZTX9cRfBfIpOBnMcyTF3Izs9H8918OwiqBHsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAxOjAwOjAwIn0=',
@@ -171,7 +180,7 @@ class OAuthServerTest extends TestCase
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
-            $tokenResponse
+            json_decode($tokenResponse->getBody(), true)
         );
     }
 
@@ -195,7 +204,7 @@ class OAuthServerTest extends TestCase
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
-            $tokenResponse
+            json_decode($tokenResponse->getBody(), true)
         );
     }
 
@@ -308,7 +317,7 @@ class OAuthServerTest extends TestCase
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
-            $tokenResponse
+            json_decode($tokenResponse->getBody(), true)
         );
     }
 

@@ -25,6 +25,7 @@
 namespace fkooman\OAuth\Server\Exception;
 
 use Exception;
+use fkooman\OAuth\Server\Response;
 
 class OAuthException extends Exception
 {
@@ -48,5 +49,25 @@ class OAuthException extends Exception
     public function getDescription()
     {
         return $this->description;
+    }
+
+    /**
+     * @return \fkooman\OAuth\Server\Response
+     */
+    public function getResponse()
+    {
+        $responseHeaders = [];
+        if (401 === $this->getCode()) {
+            $responseHeaders['WWW-Authenticate'] = 'Basic realm="OAuth"';
+        }
+
+        return new Response(
+            [
+                'error' => $this->getMessage(),
+                'error_description' => $this->getDescription(),
+            ],
+            $responseHeaders,
+            $this->getCode()
+        );
     }
 }

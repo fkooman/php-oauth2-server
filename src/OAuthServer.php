@@ -185,7 +185,7 @@ class OAuthServer
      * @param string|null $authUser BasicAuth user in case of secret client, null if public client
      * @param string|null $authPass BasicAuth pass in case of secret client, null if public client
      *
-     * @return array
+     * @return Response
      */
     public function postToken(array $postData, $authUser, $authPass)
     {
@@ -230,7 +230,7 @@ class OAuthServer
      * @param string|null $authUser BasicAuth user in case of secret client, null if public client
      * @param string|null $authPass BasicAuth pass in case of secret client, null if public client
      *
-     * @return array
+     * @return Response
      */
     private function postTokenAuthorizationCode(array $postData, $authUser, $authPass)
     {
@@ -289,12 +289,23 @@ class OAuthServer
             $codeInfo['auth_key']
         );
 
-        return [
-            'access_token' => $accessToken,
-            'refresh_token' => $refreshToken,
-            'token_type' => 'bearer',
-            'expires_in' => $this->expiresIn,
-        ];
+        return new Response(
+            [
+                'access_token' => $accessToken,
+                'refresh_token' => $refreshToken,
+                'token_type' => 'bearer',
+                'expires_in' => $this->expiresIn,
+            ],
+            // The authorization server MUST include the HTTP "Cache-Control"
+            // response header field [RFC2616] with a value of "no-store" in any
+            // response containing tokens, credentials, or other sensitive
+            // information, as well as the "Pragma" response header field [RFC2616]
+            // with a value of "no-cache".
+            [
+                'Cache-Control' => 'no-store',
+                'Pragma' => 'no-cache',
+            ]
+        );
     }
 
     /**
@@ -302,7 +313,7 @@ class OAuthServer
      * @param string|null $authUser BasicAuth user in case of secret client, null if public client
      * @param string|null $authPass BasicAuth pass in case of secret client, null if public client
      *
-     * @return array
+     * @return Response
      */
     private function postTokenRefreshToken(array $postData, $authUser, $authPass)
     {
@@ -332,11 +343,22 @@ class OAuthServer
             $refreshTokenInfo['auth_key']
         );
 
-        return [
-            'access_token' => $accessToken,
-            'token_type' => 'bearer',
-            'expires_in' => $this->expiresIn,
-        ];
+        return new Response(
+            [
+                'access_token' => $accessToken,
+                'token_type' => 'bearer',
+                'expires_in' => $this->expiresIn,
+            ],
+            // The authorization server MUST include the HTTP "Cache-Control"
+            // response header field [RFC2616] with a value of "no-store" in any
+            // response containing tokens, credentials, or other sensitive
+            // information, as well as the "Pragma" response header field [RFC2616]
+            // with a value of "no-cache".
+            [
+                'Cache-Control' => 'no-store',
+                'Pragma' => 'no-cache',
+            ]
+        );
     }
 
     /**

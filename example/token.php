@@ -26,7 +26,10 @@ require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\Exception\OAuthException;
 use fkooman\OAuth\Server\OAuthServer;
+use fkooman\OAuth\Server\Response;
 use fkooman\OAuth\Server\Storage;
+
+// XXX explain Response
 
 try {
     // storage
@@ -57,34 +60,32 @@ try {
         case 'POST':
             $authUser = array_key_exists('PHP_AUTH_USER', $_SERVER) ? $_SERVER['PHP_AUTH_USER'] : null;
             $authPass = array_key_exists('PHP_AUTH_PW', $_SERVER) ? $_SERVER['PHP_AUTH_PW'] : null;
-
-            http_response_code(200);
-            header('Content-Type: application/json');
-            header('Cache-Control: no-store');
-            header('Pragma: no-cache');
-            echo json_encode($oauthServer->postToken($_POST, $authUser, $authPass));
+            $response = $oauthServer->postToken($_POST, $authUser, $authPass);
+            $response->send();
             break;
         default:
-            http_response_code(405);
-            header('Content-Type: application/json');
-            header('Cache-Control: no-store');
-            header('Pragma: no-cache');
-            header('Allow: POST');
-            echo json_encode(['error' => 'invalid_request', 'error_description' => 'Method Not Allowed']);
+            $response = new Response(
+                [
+                    'error' => 'invalid_request',
+                    'error_description' => 'Method Not Allowed',
+                ],
+                [
+                    'Allow' => 'POST',
+                ],
+                405
+            );
+            $response->send();
     }
 } catch (OAuthException $e) {
-    http_response_code($e->getCode());
-    header('Content-Type: application/json');
-    header('Cache-Control: no-store');
-    header('Pragma: no-cache');
-    if (401 === $e->getCode()) {
-        header('WWW-Authenticate: Basic realm="OAuth"');
-    }
-    echo json_encode(['error' => $e->getMessage(), 'error_description' => $e->getDescription()]);
+    $e->getResponse()->send();
 } catch (Exception $e) {
-    http_response_code(500);
-    header('Content-Type: application/json');
-    header('Cache-Control: no-store');
-    header('Pragma: no-cache');
-    echo json_encode(['error' => 'server_error', 'error_description' => $e->getMessage()]);
+    $response = new Response(
+        [
+            'error' => 'server_error',
+            'error_description' => $e->getMessage(),
+        ],
+        [],
+        500
+    );
+    $response->send();
 }

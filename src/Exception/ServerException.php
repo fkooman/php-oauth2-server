@@ -26,6 +26,9 @@ namespace fkooman\OAuth\Server\Exception;
 
 use RuntimeException;
 
+/**
+ * This exception is used for "internet server error" style errors.
+ */
 class ServerException extends RuntimeException
 {
 }
