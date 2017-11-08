@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-namespace fkooman\OAuth\Server;
+namespace fkooman\OAuth\Server\Http;
 
 class Response
 {

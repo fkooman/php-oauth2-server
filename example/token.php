@@ -25,9 +25,9 @@ require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
 use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\Exception\OAuthException;
+use fkooman\OAuth\Server\Http\TokenResponse;
 use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\Storage;
-use fkooman\OAuth\Server\TokenResponse;
 
 // XXX explain Response
 

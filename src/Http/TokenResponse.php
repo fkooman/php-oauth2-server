@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-namespace fkooman\OAuth\Server;
+namespace fkooman\OAuth\Server\Http;
 
-class ApiResponse extends JsonResponse
+class TokenResponse extends JsonResponse
 {
 }

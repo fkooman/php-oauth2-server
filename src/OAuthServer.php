@@ -30,6 +30,8 @@ use fkooman\OAuth\Server\Exception\ClientException;
 use fkooman\OAuth\Server\Exception\GrantException;
 use fkooman\OAuth\Server\Exception\ServerException;
 use fkooman\OAuth\Server\Exception\ValidateException;
+use fkooman\OAuth\Server\Http\AuthorizeResponse;
+use fkooman\OAuth\Server\Http\TokenResponse;
 use ParagonIE\ConstantTime\Base64;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 

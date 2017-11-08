@@ -23,9 +23,9 @@
  */
 require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
-use fkooman\OAuth\Server\ApiResponse;
 use fkooman\OAuth\Server\BearerValidator;
 use fkooman\OAuth\Server\Exception\BearerException;
+use fkooman\OAuth\Server\Http\ApiResponse;
 use fkooman\OAuth\Server\Storage;
 
 try {

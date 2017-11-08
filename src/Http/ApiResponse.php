@@ -22,18 +22,8 @@
  * SOFTWARE.
  */
 
-namespace fkooman\OAuth\Server;
+namespace fkooman\OAuth\Server\Http;
 
-class AuthorizeResponse extends Response
+class ApiResponse extends JsonResponse
 {
-    /**
-     * @param string $responseBody
-     * @param array  $responseHeaders
-     * @param int    $statusCode
-     */
-    public function __construct($responseBody, array $responseHeaders = [], $statusCode = 200)
-    {
-        $responseHeaders['Content-Type'] = 'text/html; charset=utf-8';
-        parent::__construct($responseBody, $responseHeaders, $statusCode);
-    }
 }

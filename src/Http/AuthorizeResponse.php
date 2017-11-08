@@ -22,25 +22,18 @@
  * SOFTWARE.
  */
 
-namespace fkooman\OAuth\Server;
+namespace fkooman\OAuth\Server\Http;
 
-use fkooman\OAuth\Server\Exception\ServerException;
-
-class JsonResponse extends Response
+class AuthorizeResponse extends Response
 {
     /**
-     * @param mixed $jsonData
-     * @param array $responseHeaders
-     * @param int   $statusCode
+     * @param string $responseBody
+     * @param array  $responseHeaders
+     * @param int    $statusCode
      */
-    public function __construct($jsonData, array $responseHeaders = [], $statusCode = 200)
+    public function __construct($responseBody, array $responseHeaders = [], $statusCode = 200)
     {
-        $jsonString = json_encode($jsonData);
-        if (false === $jsonString) {
-            throw new ServerException('unable to encode JSON');
-        }
-
-        $responseHeaders['Content-Type'] = 'application/json';
-        parent::__construct($jsonString, $responseHeaders, $statusCode);
+        $responseHeaders['Content-Type'] = 'text/html; charset=utf-8';
+        parent::__construct($responseBody, $responseHeaders, $statusCode);
     }
 }

@@ -25,7 +25,7 @@
 namespace fkooman\OAuth\Server\Exception;
 
 use Exception;
-use fkooman\OAuth\Server\TokenResponse;
+use fkooman\OAuth\Server\Http\TokenResponse;
 
 class OAuthException extends Exception
 {
@@ -52,7 +52,7 @@ class OAuthException extends Exception
     }
 
     /**
-     * @return \fkooman\OAuth\Server\TokenResponse
+     * @return \fkooman\OAuth\Server\Http\TokenResponse
      */
     public function getResponse()
     {

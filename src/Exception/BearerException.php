@@ -25,7 +25,7 @@
 namespace fkooman\OAuth\Server\Exception;
 
 use Exception;
-use fkooman\OAuth\Server\ApiResponse;
+use fkooman\OAuth\Server\Http\ApiResponse;
 
 class BearerException extends OAuthException
 {
@@ -39,7 +39,7 @@ class BearerException extends OAuthException
     }
 
     /**
-     * @return \fkooman\OAuth\Server\ApiResponse
+     * @return \fkooman\OAuth\Server\Http\ApiResponse
      */
     public function getResponse()
     {
