@@ -24,17 +24,8 @@
 
 namespace fkooman\OAuth\Server;
 
-class AuthorizeResponse
+class AuthorizeResponse extends Response
 {
-    /** @var int */
-    private $statusCode;
-
-    /** @var array */
-    private $responseHeaders;
-
-    /** @var string */
-    private $responseBody;
-
     /**
      * @param string $responseBody
      * @param array  $responseHeaders
@@ -42,45 +33,7 @@ class AuthorizeResponse
      */
     public function __construct($responseBody, array $responseHeaders = [], $statusCode = 200)
     {
-        $this->responseBody = $responseBody;
-        $this->responseHeaders = $responseHeaders;
-        $this->responseHeaders['Content-Type'] = 'text/html; charset=utf-8';
-        $this->statusCode = $statusCode;
-    }
-
-    /**
-     * @return string
-     */
-    public function getBody()
-    {
-        return $this->responseBody;
-    }
-
-    /**
-     * @return array
-     */
-    public function getHeaders()
-    {
-        return $this->responseHeaders;
-    }
-
-    /**
-     * @return int
-     */
-    public function getStatusCode()
-    {
-        return $this->statusCode;
-    }
-
-    /**
-     * @return void
-     */
-    public function send()
-    {
-        http_response_code($this->statusCode);
-        foreach ($this->responseHeaders as $k => $v) {
-            header(sprintf('%s: %s', $k, $v));
-        }
-        echo $this->responseBody;
+        $responseHeaders['Content-Type'] = 'text/html; charset=utf-8';
+        parent::__construct($responseBody, $responseHeaders, $statusCode);
     }
 }
