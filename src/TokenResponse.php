@@ -79,22 +79,6 @@ class TokenResponse
     }
 
     /**
-     * Get a simple "serialized" representation of the response.
-     *
-     * @return array
-     */
-    public function export()
-    {
-        // we do not want PSR-7, which is WAY too over engineered...
-        // https://evertpot.com/psr-7-issues/
-        return [
-            'statusCode' => $this->statusCode,
-            'responseHeaders' => $this->responseHeaders,
-            'responseBody' => $this->responseBody,
-        ];
-    }
-
-    /**
      * @return void
      */
     public function send()
