@@ -36,7 +36,13 @@ try {
 
     // client "database"
     $getClientInfo = function ($clientId) {
-        $oauthClients = require 'clients.php';
+        $oauthClients = [
+            'demo_client' => [
+                'redirect_uri' => ['http://localhost:8081/callback.php'],
+                'display_name' => 'Demo Client',
+                'client_secret' => 'demo_secret',
+            ],
+        ];
         if (!array_key_exists($clientId, $oauthClients)) {
             return false;
         }
@@ -59,6 +65,7 @@ try {
 
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'GET':
+        case 'HEAD':
             $authorizeVariables = $oauthServer->getAuthorize($_GET);
             $authorizeResponse = new AuthorizeResponse(
                 sprintf('<html><head><title>Authorize</title></head><body><pre>%s</pre><form method="post"><button type="submit" name="approve" value="yes">Approve</button></form></body></html>', var_export($authorizeVariables, true))
@@ -66,11 +73,12 @@ try {
             $authorizeResponse->send();
             break;
         case 'POST':
+            // you MUST implement CSRF protection!
             $authorizeResponse = $oauthServer->postAuthorize($_GET, $_POST, $userId);
             $authorizeResponse->send();
             break;
         default:
-            $authorizeResponse = new AuthorizeResponse('[405] Method Not Allowed', ['Allow' => 'GET,POST'], 405);
+            $authorizeResponse = new AuthorizeResponse('[405] Method Not Allowed', ['Allow' => 'GET,HEAD,POST'], 405);
             $authorizeResponse->send();
     }
 } catch (OAuthException $e) {

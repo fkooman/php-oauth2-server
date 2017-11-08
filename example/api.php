@@ -39,6 +39,7 @@ try {
 
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'GET':
+        case 'HEAD':
             $authorizationHeader = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : null;
             $tokenInfo = $bearerValidator->validate($authorizationHeader);
             $apiResponse = new ApiResponse(

@@ -29,8 +29,6 @@ use fkooman\OAuth\Server\Http\TokenResponse;
 use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\Storage;
 
-// XXX explain Response
-
 try {
     // storage
     $storage = new Storage(new PDO(sprintf('sqlite:%s/data/db.sqlite', dirname(__DIR__))));
@@ -38,7 +36,13 @@ try {
 
     // client "database"
     $getClientInfo = function ($clientId) {
-        $oauthClients = require 'clients.php';
+        $oauthClients = [
+            'demo_client' => [
+                'redirect_uri' => ['http://localhost:8081/callback.php'],
+                'display_name' => 'Demo Client',
+                'client_secret' => 'demo_secret',
+            ],
+        ];
         if (!array_key_exists($clientId, $oauthClients)) {
             return false;
         }
@@ -60,11 +64,12 @@ try {
         case 'POST':
             $authUser = array_key_exists('PHP_AUTH_USER', $_SERVER) ? $_SERVER['PHP_AUTH_USER'] : null;
             $authPass = array_key_exists('PHP_AUTH_PW', $_SERVER) ? $_SERVER['PHP_AUTH_PW'] : null;
-            $response = $oauthServer->postToken($_POST, $authUser, $authPass);
-            $response->send();
+            $tokenResponse = $oauthServer->postToken($_POST, $authUser, $authPass);
+            error_log(var_export($tokenResponse, true));
+            $tokenResponse->send();
             break;
         default:
-            $response = new TokenResponse(
+            $tokenResponse = new TokenResponse(
                 [
                     'error' => 'invalid_request',
                     'error_description' => 'Method Not Allowed',
@@ -74,12 +79,15 @@ try {
                 ],
                 405
             );
-            $response->send();
+            error_log(var_export($tokenResponse, true));
+            $tokenResponse->send();
     }
 } catch (OAuthException $e) {
-    $e->getTokenResponse()->send();
+    $tokenResponse = $e->getTokenResponse();
+    error_log(var_export($tokenResponse, true));
+    $tokenResponse->send();
 } catch (Exception $e) {
-    $response = new TokenResponse(
+    $tokenResponse = new TokenResponse(
         [
             'error' => 'server_error',
             'error_description' => $e->getMessage(),
@@ -87,5 +95,6 @@ try {
         [],
         500
     );
-    $response->send();
+    error_log(var_export($tokenResponse, true));
+    $tokenResponse->send();
 }
