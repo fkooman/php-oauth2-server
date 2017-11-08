@@ -22,43 +22,8 @@
  * SOFTWARE.
  */
 
-namespace fkooman\OAuth\Server\Exception;
+namespace fkooman\OAuth\Server;
 
-use Exception;
-use fkooman\OAuth\Server\ApiResponse;
-
-class BearerException extends OAuthException
+class ApiResponse extends JsonResponse
 {
-    /**
-     * @param string $message
-     * @param int    $code
-     */
-    public function __construct($message, $code = 401, Exception $previous = null)
-    {
-        parent::__construct('invalid_token', $message, $code, $previous);
-    }
-
-    /**
-     * @return \fkooman\OAuth\Server\ApiResponse
-     */
-    public function getResponse()
-    {
-        $responseHeaders = [];
-        if (401 === $this->getCode()) {
-            $responseHeaders['WWW-Authenticate'] = sprintf(
-                'Bearer error="%s",error_description="%s"',
-                $this->getMessage(),
-                $this->getDescription()
-            );
-        }
-
-        return new ApiResponse(
-            [
-                'error' => $this->getMessage(),
-                'error_description' => $this->getDescription(),
-            ],
-            $responseHeaders,
-            $this->getCode()
-        );
-    }
 }

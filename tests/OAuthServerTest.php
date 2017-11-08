@@ -108,45 +108,55 @@ class OAuthServerTest extends TestCase
 
     public function testAuthorizeCodePost()
     {
+        $authorizeResponse = $this->server->postAuthorize(
+            [
+                'client_id' => 'code-client',
+                'redirect_uri' => 'http://example.org/code-cb',
+                'response_type' => 'code',
+                'scope' => 'foo',
+                'state' => '12345',
+                'code_challenge_method' => 'S256',
+                'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+            ],
+            [
+                'approve' => 'yes',
+            ],
+            'foo'
+        );
+        $this->assertSame(302, $authorizeResponse->getStatusCode());
         $this->assertSame(
-            'http://example.org/code-cb?code=eAK58VRxVi1FHxAG6dhSzao2Ty7wKlDHwuFF5G1ilVIdZP9PW6IwpFUb9VsNcFvjgS35wAqtMnky16buhyYxB3sidHlwZSI6ImF1dGhvcml6YXRpb25fY29kZSIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImZvbyIsInJlZGlyZWN0X3VyaSI6Imh0dHA6XC9cL2V4YW1wbGUub3JnXC9jb2RlLWNiIiwiY29kZV9jaGFsbGVuZ2UiOiJFOU1lbGhvYTJPd3ZGckVNVEpndUNIYW9lSzF0OFVSV2J1R0pTc3R3LWNNIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDA6MDU6MDAifQ%3D%3D&state=12345',
-            $this->server->postAuthorize(
-                [
-                    'client_id' => 'code-client',
-                    'redirect_uri' => 'http://example.org/code-cb',
-                    'response_type' => 'code',
-                    'scope' => 'foo',
-                    'state' => '12345',
-                    'code_challenge_method' => 'S256',
-                    'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-                ],
-                [
-                    'approve' => 'yes',
-                ],
-                'foo'
-            )
+            [
+                'Location' => 'http://example.org/code-cb?code=eAK58VRxVi1FHxAG6dhSzao2Ty7wKlDHwuFF5G1ilVIdZP9PW6IwpFUb9VsNcFvjgS35wAqtMnky16buhyYxB3sidHlwZSI6ImF1dGhvcml6YXRpb25fY29kZSIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImZvbyIsInJlZGlyZWN0X3VyaSI6Imh0dHA6XC9cL2V4YW1wbGUub3JnXC9jb2RlLWNiIiwiY29kZV9jaGFsbGVuZ2UiOiJFOU1lbGhvYTJPd3ZGckVNVEpndUNIYW9lSzF0OFVSV2J1R0pTc3R3LWNNIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDA6MDU6MDAifQ%3D%3D&state=12345',
+                'Content-Type' => 'text/html; charset=utf-8',
+            ],
+            $authorizeResponse->getHeaders()
         );
     }
 
     public function testAuthorizeTokenPostRedirectUriWithQuery()
     {
+        $authorizeResponse = $this->server->postAuthorize(
+            [
+                'client_id' => 'code-client-query-redirect',
+                'redirect_uri' => 'http://example.org/code-cb?keep=this',
+                'response_type' => 'code',
+                'scope' => 'config',
+                'state' => '12345',
+                'code_challenge_method' => 'S256',
+                'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+            ],
+            [
+                'approve' => 'yes',
+            ],
+            'foo'
+        );
+        $this->assertSame(302, $authorizeResponse->getStatusCode());
         $this->assertSame(
-            'http://example.org/code-cb?keep=this&code=PxOQ%2FysqZ65ozJ8aEsMaQfBuK0jJqyr2UPqvWCiUxUWKPz5C009%2Bv3ShcgGwa93VNogtY1%2FSENKlKmCzHgdMBHsidHlwZSI6ImF1dGhvcml6YXRpb25fY29kZSIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQtcXVlcnktcmVkaXJlY3QiLCJzY29wZSI6ImNvbmZpZyIsInJlZGlyZWN0X3VyaSI6Imh0dHA6XC9cL2V4YW1wbGUub3JnXC9jb2RlLWNiP2tlZXA9dGhpcyIsImNvZGVfY2hhbGxlbmdlIjoiRTlNZWxob2EyT3d2RnJFTVRKZ3VDSGFvZUsxdDhVUldidUdKU3N0dy1jTSIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAwOjA1OjAwIn0%3D&state=12345',
-            $this->server->postAuthorize(
-                [
-                    'client_id' => 'code-client-query-redirect',
-                    'redirect_uri' => 'http://example.org/code-cb?keep=this',
-                    'response_type' => 'code',
-                    'scope' => 'config',
-                    'state' => '12345',
-                    'code_challenge_method' => 'S256',
-                    'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-                ],
-                [
-                    'approve' => 'yes',
-                ],
-                'foo'
-            )
+            [
+                'Location' => 'http://example.org/code-cb?keep=this&code=PxOQ%2FysqZ65ozJ8aEsMaQfBuK0jJqyr2UPqvWCiUxUWKPz5C009%2Bv3ShcgGwa93VNogtY1%2FSENKlKmCzHgdMBHsidHlwZSI6ImF1dGhvcml6YXRpb25fY29kZSIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQtcXVlcnktcmVkaXJlY3QiLCJzY29wZSI6ImNvbmZpZyIsInJlZGlyZWN0X3VyaSI6Imh0dHA6XC9cL2V4YW1wbGUub3JnXC9jb2RlLWNiP2tlZXA9dGhpcyIsImNvZGVfY2hhbGxlbmdlIjoiRTlNZWxob2EyT3d2RnJFTVRKZ3VDSGFvZUsxdDhVUldidUdKU3N0dy1jTSIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAwOjA1OjAwIn0%3D&state=12345',
+                'Content-Type' => 'text/html; charset=utf-8',
+            ],
+            $authorizeResponse->getHeaders()
         );
     }
 

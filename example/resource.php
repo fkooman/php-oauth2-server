@@ -23,6 +23,7 @@
  */
 require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
+use fkooman\OAuth\Server\ApiResponse;
 use fkooman\OAuth\Server\BearerValidator;
 use fkooman\OAuth\Server\Exception\BearerException;
 use fkooman\OAuth\Server\Storage;
@@ -40,27 +41,26 @@ try {
         case 'GET':
             $authorizationHeader = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : null;
             $tokenInfo = $bearerValidator->validate($authorizationHeader);
-            http_response_code(200);
-            header('Content-Type: application/json');
-            echo json_encode(
+            $apiResponse = new ApiResponse(
                 ['user_id' => $tokenInfo->getUserId()]
             );
+            $apiResponse->send();
             break;
         default:
-            http_response_code(405);
-            header('Content-Type: application/json');
-            header('Allow: GET');
-            echo json_encode(['error' => 'invalid_request', 'error_description' => 'Method Not Allowed']);
+            $apiResponse = new ApiResponse(
+                ['error' => 'invalid_request', 'error_description' => 'Method Not Allowed'],
+                ['Allow' => 'GET,HEAD'],
+                405
+            );
+            $apiResponse->send();
     }
 } catch (BearerException $e) {
-    http_response_code($e->getCode());
-    header('Content-Type: application/json');
-    if (401 === $e->getCode()) {
-        header(sprintf('WWW-Authenticate: Bearer error="%s"', $e->getMessage()));
-    }
-    echo json_encode(['error' => $e->getMessage(), 'error_description' => $e->getDescription()]);
+    $e->getResponse()->send();
 } catch (Exception $e) {
-    http_response_code(500);
-    header('Content-Type: application/json');
-    echo json_encode(['error' => 'server_error', 'error_description' => $e->getMessage()]);
+    $apiResponse = new ApiResponse(
+        ['error' => 'server_error', 'error_description' => $e->getMessage()],
+        [],
+        500
+    );
+    $apiResponse->send();
 }

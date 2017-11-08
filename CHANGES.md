@@ -6,6 +6,7 @@
 - introduce `ServerException`
 - add support for PHPUnit 6
 - introduce `TokenResponse` object to make integration in applications easier
+- introduce `ApiResponse` and `AuthorizeResponse` as well
 
 ## 1.1.0 (2017-09-18)
 - introduce PHP >= 7.2 compatibilty by using `SodiumCompat` wrapper;

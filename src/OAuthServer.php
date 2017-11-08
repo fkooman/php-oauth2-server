@@ -131,7 +131,7 @@ class OAuthServer
      * @param array  $postData
      * @param string $userId
      *
-     * @return string the parameterized redirect URI
+     * @return AuthorizeResponse
      */
     public function postAuthorize(array $getData, array $postData, $userId)
     {
@@ -140,12 +140,18 @@ class OAuthServer
 
         if ('no' === $postData['approve']) {
             // user did not approve, tell OAuth client
-            return $this->prepareRedirectUri(
-                $getData['redirect_uri'],
+            return new AuthorizeResponse(
+                '',
                 [
-                    'error' => 'access_denied',
-                    'state' => $getData['state'],
-                ]
+                    'Location' => $this->prepareRedirectUri(
+                        $getData['redirect_uri'],
+                        [
+                            'error' => 'access_denied',
+                            'state' => $getData['state'],
+                        ]
+                    ),
+                ],
+                302
             );
         }
 
@@ -169,12 +175,18 @@ class OAuthServer
             array_key_exists('code_challenge', $getData) ? $getData['code_challenge'] : null
         );
 
-        return $this->prepareRedirectUri(
-            $getData['redirect_uri'],
+        return new AuthorizeResponse(
+            '',
             [
-                'code' => $authorizationCode,
-                'state' => $getData['state'],
-            ]
+                'Location' => $this->prepareRedirectUri(
+                    $getData['redirect_uri'],
+                    [
+                        'code' => $authorizationCode,
+                        'state' => $getData['state'],
+                    ]
+                ),
+            ],
+            302
         );
     }
 

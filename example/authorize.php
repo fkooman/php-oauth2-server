@@ -23,6 +23,7 @@
  */
 require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
+use fkooman\OAuth\Server\AuthorizeResponse;
 use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\Exception\OAuthException;
 use fkooman\OAuth\Server\OAuthServer;
@@ -59,24 +60,24 @@ try {
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'GET':
             $authorizeVariables = $oauthServer->getAuthorize($_GET);
-            http_response_code(200);
-            echo sprintf('<html><head><title>Authorize</title></head><body><pre>%s</pre><form method="post"><button type="submit" name="approve" value="yes">Approve</button></form></body></html>', var_export($authorizeVariables, true));
+            $authorizeResponse = new AuthorizeResponse(
+                sprintf('<html><head><title>Authorize</title></head><body><pre>%s</pre><form method="post"><button type="submit" name="approve" value="yes">Approve</button></form></body></html>', var_export($authorizeVariables, true))
+            );
+            $authorizeResponse->send();
             break;
         case 'POST':
-            $redirectUri = $oauthServer->postAuthorize($_GET, $_POST, $userId);
-            http_response_code(302);
-            header(sprintf('Location: %s', $redirectUri));
+            $authorizeResponse = $oauthServer->postAuthorize($_GET, $_POST, $userId);
+            $authorizeResponse->send();
             break;
         default:
-            http_response_code(405);
-            header('Allow: GET,POST');
-            echo '[405] Method Not Allowed';
-            break;
+            $authorizeResponse = new AuthorizeResponse('[405] Method Not Allowed', ['Allow' => 'GET,POST'], 405);
+            $authorizeResponse->send();
     }
 } catch (OAuthException $e) {
-    http_response_code($e->getCode());
-    echo sprintf('[%d] %s (%s)', $e->getCode(), $e->getMessage(), $e->getDescription());
+    // XXX we need to make a getResponse and getAuthorizeResponse or something,
+    // or use different exceptions!
+    $e->getResponse()->send();
 } catch (Exception $e) {
-    http_response_code(500);
-    echo sprintf('[500] %s', $e->getMessage());
+    $authorizeResponse = new AuthorizeResponse(sprintf('[500] %s', $e->getMessage()), [], 500);
+    $authorizeResponse->send();
 }
