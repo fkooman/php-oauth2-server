@@ -185,7 +185,7 @@ class OAuthServer
      * @param string|null $authUser BasicAuth user in case of secret client, null if public client
      * @param string|null $authPass BasicAuth pass in case of secret client, null if public client
      *
-     * @return JsonResponse
+     * @return TokenResponse
      */
     public function postToken(array $postData, $authUser, $authPass)
     {
@@ -230,7 +230,7 @@ class OAuthServer
      * @param string|null $authUser BasicAuth user in case of secret client, null if public client
      * @param string|null $authPass BasicAuth pass in case of secret client, null if public client
      *
-     * @return JsonResponse
+     * @return TokenResponse
      */
     private function postTokenAuthorizationCode(array $postData, $authUser, $authPass)
     {
@@ -289,7 +289,7 @@ class OAuthServer
             $codeInfo['auth_key']
         );
 
-        return new JsonResponse(
+        return new TokenResponse(
             [
                 'access_token' => $accessToken,
                 'refresh_token' => $refreshToken,
@@ -313,7 +313,7 @@ class OAuthServer
      * @param string|null $authUser BasicAuth user in case of secret client, null if public client
      * @param string|null $authPass BasicAuth pass in case of secret client, null if public client
      *
-     * @return JsonResponse
+     * @return TokenResponse
      */
     private function postTokenRefreshToken(array $postData, $authUser, $authPass)
     {
@@ -343,7 +343,7 @@ class OAuthServer
             $refreshTokenInfo['auth_key']
         );
 
-        return new JsonResponse(
+        return new TokenResponse(
             [
                 'access_token' => $accessToken,
                 'token_type' => 'bearer',

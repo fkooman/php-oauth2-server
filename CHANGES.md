@@ -5,7 +5,7 @@
 - fix some additional Psalm warnings
 - introduce `ServerException`
 - add support for PHPUnit 6
-- introduce `Response` object to make integration in applications easier
+- introduce `TokenResponse` object to make integration in applications easier
 
 ## 1.1.0 (2017-09-18)
 - introduce PHP >= 7.2 compatibilty by using `SodiumCompat` wrapper;

@@ -25,7 +25,7 @@
 namespace fkooman\OAuth\Server\Exception;
 
 use Exception;
-use fkooman\OAuth\Server\JsonResponse;
+use fkooman\OAuth\Server\TokenResponse;
 
 class OAuthException extends Exception
 {
@@ -52,7 +52,7 @@ class OAuthException extends Exception
     }
 
     /**
-     * @return \fkooman\OAuth\Server\JsonResponse
+     * @return \fkooman\OAuth\Server\TokenResponse
      */
     public function getResponse()
     {
@@ -61,7 +61,7 @@ class OAuthException extends Exception
             $responseHeaders['WWW-Authenticate'] = 'Basic realm="OAuth"';
         }
 
-        return new JsonResponse(
+        return new TokenResponse(
             [
                 'error' => $this->getMessage(),
                 'error_description' => $this->getDescription(),
