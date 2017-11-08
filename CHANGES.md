@@ -3,7 +3,7 @@
 ## 2.0.0 (...)
 - remove "implicit grant" support, only support "autorization code"
 - fix some additional Psalm warnings
-- introduce ServerException
+- introduce `ServerException`
 - add support for PHPUnit 6
 - introduce `Response` object to make integration in applications easier
 

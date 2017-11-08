@@ -26,7 +26,7 @@ namespace fkooman\OAuth\Server;
 
 use fkooman\OAuth\Server\Exception\ServerException;
 
-class Response
+class JsonResponse
 {
     /** @var int */
     private $statusCode;

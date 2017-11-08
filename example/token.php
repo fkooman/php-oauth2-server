@@ -25,8 +25,8 @@ require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
 use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\Exception\OAuthException;
+use fkooman\OAuth\Server\JsonResponse;
 use fkooman\OAuth\Server\OAuthServer;
-use fkooman\OAuth\Server\Response;
 use fkooman\OAuth\Server\Storage;
 
 // XXX explain Response
@@ -64,7 +64,7 @@ try {
             $response->send();
             break;
         default:
-            $response = new Response(
+            $response = new JsonResponse(
                 [
                     'error' => 'invalid_request',
                     'error_description' => 'Method Not Allowed',
@@ -79,7 +79,7 @@ try {
 } catch (OAuthException $e) {
     $e->getResponse()->send();
 } catch (Exception $e) {
-    $response = new Response(
+    $response = new JsonResponse(
         [
             'error' => 'server_error',
             'error_description' => $e->getMessage(),
