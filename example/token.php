@@ -30,19 +30,23 @@ use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\Storage;
 
 try {
-    // storage
+    // persistent storage for access_token authorizations
     $storage = new Storage(new PDO(sprintf('sqlite:%s/data/db.sqlite', dirname(__DIR__))));
     $storage->init();
 
-    // client "database"
+    // callback to "convert" a client_id into a ClientInfo object, typically
+    // this configuration comes from a configuration file or database...
     $getClientInfo = function ($clientId) {
         $oauthClients = [
+            // we only have one client here with client_id "demo_client"...
             'demo_client' => [
                 'redirect_uri' => ['http://localhost:8081/callback.php'],
                 'display_name' => 'Demo Client',
                 'client_secret' => 'demo_secret',
             ],
         ];
+
+        // if the client with this client_id does not exist, we return false...
         if (!array_key_exists($clientId, $oauthClients)) {
             return false;
         }
@@ -50,25 +54,31 @@ try {
         return new ClientInfo($oauthClients[$clientId]);
     };
 
-    // server
+    // the 3rd argument is a generated keypair, see README
     $oauthServer = new OAuthServer(
         $storage,
         $getClientInfo,
         '2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol'
     );
 
-    // expire a token after 30 seconds
+    // we expire issued access_tokens after 30 seconds, the default is 3600
+    // seconds (1 hour)
     $oauthServer->setExpiresIn(30);
 
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'POST':
+            // here we obtain the "Basic Authentication" user and pass
             $authUser = array_key_exists('PHP_AUTH_USER', $_SERVER) ? $_SERVER['PHP_AUTH_USER'] : null;
             $authPass = array_key_exists('PHP_AUTH_PW', $_SERVER) ? $_SERVER['PHP_AUTH_PW'] : null;
             $tokenResponse = $oauthServer->postToken($_POST, $authUser, $authPass);
+
+            // we print the HTTP response to the "error_log" for easy debugging
             error_log(var_export($tokenResponse, true));
             $tokenResponse->send();
             break;
         default:
+            // typically your HTTP framework would take care of this, but here
+            // in "plain" PHP we have to take care of it...
             $tokenResponse = new TokenResponse(
                 [
                     'error' => 'invalid_request',
@@ -83,10 +93,14 @@ try {
             $tokenResponse->send();
     }
 } catch (OAuthException $e) {
+    // the Exception also contains a TokenResponse, like above
     $tokenResponse = $e->getTokenResponse();
     error_log(var_export($tokenResponse, true));
     $tokenResponse->send();
 } catch (Exception $e) {
+    // typically your HTTP framework would take care of this, but here
+    // in "plain" PHP we have to take care of it... here we catch all
+    // "internal server" errors
     $tokenResponse = new TokenResponse(
         [
             'error' => 'server_error',

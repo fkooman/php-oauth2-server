@@ -30,19 +30,23 @@ use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\Storage;
 
 try {
-    // storage
+    // persistent storage for access_token authorizations
     $storage = new Storage(new PDO(sprintf('sqlite:%s/data/db.sqlite', dirname(__DIR__))));
     $storage->init();
 
-    // client "database"
+    // callback to "convert" a client_id into a ClientInfo object, typically
+    // this configuration comes from a configuration file or database...
     $getClientInfo = function ($clientId) {
         $oauthClients = [
+            // we only have one client here with client_id "demo_client"...
             'demo_client' => [
                 'redirect_uri' => ['http://localhost:8081/callback.php'],
                 'display_name' => 'Demo Client',
                 'client_secret' => 'demo_secret',
             ],
         ];
+
+        // if the client with this client_id does not exist, we return false...
         if (!array_key_exists($clientId, $oauthClients)) {
             return false;
         }
@@ -50,26 +54,36 @@ try {
         return new ClientInfo($oauthClients[$clientId]);
     };
 
-    // server
+    // the 3rd argument is a generated keypair, see README
     $oauthServer = new OAuthServer(
         $storage,
         $getClientInfo,
         '2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol'
     );
 
-    // expire a token after 30 seconds
+    // we expire issued access_tokens after 30 seconds, the default is 3600
+    // seconds (1 hour)
     $oauthServer->setExpiresIn(30);
 
-    // XXX use user authentication information
+    // user authentication MUST take place, here we ignore this for simplicity,
+    // and assume the user_id is "foo"
     $userId = 'foo';
 
+    // typically you would handle this with your framework or HTTP framework...
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'GET':
         case 'HEAD':
+            // this is an authorization request, parse all parameters and
+            // return an array with data that you can use to ask the user
+            // for authorization, this is a very minimal HTML form example
             $authorizeVariables = $oauthServer->getAuthorize($_GET);
             $authorizeResponse = new AuthorizeResponse(
                 sprintf('<html><head><title>Authorize</title></head><body><pre>%s</pre><form method="post"><button type="submit" name="approve" value="yes">Approve</button></form></body></html>', var_export($authorizeVariables, true))
             );
+            // the AuthorizeResponse is a simple HTTP wrapper that has the
+            // statusCode, responseHeaders and responseBody, here we send it
+            // directly, if you use a framework you can extract those and pass
+            // them along...
             $authorizeResponse->send();
             break;
         case 'POST':
@@ -78,12 +92,18 @@ try {
             $authorizeResponse->send();
             break;
         default:
+            // typically your HTTP framework would take care of this, but here
+            // in "plain" PHP we have to take care of it...
             $authorizeResponse = new AuthorizeResponse('[405] Method Not Allowed', ['Allow' => 'GET,HEAD,POST'], 405);
             $authorizeResponse->send();
     }
 } catch (OAuthException $e) {
+    // the Exception also contains an AuthorizeResponse, like above
     $e->getAuthorizeResponse()->send();
 } catch (Exception $e) {
+    // typically your HTTP framework would take care of this, but here
+    // in "plain" PHP we have to take care of it... here we catch all
+    // "internal server" errors
     $authorizeResponse = new AuthorizeResponse(
         sprintf('[500] %s', $e->getMessage()),
         [],
