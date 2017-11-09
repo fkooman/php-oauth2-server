@@ -77,11 +77,6 @@ class OAuthException extends Exception
      */
     public function getAuthorizeResponse()
     {
-        $responseHeaders = [];
-        if (401 === $this->getCode()) {
-            $responseHeaders['WWW-Authenticate'] = 'Basic realm="OAuth"';
-        }
-
         return new AuthorizeResponse(
             sprintf('[%d] %s (%s)', $this->getCode(), $this->getMessage(), $this->getDescription()),
             [],
