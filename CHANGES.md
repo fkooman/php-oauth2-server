@@ -7,7 +7,8 @@
 - introduce `TokenResponse`, `ApiResponse` and `AuthorizeResponse` to ease 
   integration in existing applications
 - add support for PHPUnit 6
-
+- do not accept tokens from deleted clients, API update (issue #14)
+ 
 ## 1.1.0 (2017-09-18)
 - introduce PHP >= 7.2 compatibilty by using `SodiumCompat` wrapper;
 - only use crypto functionality from Sodium, use polyfills for the rest;

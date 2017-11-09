@@ -24,6 +24,7 @@
 require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
 use fkooman\OAuth\Server\BearerValidator;
+use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\Exception\BearerException;
 use fkooman\OAuth\Server\Http\ApiResponse;
 use fkooman\OAuth\Server\Storage;
@@ -33,9 +34,30 @@ try {
     $storage = new Storage(new PDO(sprintf('sqlite:%s/data/db.sqlite', dirname(__DIR__))));
     $storage->init();
 
-    // the 2nd argument is a generated keypair, see README
+    // callback to "convert" a client_id into a ClientInfo object, typically
+    // this configuration comes from a configuration file or database...
+    $getClientInfo = function ($clientId) {
+        $oauthClients = [
+            // we only have one client here with client_id "demo_client"...
+            'demo_client' => [
+                'redirect_uri' => ['http://localhost:8081/callback.php'],
+                'display_name' => 'Demo Client',
+                'client_secret' => 'demo_secret',
+            ],
+        ];
+
+        // if the client with this client_id does not exist, we return false...
+        if (!array_key_exists($clientId, $oauthClients)) {
+            return false;
+        }
+
+        return new ClientInfo($oauthClients[$clientId]);
+    };
+
+    // the 3rd argument is a generated keypair, see README
     $bearerValidator = new BearerValidator(
         $storage,
+        $getClientInfo,
         '2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol'
     );
 

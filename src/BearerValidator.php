@@ -35,6 +35,9 @@ class BearerValidator
     /** @var Storage */
     private $storage;
 
+    /** @var callable */
+    private $getClientInfo;
+
     /** @var string */
     private $publicKey;
 
@@ -45,12 +48,14 @@ class BearerValidator
     private $dateTime;
 
     /**
-     * @param Storage $storage
-     * @param string  $keyPair the Base64 encoded keyPair
+     * @param Storage  $storage
+     * @param callable $getClientInfo
+     * @param string   $keyPair       the Base64 encoded keyPair
      */
-    public function __construct(Storage $storage, $keyPair)
+    public function __construct(Storage $storage, callable $getClientInfo, $keyPair)
     {
         $this->storage = $storage;
+        $this->getClientInfo = $getClientInfo;
         $this->publicKey = SodiumCompat::crypto_sign_publickey(Base64::decode($keyPair));
         $this->dateTime = new DateTime();
     }
@@ -96,13 +101,18 @@ class BearerValidator
             $bearerToken = substr($authorizationHeader, 7);
             $signedBearerToken = Base64::decode($bearerToken);
 
-            // make sure access_token is signed by us
+            // check wheter the access_token was signed by us
             if (false !== $jsonToken = SodiumCompat::crypto_sign_open($signedBearerToken, $this->publicKey)) {
-                // as it is signed by us, it MUST exist in the DB as well,
-                // otherwise it was revoked...
                 $tokenInfo = $this->validateTokenInfo(json_decode($jsonToken, true));
+
+                // as it is signed by us, the client MUST still be there
+                if (false === call_user_func($this->getClientInfo, $tokenInfo->getClientId())) {
+                    throw new BearerException('client not longer exists');
+                }
+
+                // it MUST exist in the DB as well, otherwise it was revoked...
                 if (!$this->storage->hasAuthorization($tokenInfo->getAuthKey())) {
-                    throw new BearerException('authorization no longer exists, invalid token');
+                    throw new BearerException('authorization no longer exists');
                 }
 
                 return $tokenInfo;
@@ -148,6 +158,7 @@ class BearerValidator
         return new TokenInfo(
             $tokenInfo['auth_key'],
             $tokenInfo['user_id'],
+            $tokenInfo['client_id'],
             $tokenInfo['scope'],
             $expiresAt
         );

@@ -26,12 +26,16 @@ namespace fkooman\OAuth\Server\Tests;
 
 use DateTime;
 use fkooman\OAuth\Server\BearerValidator;
+use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\Storage;
 use PDO;
 use PHPUnit\Framework\TestCase;
 
 class BearerValidatorTest extends TestCase
 {
+    /** @var array */
+    private $oauthClients;
+
     /** @var \fkooman\OAuth\Server\BearerValidator */
     private $validator;
 
@@ -40,9 +44,29 @@ class BearerValidatorTest extends TestCase
 
     public function setUp()
     {
+        $this->oauthClients = [
+            'code-client' => [
+                'redirect_uri' => 'http://example.org/code-cb',
+                'response_type' => 'code',
+                'display_name' => 'Code Client',
+            ],
+        ];
+
+        $getClientInfo = function ($clientId) {
+            if (!array_key_exists($clientId, $this->oauthClients)) {
+                return false;
+            }
+
+            return new ClientInfo($this->oauthClients[$clientId]);
+        };
+
         $this->storage = new Storage(new PDO('sqlite::memory:'));
         $this->storage->init();
-        $this->validator = new BearerValidator($this->storage, '2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol');
+        $this->validator = new BearerValidator(
+            $this->storage,
+            $getClientInfo,
+            '2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol'
+        );
         $this->validator->setDateTime(new DateTime('2016-01-01'));
     }
 
@@ -55,6 +79,17 @@ class BearerValidatorTest extends TestCase
         $this->assertSame('config', $tokenInfo->getScope());
         $this->assertSame(3600, $tokenInfo->getExpiresIn(new DateTime('2016-01-01')));
         $this->assertNull($tokenInfo->getIssuer());
+    }
+
+    /**
+     * @expectedException \fkooman\OAuth\Server\Exception\BearerException
+     * @expectedExceptionMessage: invalid_token
+     */
+    public function testDeletedClient()
+    {
+        $this->oauthClients = [];
+        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
+        $this->validator->validate('Bearer znwcwk0WpP1y0qrUSd/J6KToSlXdceGBaliVLhYYjRESQoVZI1aZTX9cRfBfIpOBnMcyTF3Izs9H8918OwiqBHsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAxOjAwOjAwIn0=');
     }
 
     public function testValidPublicKeyToken()

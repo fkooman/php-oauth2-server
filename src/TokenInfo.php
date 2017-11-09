@@ -35,6 +35,9 @@ class TokenInfo
     private $userId;
 
     /** @var string */
+    private $clientId;
+
+    /** @var string */
     private $scope;
 
     /** @var \DateTime */
@@ -46,13 +49,15 @@ class TokenInfo
     /**
      * @param string    $authKey
      * @param string    $userId
+     * @param string    $clientId
      * @param string    $scope
      * @param \DateTime $expiresAt
      */
-    public function __construct($authKey, $userId, $scope, DateTime $expiresAt)
+    public function __construct($authKey, $userId, $clientId, $scope, DateTime $expiresAt)
     {
         $this->authKey = $authKey;
         $this->userId = $userId;
+        $this->clientId = $clientId;
         $this->scope = $scope;
         $this->expiresAt = $expiresAt;
     }
@@ -81,6 +86,14 @@ class TokenInfo
     public function getUserId()
     {
         return $this->userId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getClientId()
+    {
+        return $this->clientId;
     }
 
     /**
