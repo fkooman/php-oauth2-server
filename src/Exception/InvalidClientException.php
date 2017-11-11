@@ -22,8 +22,23 @@
  * SOFTWARE.
  */
 
-namespace fkooman\OAuth\Server\Http;
+namespace fkooman\OAuth\Server\Exception;
 
-class TokenResponse extends JsonResponse
+use Exception;
+
+class InvalidClientException extends OAuthException
 {
+    /**
+     * @param string $description
+     */
+    public function __construct($description, Exception $previous = null)
+    {
+        parent::__construct(
+            'invalid_client',
+            $description,
+            ['WWW-Authenticate' => 'Basic realm="OAuth"'],
+            401,
+            $previous
+        );
+    }
 }

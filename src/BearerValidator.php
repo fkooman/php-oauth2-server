@@ -25,8 +25,9 @@
 namespace fkooman\OAuth\Server;
 
 use DateTime;
-use fkooman\OAuth\Server\Exception\BearerException;
-use InvalidArgumentException;
+use fkooman\OAuth\Server\Exception\InsufficientScopeException;
+use fkooman\OAuth\Server\Exception\InvalidTokenException;
+use fkooman\OAuth\Server\Exception\ServerErrorException;
 use ParagonIE\ConstantTime\Base64;
 use RangeException;
 
@@ -83,7 +84,7 @@ class BearerValidator
         $this->foreignKeys = [];
         foreach ($foreignKeys as $tokenIssuer => $publicKey) {
             if (!is_string($tokenIssuer)) {
-                throw new InvalidArgumentException('tokenIssuer MUST be string');
+                throw new ServerErrorException('tokenIssuer MUST be string');
             }
             $this->foreignKeys[$tokenIssuer] = Base64::decode($publicKey);
         }
@@ -107,12 +108,12 @@ class BearerValidator
 
                 // as it is signed by us, the client MUST still be there
                 if (false === call_user_func($this->getClientInfo, $tokenInfo->getClientId())) {
-                    throw new BearerException('invalid_token', 'client not longer exists');
+                    throw new InvalidTokenException('client not longer exists');
                 }
 
                 // it MUST exist in the DB as well, otherwise it was revoked...
                 if (!$this->storage->hasAuthorization($tokenInfo->getAuthKey())) {
-                    throw new BearerException('invalid_token', 'authorization no longer exists');
+                    throw new InvalidTokenException('authorization no longer exists');
                 }
 
                 return $tokenInfo;
@@ -135,10 +136,10 @@ class BearerValidator
 
             // non of the additional public keys (if they were set) were able
             // to validate the token
-            throw new BearerException('invalid_token', 'invalid signature');
+            throw new InvalidTokenException('invalid signature');
         } catch (RangeException $e) {
             // Base64::decode throws this exception if string is not valid Base64
-            throw new BearerException('invalid_token', 'invalid token format');
+            throw new InvalidTokenException('invalid token format');
         }
     }
 
@@ -153,7 +154,7 @@ class BearerValidator
         $grantedScopeList = explode(' ', $tokenInfo->getScope());
         foreach ($requiredScopeList as $requiredScope) {
             if (!in_array($requiredScope, $grantedScopeList, true)) {
-                throw new BearerException('insufficient_scope', sprintf('scope "%s" not granted', $requiredScope));
+                throw new InsufficientScopeException(sprintf('scope "%s" not granted', $requiredScope));
             }
         }
     }
@@ -175,7 +176,7 @@ class BearerValidator
         }
 
         if (!$hasAny) {
-            throw new BearerException('insufficient_scope', sprintf('not any of scopes "%s" granted', implode(' ', $requiredScopeList)));
+            throw new InsufficientScopeException(sprintf('not any of scopes "%s" granted', implode(' ', $requiredScopeList)));
         }
     }
 
@@ -188,7 +189,7 @@ class BearerValidator
     {
         // type MUST be "access_token"
         if ('access_token' !== $tokenInfo['type']) {
-            throw new BearerException('invalid_token', 'not an access token');
+            throw new InvalidTokenException('not an access token');
         }
 
         // XXX only accept tokens that have "expires_in" <= 3600? this to
@@ -197,7 +198,7 @@ class BearerValidator
 
         $expiresAt = new DateTime($tokenInfo['expires_at']);
         if ($this->dateTime >= $expiresAt) {
-            throw new BearerException('invalid_token', 'token expired');
+            throw new InvalidTokenException('token expired');
         }
 
         return new TokenInfo(
@@ -220,7 +221,7 @@ class BearerValidator
         //                   "-" / "." / "_" / "~" / "+" / "/" ) *"="
         // credentials = "Bearer" 1*SP b64token
         if (1 !== preg_match('|^Bearer [a-zA-Z0-9-._~+/]+=*$|', $bearerCredentials)) {
-            throw new BearerException('invalid_token', 'bearer credential syntax error');
+            throw new InvalidTokenException('bearer credential syntax error');
         }
     }
 }

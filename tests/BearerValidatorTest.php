@@ -83,8 +83,7 @@ class BearerValidatorTest extends TestCase
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\BearerException
-     * @expectedExceptionMessage: invalid_token
+     * @expectedException \fkooman\OAuth\Server\Exception\InvalidTokenException
      */
     public function testDeletedClient()
     {
@@ -109,8 +108,7 @@ class BearerValidatorTest extends TestCase
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\BearerException
-     * @expectedExceptionMessage: invalid_token
+     * @expectedException \fkooman\OAuth\Server\Exception\InvalidTokenException
      */
     public function testInvalidSyntax()
     {
@@ -118,8 +116,7 @@ class BearerValidatorTest extends TestCase
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\BearerException
-     * @expectedExceptionMessage: invalid_token
+     * @expectedException \fkooman\OAuth\Server\Exception\InvalidTokenException
      */
     public function testExpiredToken()
     {
@@ -128,8 +125,7 @@ class BearerValidatorTest extends TestCase
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\BearerException
-     * @expectedExceptionMessage: invalid_token
+     * @expectedException \fkooman\OAuth\Server\Exception\InvalidTokenException
      */
     public function testInvalidSignatureKey()
     {
@@ -137,8 +133,7 @@ class BearerValidatorTest extends TestCase
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\BearerException
-     * @expectedExceptionMessage: invalid_token
+     * @expectedException \fkooman\OAuth\Server\Exception\InvalidTokenException
      */
     public function testBasicAuthentication()
     {
@@ -170,8 +165,7 @@ class BearerValidatorTest extends TestCase
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\BearerException
-     * @expectedExceptionMessage insufficient_scope
+     * @expectedException \fkooman\OAuth\Server\Exception\InsufficientScopeException
      */
     public function testAnyScopeMissingAll()
     {
@@ -186,8 +180,7 @@ class BearerValidatorTest extends TestCase
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\BearerException
-     * @expectedExceptionMessage insufficient_scope
+     * @expectedException \fkooman\OAuth\Server\Exception\InsufficientScopeException
      */
     public function testAllScopeMissingOne()
     {

@@ -24,7 +24,7 @@
 
 namespace fkooman\OAuth\Server;
 
-use fkooman\OAuth\Server\Exception\ServerException;
+use fkooman\OAuth\Server\Exception\ServerErrorException;
 
 class ClientInfo
 {
@@ -43,7 +43,7 @@ class ClientInfo
     public function __construct(array $clientInfo)
     {
         if (!array_key_exists('redirect_uri', $clientInfo)) {
-            throw new ServerException('"redirect_uri" not in client database');
+            throw new ServerErrorException('"redirect_uri" not in client database');
         }
         $this->redirectUriList = (array) $clientInfo['redirect_uri'];
 

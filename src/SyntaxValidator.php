@@ -24,7 +24,7 @@
 
 namespace fkooman\OAuth\Server;
 
-use fkooman\OAuth\Server\Exception\ValidateException;
+use fkooman\OAuth\Server\Exception\InvalidRequestException;
 
 class SyntaxValidator
 {
@@ -38,7 +38,7 @@ class SyntaxValidator
         // client-id  = *VSCHAR
         // VSCHAR     = %x20-7E
         if (1 !== preg_match('/^[\x20-\x7E]+$/', $clientId)) {
-            throw new ValidateException('invalid "client_id"');
+            throw new InvalidRequestException('invalid "client_id"');
         }
     }
 
@@ -54,7 +54,7 @@ class SyntaxValidator
         // code       = 1*VSCHAR
         // VSCHAR     = %x20-7E
         if (1 !== preg_match('/^[\x20-\x7E]+$/', $code)) {
-            throw new ValidateException('invalid "code"');
+            throw new InvalidRequestException('invalid "code"');
         }
     }
 
@@ -71,7 +71,7 @@ class SyntaxValidator
 
         // we have an explicit whitelist here
         if ('authorization_code' !== $grantType && 'refresh_token' !== $grantType) {
-            throw new ValidateException('invalid "grant_type"');
+            throw new InvalidRequestException('invalid "grant_type"');
         }
     }
 
@@ -83,7 +83,7 @@ class SyntaxValidator
     public static function validateResponseType($responseType)
     {
         if ('code' !== $responseType) {
-            throw new ValidateException('invalid "response_type"');
+            throw new InvalidRequestException('invalid "response_type"');
         }
     }
 
@@ -99,7 +99,7 @@ class SyntaxValidator
         // NQCHAR      = %x21 / %x23-5B / %x5D-7E
         foreach (explode(' ', $scope) as $scopeToken) {
             if (1 !== preg_match('/^[\x21\x23-\x5B\x5D-\x7E]+$/', $scopeToken)) {
-                throw new ValidateException('invalid "scope"');
+                throw new InvalidRequestException('invalid "scope"');
             }
         }
     }
@@ -114,7 +114,7 @@ class SyntaxValidator
         // state      = 1*VSCHAR
         // VSCHAR     = %x20-7E
         if (1 !== preg_match('/^[\x20-\x7E]+$/', $state)) {
-            throw new ValidateException('invalid "state"');
+            throw new InvalidRequestException('invalid "state"');
         }
     }
 
@@ -126,7 +126,7 @@ class SyntaxValidator
     public static function validateCodeChallengeMethod($codeChallengeMethod)
     {
         if ('S256' !== $codeChallengeMethod) {
-            throw new ValidateException('invalid "code_challenge_method"');
+            throw new InvalidRequestException('invalid "code_challenge_method"');
         }
     }
 
@@ -142,7 +142,7 @@ class SyntaxValidator
         // ALPHA         = %x41-5A / %x61-7A
         // DIGIT         = %x30-39
         if (1 !== preg_match('/^[\x41-\x5A\x61-\x7A\x30-\x39-._~]{43,128}$/', $codeVerifier)) {
-            throw new ValidateException('invalid "code_verifier"');
+            throw new InvalidRequestException('invalid "code_verifier"');
         }
     }
 
@@ -156,7 +156,7 @@ class SyntaxValidator
         // it seems the length of the codeChallenge is always 43 because it is
         // the output of the SHA256 hashing algorithm
         if (1 !== preg_match('/^[\x41-\x5A\x61-\x7A\x30-\x39-_]{43}$/', $codeChallenge)) {
-            throw new ValidateException('invalid "code_challenge"');
+            throw new InvalidRequestException('invalid "code_challenge"');
         }
     }
 
@@ -168,7 +168,7 @@ class SyntaxValidator
     public static function validateApprove($approve)
     {
         if (!in_array($approve, ['yes', 'no'], true)) {
-            throw new ValidateException('invalid "approve"');
+            throw new InvalidRequestException('invalid "approve"');
         }
     }
 
@@ -182,7 +182,7 @@ class SyntaxValidator
         // refresh-token = 1*VSCHAR
         // VSCHAR        = %x20-7E
         if (1 !== preg_match('/^[\x20-\x7E]+$/', $refreshToken)) {
-            throw new ValidateException('invalid "refresh_token"');
+            throw new InvalidRequestException('invalid "refresh_token"');
         }
     }
 }

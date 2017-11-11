@@ -25,62 +25,53 @@
 namespace fkooman\OAuth\Server\Exception;
 
 use Exception;
-use fkooman\OAuth\Server\Http\AuthorizeResponse;
-use fkooman\OAuth\Server\Http\TokenResponse;
+use fkooman\OAuth\Server\Http\HtmlResponse;
+use fkooman\OAuth\Server\Http\JsonResponse;
 
 class OAuthException extends Exception
 {
     /** @var string */
-    protected $description;
+    private $description;
+
+    /** @var array */
+    private $responseHeaders = [];
 
     /**
      * @param string $message
      * @param string $description
      * @param int    $code
      */
-    public function __construct($message, $description, $code = 0, Exception $previous = null)
+    public function __construct($message, $description, array $responseHeaders = [], $code = 0, Exception $previous = null)
     {
         $this->description = $description;
+        $this->responseHeaders = $responseHeaders;
         parent::__construct($message, $code, $previous);
     }
 
     /**
-     * @return string
+     * @return \fkooman\OAuth\Server\Http\JsonResponse
      */
-    public function getDescription()
+    public function getJsonResponse()
     {
-        return $this->description;
-    }
-
-    /**
-     * @return \fkooman\OAuth\Server\Http\TokenResponse
-     */
-    public function getTokenResponse()
-    {
-        $responseHeaders = [];
-        if (401 === $this->getCode()) {
-            $responseHeaders['WWW-Authenticate'] = 'Basic realm="OAuth"';
-        }
-
-        return new TokenResponse(
+        return new JsonResponse(
             [
-                'error' => $this->getMessage(),
-                'error_description' => $this->getDescription(),
+                'error' => $this->message,
+                'error_description' => $this->description,
             ],
-            $responseHeaders,
-            $this->getCode()
+            $this->responseHeaders,
+            $this->code
         );
     }
 
     /**
-     * @return \fkooman\OAuth\Server\Http\AuthorizeResponse
+     * @return \fkooman\OAuth\Server\Http\HtmlResponse
      */
-    public function getAuthorizeResponse()
+    public function getHtmlResponse()
     {
-        return new AuthorizeResponse(
-            sprintf('[%d] %s (%s)', $this->getCode(), $this->getMessage(), $this->getDescription()),
+        return new HtmlResponse(
+            sprintf('[%d] %s (%s)', $this->code, $this->message, $this->description),
             [],
-            $this->getCode()
+            $this->code
         );
     }
 }

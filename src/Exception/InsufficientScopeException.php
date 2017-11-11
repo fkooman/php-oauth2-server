@@ -24,11 +24,15 @@
 
 namespace fkooman\OAuth\Server\Exception;
 
-use RuntimeException;
+use Exception;
 
-/**
- * This exception is used for "internet server error" style errors.
- */
-class ServerException extends RuntimeException
+class InsufficientScopeException extends OAuthException
 {
+    /**
+     * @param string $description
+     */
+    public function __construct($description, Exception $previous = null)
+    {
+        parent::__construct('insufficient_scope', $description, [], 403, $previous);
+    }
 }

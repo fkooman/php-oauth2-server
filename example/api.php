@@ -25,8 +25,8 @@ require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
 use fkooman\OAuth\Server\BearerValidator;
 use fkooman\OAuth\Server\ClientInfo;
-use fkooman\OAuth\Server\Exception\BearerException;
-use fkooman\OAuth\Server\Http\ApiResponse;
+use fkooman\OAuth\Server\Exception\OAuthException;
+use fkooman\OAuth\Server\Http\JsonResponse;
 use fkooman\OAuth\Server\Storage;
 
 try {
@@ -77,34 +77,34 @@ try {
             // require any of "foo" or "bar" scope
             //BearerValidator::requireAnyScope($tokenInfo, ['foo', 'bar']);
 
-            // use "helper" ApiResponse here, typically your HTTP framework
+            // use "helper" JsonResponse here, typically your HTTP framework
             // will provide this...
-            $apiResponse = new ApiResponse(
+            $jsonResponse = new JsonResponse(
                 ['user_id' => $tokenInfo->getUserId()]
             );
-            $apiResponse->send();
+            $jsonResponse->send();
             break;
         default:
             // typically your HTTP framework would take care of this, but here
             // in "plain" PHP we have to take care of it...
-            $apiResponse = new ApiResponse(
+            $jsonResponse = new JsonResponse(
                 ['error' => 'invalid_request', 'error_description' => 'Method Not Allowed'],
                 ['Allow' => 'GET,HEAD'],
                 405
             );
-            $apiResponse->send();
+            $jsonResponse->send();
     }
-} catch (BearerException $e) {
-    // the Exception contains an ApiResponse
-    $e->getResponse()->send();
+} catch (OAuthException $e) {
+    // the Exception contains an JsonResponse
+    $e->getJsonResponse()->send();
 } catch (Exception $e) {
     // typically your HTTP framework would take care of this, but here
     // in "plain" PHP we have to take care of it... here we catch all
     // "internal server" errors
-    $apiResponse = new ApiResponse(
+    $jsonResponse = new JsonResponse(
         ['error' => 'server_error', 'error_description' => $e->getMessage()],
         [],
         500
     );
-    $apiResponse->send();
+    $jsonResponse->send();
 }

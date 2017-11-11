@@ -24,7 +24,7 @@
 
 namespace fkooman\OAuth\Server\Http;
 
-class AuthorizeResponse extends Response
+class HtmlResponse extends Response
 {
     /**
      * @param string $responseBody

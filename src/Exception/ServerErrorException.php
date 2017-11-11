@@ -26,14 +26,16 @@ namespace fkooman\OAuth\Server\Exception;
 
 use Exception;
 
-class ValidateException extends OAuthException
+/**
+ * This exception is used for "internet server error" style errors.
+ */
+class ServerErrorException extends OAuthException
 {
     /**
-     * @param string $message
-     * @param int    $code
+     * @param string $description
      */
-    public function __construct($message, $code = 400, Exception $previous = null)
+    public function __construct($description, Exception $previous = null)
     {
-        parent::__construct('invalid_request', $message, $code, $previous);
+        parent::__construct('server_error', $description, [], 500, $previous);
     }
 }

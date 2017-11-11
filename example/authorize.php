@@ -25,7 +25,7 @@ require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
 use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\Exception\OAuthException;
-use fkooman\OAuth\Server\Http\AuthorizeResponse;
+use fkooman\OAuth\Server\Http\HtmlResponse;
 use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\Storage;
 
@@ -77,37 +77,37 @@ try {
             // return an array with data that you can use to ask the user
             // for authorization, this is a very minimal HTML form example
             $authorizeVariables = $oauthServer->getAuthorize($_GET);
-            $authorizeResponse = new AuthorizeResponse(
+            $htmlResponse = new HtmlResponse(
                 sprintf('<html><head><title>Authorize</title></head><body><pre>%s</pre><form method="post"><button type="submit" name="approve" value="yes">Approve</button></form></body></html>', var_export($authorizeVariables, true))
             );
-            // the AuthorizeResponse is a simple HTTP wrapper that has the
+            // the HtmlResponse is a simple HTTP wrapper that has the
             // statusCode, responseHeaders and responseBody, here we send it
             // directly, if you use a framework you can extract those and pass
             // them along...
-            $authorizeResponse->send();
+            $htmlResponse->send();
             break;
         case 'POST':
             // you MUST implement CSRF protection!
-            $authorizeResponse = $oauthServer->postAuthorize($_GET, $_POST, $userId);
-            $authorizeResponse->send();
+            $htmlResponse = $oauthServer->postAuthorize($_GET, $_POST, $userId);
+            $htmlResponse->send();
             break;
         default:
             // typically your HTTP framework would take care of this, but here
             // in "plain" PHP we have to take care of it...
-            $authorizeResponse = new AuthorizeResponse('[405] Method Not Allowed', ['Allow' => 'GET,HEAD,POST'], 405);
-            $authorizeResponse->send();
+            $htmlResponse = new HtmlResponse('[405] Method Not Allowed', ['Allow' => 'GET,HEAD,POST'], 405);
+            $htmlResponse->send();
     }
 } catch (OAuthException $e) {
-    // the Exception also contains an AuthorizeResponse, like above
-    $e->getAuthorizeResponse()->send();
+    // the Exception also contains an HtmlResponse, like above
+    $e->getHtmlResponse()->send();
 } catch (Exception $e) {
     // typically your HTTP framework would take care of this, but here
     // in "plain" PHP we have to take care of it... here we catch all
     // "internal server" errors
-    $authorizeResponse = new AuthorizeResponse(
+    $htmlResponse = new HtmlResponse(
         sprintf('[500] %s', $e->getMessage()),
         [],
         500
     );
-    $authorizeResponse->send();
+    $htmlResponse->send();
 }

@@ -26,12 +26,12 @@ namespace fkooman\OAuth\Server;
 
 use DateInterval;
 use DateTime;
-use fkooman\OAuth\Server\Exception\ClientException;
-use fkooman\OAuth\Server\Exception\GrantException;
-use fkooman\OAuth\Server\Exception\ServerException;
-use fkooman\OAuth\Server\Exception\ValidateException;
-use fkooman\OAuth\Server\Http\AuthorizeResponse;
-use fkooman\OAuth\Server\Http\TokenResponse;
+use fkooman\OAuth\Server\Exception\InvalidClientException;
+use fkooman\OAuth\Server\Exception\InvalidGrantException;
+use fkooman\OAuth\Server\Exception\InvalidRequestException;
+use fkooman\OAuth\Server\Exception\ServerErrorException;
+use fkooman\OAuth\Server\Http\HtmlResponse;
+use fkooman\OAuth\Server\Http\JsonResponse;
 use ParagonIE\ConstantTime\Base64;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 
@@ -133,7 +133,7 @@ class OAuthServer
      * @param array  $postData
      * @param string $userId
      *
-     * @return AuthorizeResponse
+     * @return HtmlResponse
      */
     public function postAuthorize(array $getData, array $postData, $userId)
     {
@@ -142,7 +142,7 @@ class OAuthServer
 
         if ('no' === $postData['approve']) {
             // user did not approve, tell OAuth client
-            return new AuthorizeResponse(
+            return new HtmlResponse(
                 '',
                 [
                     'Location' => $this->prepareRedirectUri(
@@ -177,7 +177,7 @@ class OAuthServer
             array_key_exists('code_challenge', $getData) ? $getData['code_challenge'] : null
         );
 
-        return new AuthorizeResponse(
+        return new HtmlResponse(
             '',
             [
                 'Location' => $this->prepareRedirectUri(
@@ -199,7 +199,7 @@ class OAuthServer
      * @param string|null $authUser BasicAuth user in case of secret client, null if public client
      * @param string|null $authPass BasicAuth pass in case of secret client, null if public client
      *
-     * @return TokenResponse
+     * @return JsonResponse
      */
     public function postToken(array $postData, $authUser, $authPass)
     {
@@ -211,7 +211,7 @@ class OAuthServer
             case 'refresh_token':
                 return $this->postTokenRefreshToken($postData, $authUser, $authPass);
             default:
-                throw new ValidateException('invalid "grant_type"');
+                throw new InvalidRequestException('invalid "grant_type"');
         }
     }
 
@@ -229,7 +229,7 @@ class OAuthServer
 
         // make sure the provided redirect URI is supported by the client
         if (!$clientInfo->isValidRedirectUri($getData['redirect_uri'])) {
-            throw new ClientException('client does not support this "redirect_uri"', 400);
+            throw new InvalidClientException('client does not support this "redirect_uri"');
         }
 
         if (null === $clientInfo->getSecret()) {
@@ -244,7 +244,7 @@ class OAuthServer
      * @param string|null $authUser BasicAuth user in case of secret client, null if public client
      * @param string|null $authPass BasicAuth pass in case of secret client, null if public client
      *
-     * @return TokenResponse
+     * @return JsonResponse
      */
     private function postTokenAuthorizationCode(array $postData, $authUser, $authPass)
     {
@@ -255,17 +255,17 @@ class OAuthServer
         $signedCode = Base64::decode($postData['code']);
         $publicKey = SodiumCompat::crypto_sign_publickey($this->keyPair);
         if (false === $jsonCode = SodiumCompat::crypto_sign_open($signedCode, $publicKey)) {
-            throw new GrantException('"code" has invalid signature');
+            throw new InvalidGrantException('"code" has invalid signature');
         }
 
         $codeInfo = json_decode($jsonCode, true);
         if ('authorization_code' !== $codeInfo['type']) {
-            throw new GrantException('"code" is not of type authorization_code');
+            throw new InvalidGrantException('"code" is not of type authorization_code');
         }
 
         // check authorization code expiry
         if ($this->dateTime >= new DateTime($codeInfo['expires_at'])) {
-            throw new GrantException('"authorization_code" is expired');
+            throw new InvalidGrantException('"authorization_code" is expired');
         }
 
         // parameters in POST body need to match the parameters stored with
@@ -277,7 +277,7 @@ class OAuthServer
 
         // 1. check if the authorization is still there
         if (false === $this->storage->hasAuthorization($codeInfo['auth_key'])) {
-            throw new GrantException('"authorization_code" is no longer authorized');
+            throw new InvalidGrantException('"authorization_code" is no longer authorized');
         }
 
         // 2. make sure the authKey was not used before
@@ -286,7 +286,7 @@ class OAuthServer
             // so refresh_tokens and access_tokens can no longer be used
             $this->storage->deleteAuthKey($codeInfo['auth_key']);
 
-            throw new GrantException('"authorization_code" reuse');
+            throw new InvalidGrantException('"authorization_code" reuse');
         }
 
         $accessToken = $this->getAccessToken(
@@ -303,7 +303,7 @@ class OAuthServer
             $codeInfo['auth_key']
         );
 
-        return new TokenResponse(
+        return new JsonResponse(
             [
                 'access_token' => $accessToken,
                 'refresh_token' => $refreshToken,
@@ -327,7 +327,7 @@ class OAuthServer
      * @param string|null $authUser BasicAuth user in case of secret client, null if public client
      * @param string|null $authPass BasicAuth pass in case of secret client, null if public client
      *
-     * @return TokenResponse
+     * @return JsonResponse
      */
     private function postTokenRefreshToken(array $postData, $authUser, $authPass)
     {
@@ -335,12 +335,12 @@ class OAuthServer
         $signedRefreshToken = Base64::decode($postData['refresh_token']);
         $publicKey = SodiumCompat::crypto_sign_publickey($this->keyPair);
         if (false === $jsonRefreshToken = SodiumCompat::crypto_sign_open($signedRefreshToken, $publicKey)) {
-            throw new GrantException('"refresh_token" has invalid signature');
+            throw new InvalidGrantException('"refresh_token" has invalid signature');
         }
 
         $refreshTokenInfo = json_decode($jsonRefreshToken, true);
         if ('refresh_token' !== $refreshTokenInfo['type']) {
-            throw new GrantException('"refresh_token" is not of type refresh_token');
+            throw new InvalidGrantException('"refresh_token" is not of type refresh_token');
         }
 
         $clientInfo = $this->getClient($refreshTokenInfo['client_id']);
@@ -357,7 +357,7 @@ class OAuthServer
             $refreshTokenInfo['auth_key']
         );
 
-        return new TokenResponse(
+        return new JsonResponse(
             [
                 'access_token' => $accessToken,
                 'token_type' => 'bearer',
@@ -418,7 +418,7 @@ class OAuthServer
         );
 
         if (false === $jsonString) {
-            throw new ServerException('unable to encode JSON');
+            throw new ServerErrorException('unable to encode JSON');
         }
 
         return Base64::encode(
@@ -450,7 +450,7 @@ class OAuthServer
         );
 
         if (false === $jsonString) {
-            throw new ServerException('unable to encode JSON');
+            throw new ServerErrorException('unable to encode JSON');
         }
 
         return Base64::encode(
@@ -490,7 +490,7 @@ class OAuthServer
         );
 
         if (false === $jsonString) {
-            throw new ServerException('unable to encode JSON');
+            throw new ServerErrorException('unable to encode JSON');
         }
 
         return Base64::encode(
@@ -510,11 +510,11 @@ class OAuthServer
     private function verifyCodeInfo(array $postData, array $codeInfo)
     {
         if ($postData['client_id'] !== $codeInfo['client_id']) {
-            throw new ValidateException('unexpected "client_id"');
+            throw new InvalidRequestException('unexpected "client_id"');
         }
 
         if ($postData['redirect_uri'] !== $codeInfo['redirect_uri']) {
-            throw new ValidateException('unexpected "redirect_uri"');
+            throw new InvalidRequestException('unexpected "redirect_uri"');
         }
     }
 
@@ -527,12 +527,12 @@ class OAuthServer
     private function verifyRefreshTokenInfo(array $postData, array $refreshTokenInfo)
     {
         if ($postData['scope'] !== $refreshTokenInfo['scope']) {
-            throw new ValidateException('unexpected "scope"');
+            throw new InvalidRequestException('unexpected "scope"');
         }
 
         // make sure the authorization still exists
         if (!$this->storage->hasAuthorization($refreshTokenInfo['auth_key'])) {
-            throw new GrantException('refresh_token is no longer authorized');
+            throw new InvalidGrantException('refresh_token is no longer authorized');
         }
     }
 
@@ -549,18 +549,18 @@ class OAuthServer
         $clientSecret = $clientInfo->getSecret();
         if (null !== $clientSecret) {
             if (null === $authUser) {
-                throw new ClientException('invalid credentials (no authenticating user)', 401);
+                throw new InvalidClientException('invalid credentials (no authenticating user)');
             }
             if ($clientId !== $authUser) {
-                throw new ClientException('"client_id" does not match authenticating user', 401);
+                throw new InvalidClientException('"client_id" does not match authenticating user');
             }
 
             if (!is_string($authPass)) {
-                throw new ClientException('invalid credentials (no authenticating pass)', 401);
+                throw new InvalidClientException('invalid credentials (no authenticating pass)');
             }
 
             if (false === hash_equals($clientSecret, $authPass)) {
-                throw new ClientException('invalid credentials (invalid authenticating pass)', 401);
+                throw new InvalidClientException('invalid credentials (invalid authenticating pass)');
             }
         }
     }
@@ -579,7 +579,7 @@ class OAuthServer
         // only for public clients
         if (null === $clientInfo->getSecret()) {
             if (!array_key_exists('code_verifier', $postData)) {
-                throw new ValidateException('missing "code_verifier" parameter');
+                throw new InvalidRequestException('missing "code_verifier" parameter');
             }
 
             // constant time compare of the code_challenge compared to the
@@ -599,7 +599,7 @@ class OAuthServer
                     '='
                 )
             )) {
-                throw new GrantException('invalid "code_verifier"');
+                throw new InvalidGrantException('invalid "code_verifier"');
             }
         }
     }
@@ -612,7 +612,7 @@ class OAuthServer
     private function getClient($clientId)
     {
         if (false === $clientInfo = call_user_func($this->getClientInfo, $clientId)) {
-            throw new ClientException('client does not exist with this "client_id"', 400);
+            throw new InvalidClientException('client does not exist with this "client_id"');
         }
 
         return $clientInfo;

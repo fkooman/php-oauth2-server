@@ -25,7 +25,7 @@ require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
 use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\Exception\OAuthException;
-use fkooman\OAuth\Server\Http\TokenResponse;
+use fkooman\OAuth\Server\Http\JsonResponse;
 use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\Storage;
 
@@ -70,16 +70,16 @@ try {
             // here we obtain the "Basic Authentication" user and pass
             $authUser = array_key_exists('PHP_AUTH_USER', $_SERVER) ? $_SERVER['PHP_AUTH_USER'] : null;
             $authPass = array_key_exists('PHP_AUTH_PW', $_SERVER) ? $_SERVER['PHP_AUTH_PW'] : null;
-            $tokenResponse = $oauthServer->postToken($_POST, $authUser, $authPass);
+            $jsonResponse = $oauthServer->postToken($_POST, $authUser, $authPass);
 
             // we print the HTTP response to the "error_log" for easy debugging
-            error_log(var_export($tokenResponse, true));
-            $tokenResponse->send();
+            error_log(var_export($jsonResponse, true));
+            $jsonResponse->send();
             break;
         default:
             // typically your HTTP framework would take care of this, but here
             // in "plain" PHP we have to take care of it...
-            $tokenResponse = new TokenResponse(
+            $jsonResponse = new JsonResponse(
                 [
                     'error' => 'invalid_request',
                     'error_description' => 'Method Not Allowed',
@@ -89,19 +89,19 @@ try {
                 ],
                 405
             );
-            error_log(var_export($tokenResponse, true));
-            $tokenResponse->send();
+            error_log(var_export($jsonResponse, true));
+            $jsonResponse->send();
     }
 } catch (OAuthException $e) {
-    // the Exception also contains a TokenResponse, like above
-    $tokenResponse = $e->getTokenResponse();
-    error_log(var_export($tokenResponse, true));
-    $tokenResponse->send();
+    // the Exception also contains a JsonResponse, like above
+    $jsonResponse = $e->getJsonResponse();
+    error_log(var_export($jsonResponse, true));
+    $jsonResponse->send();
 } catch (Exception $e) {
     // typically your HTTP framework would take care of this, but here
     // in "plain" PHP we have to take care of it... here we catch all
     // "internal server" errors
-    $tokenResponse = new TokenResponse(
+    $jsonResponse = new JsonResponse(
         [
             'error' => 'server_error',
             'error_description' => $e->getMessage(),
@@ -109,6 +109,6 @@ try {
         [],
         500
     );
-    error_log(var_export($tokenResponse, true));
-    $tokenResponse->send();
+    error_log(var_export($jsonResponse, true));
+    $jsonResponse->send();
 }

@@ -26,14 +26,13 @@ namespace fkooman\OAuth\Server\Exception;
 
 use Exception;
 
-class GrantException extends OAuthException
+class InvalidGrantException extends OAuthException
 {
     /**
-     * @param string $message
-     * @param int    $code
+     * @param string $description
      */
-    public function __construct($message, $code = 400, Exception $previous = null)
+    public function __construct($description, Exception $previous = null)
     {
-        parent::__construct('invalid_grant', $message, $code, $previous);
+        parent::__construct('invalid_grant', $description, [], 400, $previous);
     }
 }

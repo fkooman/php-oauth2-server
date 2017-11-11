@@ -26,14 +26,24 @@ namespace fkooman\OAuth\Server\Exception;
 
 use Exception;
 
-class ClientException extends OAuthException
+class InvalidTokenException extends OAuthException
 {
     /**
-     * @param string $message
-     * @param int    $code
+     * @param string $description
      */
-    public function __construct($message, $code = 400, Exception $previous = null)
+    public function __construct($description, Exception $previous = null)
     {
-        parent::__construct('invalid_client', $message, $code, $previous);
+        parent::__construct(
+            'invalid_token',
+            $description,
+            [
+                'WWW-Authenticate' => sprintf(
+                    'Bearer error="invalid_token",error_description="%s"',
+                    $description
+                ),
+            ],
+            401,
+            $previous
+        );
     }
 }
