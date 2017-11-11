@@ -31,11 +31,11 @@ class BearerException extends OAuthException
 {
     /**
      * @param string $message
-     * @param int    $code
+     * @param string $description
      */
-    public function __construct($message, $code = 401, Exception $previous = null)
+    public function __construct($message, $description, Exception $previous = null)
     {
-        parent::__construct('invalid_token', $message, $code, $previous);
+        parent::__construct($message, $description, self::messageToCode($message), $previous);
     }
 
     /**
@@ -60,5 +60,24 @@ class BearerException extends OAuthException
             $responseHeaders,
             $this->getCode()
         );
+    }
+
+    /**
+     * @param string $message
+     *
+     * @return int
+     */
+    private static function messageToCode($message)
+    {
+        switch ($message) {
+            case 'invalid_request':
+                return 400;
+            case 'invalid_token':
+                return 401;
+            case 'insufficient_scope':
+                return 403;
+            default:
+                throw new ServerException('unsupported message');
+        }
     }
 }

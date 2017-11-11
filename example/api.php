@@ -72,6 +72,11 @@ try {
             // information, e.g. approved "scope"
             $tokenInfo = $bearerValidator->validate($authorizationHeader);
 
+            // require both the "foo" and "bar" scope
+            BearerValidator::requireAllScope($tokenInfo, ['foo', 'bar']);
+            // require any of "foo" or "bar" scope
+            //BearerValidator::requireAnyScope($tokenInfo, ['foo', 'bar']);
+
             // use "helper" ApiResponse here, typically your HTTP framework
             // will provide this...
             $apiResponse = new ApiResponse(

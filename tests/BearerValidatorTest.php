@@ -28,6 +28,7 @@ use DateTime;
 use fkooman\OAuth\Server\BearerValidator;
 use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\Storage;
+use fkooman\OAuth\Server\TokenInfo;
 use PDO;
 use PHPUnit\Framework\TestCase;
 
@@ -142,5 +143,61 @@ class BearerValidatorTest extends TestCase
     public function testBasicAuthentication()
     {
         $this->validator->validate('Basic AAA===');
+    }
+
+    public function testAnyScope()
+    {
+        $tokenInfo = new TokenInfo(
+            'auth_key',
+            'user_id',
+            'client_id',
+            'foo bar',
+            new DateTime('2016-01-01')
+        );
+        BearerValidator::requireAnyScope($tokenInfo, ['baz', 'bar', 'foo']);
+    }
+
+    public function testAllScope()
+    {
+        $tokenInfo = new TokenInfo(
+            'auth_key',
+            'user_id',
+            'client_id',
+            'foo bar baz',
+            new DateTime('2016-01-01')
+        );
+        BearerValidator::requireAllScope($tokenInfo, ['baz', 'bar', 'foo']);
+    }
+
+    /**
+     * @expectedException \fkooman\OAuth\Server\Exception\BearerException
+     * @expectedExceptionMessage insufficient_scope
+     */
+    public function testAnyScopeMissingAll()
+    {
+        $tokenInfo = new TokenInfo(
+            'auth_key',
+            'user_id',
+            'client_id',
+            'foo bar',
+            new DateTime('2016-01-01')
+        );
+        BearerValidator::requireAnyScope($tokenInfo, ['baz', 'def']);
+    }
+
+    /**
+     * @expectedException \fkooman\OAuth\Server\Exception\BearerException
+     * @expectedExceptionMessage insufficient_scope
+     */
+    public function testAllScopeMissingOne()
+    {
+        $tokenInfo = new TokenInfo(
+            'auth_key',
+            'user_id',
+            'client_id',
+            'foo bar',
+            new DateTime('2016-01-01')
+        );
+        BearerValidator::requireAllScope($tokenInfo, ['baz', 'bar', 'foo']);
     }
 }

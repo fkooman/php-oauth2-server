@@ -107,12 +107,12 @@ class BearerValidator
 
                 // as it is signed by us, the client MUST still be there
                 if (false === call_user_func($this->getClientInfo, $tokenInfo->getClientId())) {
-                    throw new BearerException('client not longer exists');
+                    throw new BearerException('invalid_token', 'client not longer exists');
                 }
 
                 // it MUST exist in the DB as well, otherwise it was revoked...
                 if (!$this->storage->hasAuthorization($tokenInfo->getAuthKey())) {
-                    throw new BearerException('authorization no longer exists');
+                    throw new BearerException('invalid_token', 'authorization no longer exists');
                 }
 
                 return $tokenInfo;
@@ -120,6 +120,10 @@ class BearerValidator
 
             // it was not our signature, maybe it is one of the OPTIONAL
             // additionally configured public keys
+            //
+            // NOTE: this cannot check for revocation and also not if the
+            // client is still actually registered, as we trust the remote
+            // server to do the right thing.
             foreach ($this->foreignKeys as $tokenIssuer => $publicKey) {
                 if (false !== $jsonToken = SodiumCompat::crypto_sign_open($signedBearerToken, $publicKey)) {
                     $tokenInfo = $this->validateTokenInfo(json_decode($jsonToken, true));
@@ -131,10 +135,47 @@ class BearerValidator
 
             // non of the additional public keys (if they were set) were able
             // to validate the token
-            throw new BearerException('invalid signature');
+            throw new BearerException('invalid_token', 'invalid signature');
         } catch (RangeException $e) {
             // Base64::decode throws this exception if string is not valid Base64
-            throw new BearerException('invalid token format');
+            throw new BearerException('invalid_token', 'invalid token format');
+        }
+    }
+
+    /**
+     * @param TokenInfo $tokenInfo
+     * @param array     $requiredScopeList
+     *
+     * @return void
+     */
+    public static function requireAllScope(TokenInfo $tokenInfo, array $requiredScopeList)
+    {
+        $grantedScopeList = explode(' ', $tokenInfo->getScope());
+        foreach ($requiredScopeList as $requiredScope) {
+            if (!in_array($requiredScope, $grantedScopeList, true)) {
+                throw new BearerException('insufficient_scope', sprintf('scope "%s" not granted', $requiredScope));
+            }
+        }
+    }
+
+    /**
+     * @param TokenInfo $tokenInfo
+     * @param array     $requiredScopeList
+     *
+     * @return void
+     */
+    public static function requireAnyScope(TokenInfo $tokenInfo, array $requiredScopeList)
+    {
+        $grantedScopeList = explode(' ', $tokenInfo->getScope());
+        $hasAny = false;
+        foreach ($requiredScopeList as $requiredScope) {
+            if (in_array($requiredScope, $grantedScopeList, true)) {
+                $hasAny = true;
+            }
+        }
+
+        if (!$hasAny) {
+            throw new BearerException('insufficient_scope', sprintf('not any of scopes "%s" granted', implode(' ', $requiredScopeList)));
         }
     }
 
@@ -147,12 +188,16 @@ class BearerValidator
     {
         // type MUST be "access_token"
         if ('access_token' !== $tokenInfo['type']) {
-            throw new BearerException('not an access token');
+            throw new BearerException('invalid_token', 'not an access token');
         }
+
+        // XXX only accept tokens that have "expires_in" <= 3600? this to
+        // avoid other servers to issue access tokens that are longer valid
+        // than 1 hour?
 
         $expiresAt = new DateTime($tokenInfo['expires_at']);
         if ($this->dateTime >= $expiresAt) {
-            throw new BearerException('token expired');
+            throw new BearerException('invalid_token', 'token expired');
         }
 
         return new TokenInfo(
@@ -175,7 +220,7 @@ class BearerValidator
         //                   "-" / "." / "_" / "~" / "+" / "/" ) *"="
         // credentials = "Bearer" 1*SP b64token
         if (1 !== preg_match('|^Bearer [a-zA-Z0-9-._~+/]+=*$|', $bearerCredentials)) {
-            throw new BearerException('bearer credential syntax error');
+            throw new BearerException('invalid_token', 'bearer credential syntax error');
         }
     }
 }
