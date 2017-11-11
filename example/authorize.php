@@ -78,7 +78,7 @@ try {
             // for authorization, this is a very minimal HTML form example
             $authorizeVariables = $oauthServer->getAuthorize($_GET);
             $htmlResponse = new HtmlResponse(
-                sprintf('<html><head><title>Authorize</title></head><body><pre>%s</pre><form method="post"><button type="submit" name="approve" value="yes">Approve</button></form></body></html>', var_export($authorizeVariables, true))
+                sprintf('<html><head><title>Authorize</title></head><body><pre>%s</pre><form method="post"><button type="submit" name="approve" value="yes">Approve</button><button type="submit" name="approve" value="no">Reject</button></form></body></html>', var_export($authorizeVariables, true))
             );
             // the HtmlResponse is a simple HTTP wrapper that has the
             // statusCode, responseHeaders and responseBody, here we send it
