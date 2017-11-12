@@ -145,7 +145,7 @@ class OAuthServer
             return new HtmlResponse(
                 '',
                 [
-                    'Location' => $this->prepareRedirectUri(
+                    'Location' => self::prepareRedirectUri(
                         $getData['redirect_uri'],
                         [
                             'error' => 'access_denied',
@@ -180,7 +180,7 @@ class OAuthServer
         return new HtmlResponse(
             '',
             [
-                'Location' => $this->prepareRedirectUri(
+                'Location' => self::prepareRedirectUri(
                     $getData['redirect_uri'],
                     [
                         'code' => $authorizationCode,
@@ -381,7 +381,7 @@ class OAuthServer
      *
      * @return string
      */
-    private function prepareRedirectUri($redirectUri, array $queryParameters)
+    private static function prepareRedirectUri($redirectUri, array $queryParameters)
     {
         return sprintf(
             '%s%s%s',
