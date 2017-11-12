@@ -2,11 +2,10 @@
 
 ## 2.0.0 (...)
 - remove "implicit grant" support, only support "autorization code"
-- fix some additional Psalm warnings
-- introduce `ServerException`
-- introduce `TokenResponse`, `ApiResponse` and `AuthorizeResponse` to ease 
-  integration in existing applications
-- add support for PHPUnit 6
+- static code analysis fixes found by [Psalm](https://github.com/vimeo/psalm)
+- rework Exception handling
+- introduce Response objects
+- support for PHPUnit 6
 - do not accept tokens from deleted clients, API update (issue #14)
  
 ## 1.1.0 (2017-09-18)
