@@ -38,7 +38,7 @@ class InvalidTokenException extends OAuthException
             $description,
             [
                 'WWW-Authenticate' => sprintf(
-                    'Bearer error="invalid_token",error_description="%s"',
+                    'Bearer realm="OAuth",error="invalid_token",error_description="%s"',
                     $description
                 ),
             ],
