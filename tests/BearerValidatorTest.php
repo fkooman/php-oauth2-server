@@ -149,7 +149,12 @@ class BearerValidatorTest extends TestCase
             'foo bar',
             new DateTime('2016-01-01')
         );
-        $this->assertNull(BearerValidator::requireAnyScope($tokenInfo, ['baz', 'bar', 'foo']));
+        try {
+            BearerValidator::requireAnyScope($tokenInfo, ['baz', 'bar', 'foo']);
+            $this->assertTrue(true);
+        } catch (InsufficientScopeException $e) {
+            $this->fail();
+        }
     }
 
     public function testAllScope()
@@ -161,7 +166,12 @@ class BearerValidatorTest extends TestCase
             'foo bar baz',
             new DateTime('2016-01-01')
         );
-        $this->assertNull(BearerValidator::requireAllScope($tokenInfo, ['baz', 'bar', 'foo']));
+        try {
+            BearerValidator::requireAllScope($tokenInfo, ['baz', 'bar', 'foo']);
+            $this->assertTrue(true);
+        } catch (InsufficientScopeException $e) {
+            $this->fail();
+        }
     }
 
     /**

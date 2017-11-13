@@ -147,6 +147,8 @@ class BearerValidator
      * @param TokenInfo $tokenInfo
      * @param array     $requiredScopeList
      *
+     * @throws \fkooman\OAuth\Server\Exception\InsufficientScopeException
+     *
      * @return void
      */
     public static function requireAllScope(TokenInfo $tokenInfo, array $requiredScopeList)
@@ -162,6 +164,8 @@ class BearerValidator
     /**
      * @param TokenInfo $tokenInfo
      * @param array     $requiredScopeList
+     *
+     * @throws \fkooman\OAuth\Server\Exception\InsufficientScopeException
      *
      * @return void
      */
