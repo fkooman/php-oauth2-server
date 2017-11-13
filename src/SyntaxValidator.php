@@ -25,6 +25,8 @@
 namespace fkooman\OAuth\Server;
 
 use fkooman\OAuth\Server\Exception\InvalidRequestException;
+use fkooman\OAuth\Server\Exception\InvalidScopeException;
+use fkooman\OAuth\Server\Exception\UnsupportedResponseTypeException;
 
 class SyntaxValidator
 {
@@ -83,7 +85,7 @@ class SyntaxValidator
     public static function validateResponseType($responseType)
     {
         if ('code' !== $responseType) {
-            throw new InvalidRequestException('invalid "response_type"');
+            throw new UnsupportedResponseTypeException('unsupported "response_type"');
         }
     }
 
@@ -99,7 +101,7 @@ class SyntaxValidator
         // NQCHAR      = %x21 / %x23-5B / %x5D-7E
         foreach (explode(' ', $scope) as $scopeToken) {
             if (1 !== preg_match('/^[\x21\x23-\x5B\x5D-\x7E]+$/', $scopeToken)) {
-                throw new InvalidRequestException('invalid "scope"');
+                throw new InvalidScopeException('invalid "scope"');
             }
         }
     }

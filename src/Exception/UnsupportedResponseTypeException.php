@@ -25,48 +25,14 @@
 namespace fkooman\OAuth\Server\Exception;
 
 use Exception;
-use fkooman\OAuth\Server\Http\JsonResponse;
 
-class OAuthException extends Exception
+class UnsupportedResponseTypeException extends OAuthException
 {
-    /** @var string */
-    private $description;
-
-    /** @var array */
-    private $responseHeaders = [];
-
     /**
-     * @param string $message
      * @param string $description
-     * @param int    $code
      */
-    public function __construct($message, $description, array $responseHeaders = [], $code = 0, Exception $previous = null)
+    public function __construct($description, Exception $previous = null)
     {
-        $this->description = $description;
-        $this->responseHeaders = $responseHeaders;
-        parent::__construct($message, $code, $previous);
-    }
-
-    /**
-     * @return string
-     */
-    public function getDescription()
-    {
-        return $this->description;
-    }
-
-    /**
-     * @return \fkooman\OAuth\Server\Http\JsonResponse
-     */
-    public function getJsonResponse()
-    {
-        return new JsonResponse(
-            [
-                'error' => $this->message,
-                'error_description' => $this->description,
-            ],
-            $this->responseHeaders,
-            $this->code
-        );
+        parent::__construct('unsupported_response_type', $description, [], 400, $previous);
     }
 }

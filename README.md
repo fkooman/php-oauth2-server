@@ -21,7 +21,9 @@ sent.
 - Does not force a framework on you;
 - There will be no toggles to shoot yourself in the foot;
 - Supports [PKCE](https://tools.ietf.org/html/rfc7636);
-- Supports refresh tokens
+- Supports refresh tokens;
+- Do NOT implement RFC 6749 (#4.1.2.1) error response (except for 
+  `access_denied`);
 
 # Requirements
 

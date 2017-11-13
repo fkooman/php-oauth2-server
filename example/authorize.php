@@ -98,8 +98,12 @@ try {
             $htmlResponse->send();
     }
 } catch (OAuthException $e) {
-    // the Exception also contains an HtmlResponse, like above
-    $e->getHtmlResponse()->send();
+    $htmlResponse = new HtmlResponse(
+        sprintf('[%s] %s (%s)', $e->getCode(), $e->getMessage(), $e->getDescription()),
+        [],
+        400
+    );
+    $htmlResponse->send();
 } catch (Exception $e) {
     // typically your HTTP framework would take care of this, but here
     // in "plain" PHP we have to take care of it... here we catch all
