@@ -218,13 +218,26 @@ class OAuthServerTest extends TestCase
         );
     }
 
+    /**
+     * @expectedException \fkooman\OAuth\Server\Exception\InvalidRequestException
+     */
     public function testPostTokenMissingCodeVerifierPublicClient()
     {
+        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
+        $tokenResponse = $this->server->postToken(
+            [
+                'grant_type' => 'authorization_code',
+                'code' => 'nmVljssjTwA29QjWrzieuAQjwR0yJo6DodWaTAa72t03WWyGDA8ajTdUy0Dzklrzx4kUjkL7MX/BaE2PUuykBHsidHlwZSI6ImF1dGhvcml6YXRpb25fY29kZSIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsInJlZGlyZWN0X3VyaSI6Imh0dHA6XC9cL2V4YW1wbGUub3JnXC9jb2RlLWNiIiwiY29kZV9jaGFsbGVuZ2UiOiJFOU1lbGhvYTJPd3ZGckVNVEpndUNIYW9lSzF0OFVSV2J1R0pTc3R3LWNNIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDA6MDU6MDAifQ==',
+                'redirect_uri' => 'http://example.org/code-cb',
+                'client_id' => 'code-client',
+            ],
+            null,
+            null
+        );
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\OAuthException
-     * @expectedExceptionMessage invalid_request
+     * @expectedException \fkooman\OAuth\Server\Exception\InvalidRequestException
      */
     public function testBrokenPostToken()
     {
@@ -237,8 +250,7 @@ class OAuthServerTest extends TestCase
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\OAuthException
-     * @expectedExceptionMessage invalid_client
+     * @expectedException \fkooman\OAuth\Server\Exception\InvalidClientException
      */
     public function testPostTokenSecretInvalid()
     {
@@ -255,8 +267,7 @@ class OAuthServerTest extends TestCase
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\OAuthException
-     * @expectedExceptionMessage invalid_grant
+     * @expectedException \fkooman\OAuth\Server\Exception\InvalidGrantException
      */
     public function testPostReuseCode()
     {
@@ -276,8 +287,7 @@ class OAuthServerTest extends TestCase
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Server\Exception\OAuthException
-     * @expectedExceptionMessage invalid_grant
+     * @expectedException \fkooman\OAuth\Server\Exception\InvalidGrantException
      */
     public function testExpiredCode()
     {
@@ -333,16 +343,24 @@ class OAuthServerTest extends TestCase
 
     public function testLoopbackClient()
     {
-        $this->server->getAuthorize(
+        $this->assertSame(
             [
                 'client_id' => 'loopback',
-                'redirect_uri' => 'http://127.0.0.1:12345/cb',
-                'response_type' => 'code',
+                'display_name' => 'Loopback Client',
                 'scope' => 'config',
-                'state' => '12345',
-                'code_challenge_method' => 'S256',
-                'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-            ]
+                'redirect_uri' => 'http://127.0.0.1:12345/cb',
+            ],
+            $this->server->getAuthorize(
+                [
+                    'client_id' => 'loopback',
+                    'redirect_uri' => 'http://127.0.0.1:12345/cb',
+                    'response_type' => 'code',
+                    'scope' => 'config',
+                    'state' => '12345',
+                    'code_challenge_method' => 'S256',
+                    'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+                ]
+            )
         );
     }
 
