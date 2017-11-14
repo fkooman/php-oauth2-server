@@ -1,6 +1,6 @@
 # ChangeLog
 
-## 2.0.0 (...)
+## 2.0.0 (2017.11-14)
 - remove "implicit grant" support, only support "autorization code"
 - static code analysis fixes found by [Psalm](https://github.com/vimeo/psalm)
 - rework Exception handling
