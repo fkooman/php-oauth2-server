@@ -28,6 +28,7 @@ use DateTime;
 use fkooman\OAuth\Server\BearerValidator;
 use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\Exception\InsufficientScopeException;
+use fkooman\OAuth\Server\Exception\InvalidTokenException;
 use fkooman\OAuth\Server\Storage;
 use fkooman\OAuth\Server\TokenInfo;
 use PDO;
@@ -143,14 +144,14 @@ class BearerValidatorTest extends TestCase
 
     public function testAnyScope()
     {
-        $tokenInfo = new TokenInfo(
-            'auth_key',
-            'user_id',
-            'client_id',
-            'foo bar',
-            new DateTime('2016-01-01')
-        );
         try {
+            $tokenInfo = new TokenInfo(
+                'auth_key',
+                'user_id',
+                'client_id',
+                'foo bar',
+                new DateTime('2016-01-01')
+            );
             BearerValidator::requireAnyScope($tokenInfo, ['baz', 'bar', 'foo']);
             $this->assertTrue(true);
         } catch (InsufficientScopeException $e) {
@@ -160,14 +161,14 @@ class BearerValidatorTest extends TestCase
 
     public function testAllScope()
     {
-        $tokenInfo = new TokenInfo(
-            'auth_key',
-            'user_id',
-            'client_id',
-            'foo bar baz',
-            new DateTime('2016-01-01')
-        );
         try {
+            $tokenInfo = new TokenInfo(
+                'auth_key',
+                'user_id',
+                'client_id',
+                'foo bar baz',
+                new DateTime('2016-01-01')
+            );
             BearerValidator::requireAllScope($tokenInfo, ['baz', 'bar', 'foo']);
             $this->assertTrue(true);
         } catch (InsufficientScopeException $e) {
@@ -175,33 +176,47 @@ class BearerValidatorTest extends TestCase
         }
     }
 
-    /**
-     * @expectedException \fkooman\OAuth\Server\Exception\InsufficientScopeException
-     */
     public function testAnyScopeMissingAll()
     {
-        $tokenInfo = new TokenInfo(
-            'auth_key',
-            'user_id',
-            'client_id',
-            'foo bar',
-            new DateTime('2016-01-01')
-        );
-        BearerValidator::requireAnyScope($tokenInfo, ['baz', 'def']);
+        try {
+            $tokenInfo = new TokenInfo(
+                'auth_key',
+                'user_id',
+                'client_id',
+                'foo bar',
+                new DateTime('2016-01-01')
+            );
+            BearerValidator::requireAnyScope($tokenInfo, ['baz', 'def']);
+            $this->fail();
+        } catch (InsufficientScopeException $e) {
+            $this->assertSame('not any of scopes "baz def" granted', $e->getDescription());
+        }
     }
 
-    /**
-     * @expectedException \fkooman\OAuth\Server\Exception\InsufficientScopeException
-     */
     public function testAllScopeMissingOne()
     {
-        $tokenInfo = new TokenInfo(
-            'auth_key',
-            'user_id',
-            'client_id',
-            'foo bar',
-            new DateTime('2016-01-01')
-        );
-        BearerValidator::requireAllScope($tokenInfo, ['baz', 'bar', 'foo']);
+        try {
+            $tokenInfo = new TokenInfo(
+                'auth_key',
+                'user_id',
+                'client_id',
+                'foo bar',
+                new DateTime('2016-01-01')
+            );
+            BearerValidator::requireAllScope($tokenInfo, ['baz', 'bar', 'foo']);
+            $this->fail();
+        } catch (InsufficientScopeException $e) {
+            $this->assertSame('scope "baz" not granted', $e->getDescription());
+        }
+    }
+
+    public function testCodeAsAccessToken()
+    {
+        try {
+            $this->validator->validate('Bearer nmVljssjTwA29QjWrzieuAQjwR0yJo6DodWaTAa72t03WWyGDA8ajTdUy0Dzklrzx4kUjkL7MX/BaE2PUuykBHsidHlwZSI6ImF1dGhvcml6YXRpb25fY29kZSIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsInJlZGlyZWN0X3VyaSI6Imh0dHA6XC9cL2V4YW1wbGUub3JnXC9jb2RlLWNiIiwiY29kZV9jaGFsbGVuZ2UiOiJFOU1lbGhvYTJPd3ZGckVNVEpndUNIYW9lSzF0OFVSV2J1R0pTc3R3LWNNIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDA6MDU6MDAifQ==');
+            $this->fail();
+        } catch (InvalidTokenException $e) {
+            $this->assertSame('not an access token', $e->getDescription());
+        }
     }
 }

@@ -26,6 +26,7 @@ namespace fkooman\OAuth\Server\Tests;
 
 use DateTime;
 use fkooman\OAuth\Server\ClientInfo;
+use fkooman\OAuth\Server\Exception\InvalidGrantException;
 use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\Storage;
 use PDO;
@@ -312,10 +313,23 @@ class OAuthServerTest extends TestCase
 
     public function testAccessTokenAsCode()
     {
-    }
-
-    public function testCodeAsAccessToken()
-    {
+        try {
+            $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
+            $this->server->postToken(
+                [
+                    'grant_type' => 'authorization_code',
+                    'code' => 'znwcwk0WpP1y0qrUSd/J6KToSlXdceGBaliVLhYYjRESQoVZI1aZTX9cRfBfIpOBnMcyTF3Izs9H8918OwiqBHsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAxOjAwOjAwIn0=',
+                    'redirect_uri' => 'http://example.org/code-cb',
+                    'client_id' => 'code-client',
+                    'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
+                ],
+                null,
+                null
+            );
+            $this->fail();
+        } catch (InvalidGrantException $e) {
+            $this->assertSame('"code" is not of type authorization_code', $e->getDescription());
+        }
     }
 
     public function testRefreshToken()
