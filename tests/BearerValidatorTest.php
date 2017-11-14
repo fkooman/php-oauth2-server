@@ -138,7 +138,7 @@ class BearerValidatorTest extends TestCase
     {
         $this->storage->storeAuthorization('foo', 'token-client', 'config', 'random_1');
         try {
-            $this->validator->validate('Bearer qrCFqzPz4ac7U8/fSOa6ReXvDJ6D8zsz1VNK/yEHrryWHpHanbHjVgL6Ss+pLenWgTVTOHcLLv1aT3D1RTnmAnsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoidG9rZW4tY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9');
+            $this->validator->validate('Bearer rFiR9xhpCfo0fUI6hs9kYIAeAzISfBW5xlY5xUJQPibvQVmt+Xa/GsGDtdZukmL8V8Z6i6AXjqfKQLUcSEVKAnsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoiZjNiMTVkODhjZDI4MGQ2NWM5NDlhZjA2NWJiNTg5NWYiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiZGVtb19jbGllbnQiLCJzY29wZSI6ImZvbyBiYXIiLCJleHBpcmVzX2F0IjoiMjAxNy0xMS0xNCAxNjo0NDoyNyJ9');
             $this->fail();
         } catch (InvalidTokenException $e) {
             $this->assertSame('invalid signature', $e->getDescription());
