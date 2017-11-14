@@ -43,24 +43,24 @@ class OAuthServerTest extends TestCase
     {
         $oauthClients = [
             'code-client' => [
-                'redirect_uri' => 'http://example.org/code-cb',
+                'redirect_uri_list' => ['http://example.org/code-cb'],
                 'response_type' => 'code',
                 'display_name' => 'Code Client',
             ],
             'code-client-query-redirect' => [
                 'response_type' => 'code',
-                'redirect_uri' => 'http://example.org/code-cb?keep=this',
+                'redirect_uri_list' => ['http://example.org/code-cb?keep=this'],
                 'display_name' => 'Code Client',
             ],
             'code-client-secret' => [
                 'response_type' => 'code',
-                'redirect_uri' => 'http://example.org/code-cb',
+                'redirect_uri_list' => ['http://example.org/code-cb'],
                 'display_name' => 'Code Client',
                 'client_secret' => '123456',
             ],
             'loopback' => [
                 'response_type' => 'code',
-                'redirect_uri' => 'http://127.0.0.1:{PORT}/cb',
+                'redirect_uri_list' => ['http://127.0.0.1:{PORT}/cb'],
                 'display_name' => 'Loopback Client',
             ],
         ];

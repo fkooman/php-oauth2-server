@@ -102,18 +102,18 @@ class BearerValidator
             $bearerToken = substr($authorizationHeader, 7);
             $signedBearerToken = Base64::decode($bearerToken);
 
-            // check wheter the access_token was signed by us
+            // check whether the access_token was signed by us
             if (false !== $jsonToken = SodiumCompat::crypto_sign_open($signedBearerToken, $this->publicKey)) {
                 $tokenInfo = $this->validateTokenInfo(json_decode($jsonToken, true));
 
                 // as it is signed by us, the client MUST still be there
                 if (false === call_user_func($this->getClientInfo, $tokenInfo->getClientId())) {
-                    throw new InvalidTokenException('client not longer exists');
+                    throw new InvalidTokenException('client not longer registered');
                 }
 
                 // it MUST exist in the DB as well, otherwise it was revoked...
                 if (!$this->storage->hasAuthorization($tokenInfo->getAuthKey())) {
-                    throw new InvalidTokenException('authorization no longer exists');
+                    throw new InvalidTokenException('authorization for client no longer exists');
                 }
 
                 return $tokenInfo;
@@ -195,10 +195,6 @@ class BearerValidator
         if ('access_token' !== $tokenInfo['type']) {
             throw new InvalidTokenException('not an access token');
         }
-
-        // XXX only accept tokens that have "expires_in" <= 3600? this to
-        // avoid other servers to issue access tokens that are longer valid
-        // than 1 hour?
 
         $expiresAt = new DateTime($tokenInfo['expires_at']);
         if ($this->dateTime >= $expiresAt) {

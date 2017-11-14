@@ -42,10 +42,13 @@ class ClientInfo
      */
     public function __construct(array $clientInfo)
     {
-        if (!array_key_exists('redirect_uri', $clientInfo)) {
-            throw new ServerErrorException('"redirect_uri" not in client database');
+        if (!array_key_exists('redirect_uri_list', $clientInfo)) {
+            throw new ServerErrorException('"redirect_uri_list" not in client database');
         }
-        $this->redirectUriList = (array) $clientInfo['redirect_uri'];
+        if (!is_array($clientInfo['redirect_uri_list'])) {
+            throw new ServerErrorException('"redirect_uri_list" not an array');
+        }
+        $this->redirectUriList = $clientInfo['redirect_uri_list'];
 
         if (array_key_exists('display_name', $clientInfo)) {
             $this->displayName = $clientInfo['display_name'];

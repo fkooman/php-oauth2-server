@@ -27,6 +27,7 @@ namespace fkooman\OAuth\Server\Tests;
 use DateTime;
 use fkooman\OAuth\Server\BearerValidator;
 use fkooman\OAuth\Server\ClientInfo;
+use fkooman\OAuth\Server\Exception\InsufficientScopeException;
 use fkooman\OAuth\Server\Storage;
 use fkooman\OAuth\Server\TokenInfo;
 use PDO;
@@ -47,7 +48,7 @@ class BearerValidatorTest extends TestCase
     {
         $this->oauthClients = [
             'code-client' => [
-                'redirect_uri' => 'http://example.org/code-cb',
+                'redirect_uri_list' => ['http://example.org/code-cb'],
                 'response_type' => 'code',
                 'display_name' => 'Code Client',
             ],

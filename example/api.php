@@ -40,7 +40,7 @@ try {
         $oauthClients = [
             // we only have one client here with client_id "demo_client"...
             'demo_client' => [
-                'redirect_uri' => ['http://localhost:8081/callback.php'],
+                'redirect_uri_list' => ['http://localhost:8081/callback.php'],
                 'display_name' => 'Demo Client',
                 'client_secret' => 'demo_secret',
             ],
