@@ -26,7 +26,9 @@ namespace fkooman\OAuth\Server\Tests;
 
 use DateTime;
 use fkooman\OAuth\Server\ClientInfo;
+use fkooman\OAuth\Server\Exception\InvalidClientException;
 use fkooman\OAuth\Server\Exception\InvalidGrantException;
+use fkooman\OAuth\Server\Exception\InvalidRequestException;
 use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\Storage;
 use PDO;
@@ -219,91 +221,101 @@ class OAuthServerTest extends TestCase
         );
     }
 
-    /**
-     * @expectedException \fkooman\OAuth\Server\Exception\InvalidRequestException
-     */
     public function testPostTokenMissingCodeVerifierPublicClient()
     {
-        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
-        $tokenResponse = $this->server->postToken(
-            [
-                'grant_type' => 'authorization_code',
-                'code' => 'nmVljssjTwA29QjWrzieuAQjwR0yJo6DodWaTAa72t03WWyGDA8ajTdUy0Dzklrzx4kUjkL7MX/BaE2PUuykBHsidHlwZSI6ImF1dGhvcml6YXRpb25fY29kZSIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsInJlZGlyZWN0X3VyaSI6Imh0dHA6XC9cL2V4YW1wbGUub3JnXC9jb2RlLWNiIiwiY29kZV9jaGFsbGVuZ2UiOiJFOU1lbGhvYTJPd3ZGckVNVEpndUNIYW9lSzF0OFVSV2J1R0pTc3R3LWNNIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDA6MDU6MDAifQ==',
-                'redirect_uri' => 'http://example.org/code-cb',
-                'client_id' => 'code-client',
-            ],
-            null,
-            null
-        );
+        try {
+            $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
+            $tokenResponse = $this->server->postToken(
+                [
+                    'grant_type' => 'authorization_code',
+                    'code' => 'nmVljssjTwA29QjWrzieuAQjwR0yJo6DodWaTAa72t03WWyGDA8ajTdUy0Dzklrzx4kUjkL7MX/BaE2PUuykBHsidHlwZSI6ImF1dGhvcml6YXRpb25fY29kZSIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsInJlZGlyZWN0X3VyaSI6Imh0dHA6XC9cL2V4YW1wbGUub3JnXC9jb2RlLWNiIiwiY29kZV9jaGFsbGVuZ2UiOiJFOU1lbGhvYTJPd3ZGckVNVEpndUNIYW9lSzF0OFVSV2J1R0pTc3R3LWNNIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDA6MDU6MDAifQ==',
+                    'redirect_uri' => 'http://example.org/code-cb',
+                    'client_id' => 'code-client',
+                ],
+                null,
+                null
+            );
+            $this->fail();
+        } catch (InvalidRequestException $e) {
+            $this->assertSame('missing "code_verifier" parameter', $e->getDescription());
+        }
     }
 
-    /**
-     * @expectedException \fkooman\OAuth\Server\Exception\InvalidRequestException
-     */
     public function testBrokenPostToken()
     {
-        $this->server->postToken(
-            [
-            ],
-            null,
-            null
-        );
+        try {
+            $this->server->postToken(
+                [
+                ],
+                null,
+                null
+            );
+            $this->fail();
+        } catch (InvalidRequestException $e) {
+            $this->assertSame('missing "grant_type" parameter', $e->getDescription());
+        }
     }
 
-    /**
-     * @expectedException \fkooman\OAuth\Server\Exception\InvalidClientException
-     */
     public function testPostTokenSecretInvalid()
     {
-        $this->server->postToken(
-            [
-                'grant_type' => 'authorization_code',
-                'code' => 'DEF.abcdefgh',
-                'redirect_uri' => 'http://example.org/code-cb',
-                'client_id' => 'code-client-secret',
-            ],
-            'code-client-secret',
-            '654321'
-        );
+        try {
+            $this->server->postToken(
+                [
+                    'grant_type' => 'authorization_code',
+                    'code' => 'DEF.abcdefgh',
+                    'redirect_uri' => 'http://example.org/code-cb',
+                    'client_id' => 'code-client-secret',
+                ],
+                'code-client-secret',
+                '654321'
+            );
+            $this->fail();
+        } catch (InvalidClientException $e) {
+            $this->assertSame('invalid credentials (invalid authenticating pass)', $e->getDescription());
+        }
     }
 
-    /**
-     * @expectedException \fkooman\OAuth\Server\Exception\InvalidGrantException
-     */
     public function testPostReuseCode()
     {
-        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
-        $this->storage->logAuthKey('random_1');
-        $this->server->postToken(
-            [
-                'grant_type' => 'authorization_code',
-                'code' => 'nmVljssjTwA29QjWrzieuAQjwR0yJo6DodWaTAa72t03WWyGDA8ajTdUy0Dzklrzx4kUjkL7MX/BaE2PUuykBHsidHlwZSI6ImF1dGhvcml6YXRpb25fY29kZSIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsInJlZGlyZWN0X3VyaSI6Imh0dHA6XC9cL2V4YW1wbGUub3JnXC9jb2RlLWNiIiwiY29kZV9jaGFsbGVuZ2UiOiJFOU1lbGhvYTJPd3ZGckVNVEpndUNIYW9lSzF0OFVSV2J1R0pTc3R3LWNNIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDA6MDU6MDAifQ==',
-                'redirect_uri' => 'http://example.org/code-cb',
-                'client_id' => 'code-client',
-                'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
-            ],
-            null,
-            null
-        );
+        try {
+            $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
+            $this->storage->logAuthKey('random_1');
+            $this->server->postToken(
+                [
+                    'grant_type' => 'authorization_code',
+                    'code' => 'nmVljssjTwA29QjWrzieuAQjwR0yJo6DodWaTAa72t03WWyGDA8ajTdUy0Dzklrzx4kUjkL7MX/BaE2PUuykBHsidHlwZSI6ImF1dGhvcml6YXRpb25fY29kZSIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsInJlZGlyZWN0X3VyaSI6Imh0dHA6XC9cL2V4YW1wbGUub3JnXC9jb2RlLWNiIiwiY29kZV9jaGFsbGVuZ2UiOiJFOU1lbGhvYTJPd3ZGckVNVEpndUNIYW9lSzF0OFVSV2J1R0pTc3R3LWNNIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDA6MDU6MDAifQ==',
+                    'redirect_uri' => 'http://example.org/code-cb',
+                    'client_id' => 'code-client',
+                    'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
+                ],
+                null,
+                null
+            );
+            $this->fail();
+        } catch (InvalidGrantException $e) {
+            $this->assertSame('"authorization_code" reuse', $e->getDescription());
+        }
     }
 
-    /**
-     * @expectedException \fkooman\OAuth\Server\Exception\InvalidGrantException
-     */
     public function testExpiredCode()
     {
-        $this->server->setDateTime(new DateTime('2017-01-01'));
-        $this->server->postToken(
-            [
-                'grant_type' => 'authorization_code',
-                'code' => 'nmVljssjTwA29QjWrzieuAQjwR0yJo6DodWaTAa72t03WWyGDA8ajTdUy0Dzklrzx4kUjkL7MX/BaE2PUuykBHsidHlwZSI6ImF1dGhvcml6YXRpb25fY29kZSIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsInJlZGlyZWN0X3VyaSI6Imh0dHA6XC9cL2V4YW1wbGUub3JnXC9jb2RlLWNiIiwiY29kZV9jaGFsbGVuZ2UiOiJFOU1lbGhvYTJPd3ZGckVNVEpndUNIYW9lSzF0OFVSV2J1R0pTc3R3LWNNIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDA6MDU6MDAifQ==',
-                'redirect_uri' => 'http://example.org/code-cb',
-                'client_id' => 'code-client',
-                'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
-            ],
-            null,
-            null
-        );
+        try {
+            $this->server->setDateTime(new DateTime('2017-01-01'));
+            $this->server->postToken(
+                [
+                    'grant_type' => 'authorization_code',
+                    'code' => 'nmVljssjTwA29QjWrzieuAQjwR0yJo6DodWaTAa72t03WWyGDA8ajTdUy0Dzklrzx4kUjkL7MX/BaE2PUuykBHsidHlwZSI6ImF1dGhvcml6YXRpb25fY29kZSIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsInJlZGlyZWN0X3VyaSI6Imh0dHA6XC9cL2V4YW1wbGUub3JnXC9jb2RlLWNiIiwiY29kZV9jaGFsbGVuZ2UiOiJFOU1lbGhvYTJPd3ZGckVNVEpndUNIYW9lSzF0OFVSV2J1R0pTc3R3LWNNIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDA6MDU6MDAifQ==',
+                    'redirect_uri' => 'http://example.org/code-cb',
+                    'client_id' => 'code-client',
+                    'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
+                ],
+                null,
+                null
+            );
+            $this->fail();
+        } catch (InvalidGrantException $e) {
+            $this->assertSame('"authorization_code" is expired', $e->getDescription());
+        }
     }
 
     public function testGetPublicKey()

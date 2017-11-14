@@ -50,8 +50,11 @@ class BearerValidatorTest extends TestCase
         $this->oauthClients = [
             'code-client' => [
                 'redirect_uri_list' => ['http://example.org/code-cb'],
-                'response_type' => 'code',
                 'display_name' => 'Code Client',
+            ],
+            'token-client' => [
+                'redirect_uri_list' => ['http://example.org/token-cb'],
+                'display_name' => 'Token Client',
             ],
         ];
 
@@ -84,14 +87,15 @@ class BearerValidatorTest extends TestCase
         $this->assertNull($tokenInfo->getIssuer());
     }
 
-    /**
-     * @expectedException \fkooman\OAuth\Server\Exception\InvalidTokenException
-     */
     public function testDeletedClient()
     {
-        $this->oauthClients = [];
-        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
-        $this->validator->validate('Bearer znwcwk0WpP1y0qrUSd/J6KToSlXdceGBaliVLhYYjRESQoVZI1aZTX9cRfBfIpOBnMcyTF3Izs9H8918OwiqBHsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAxOjAwOjAwIn0=');
+        try {
+            $this->oauthClients = [];
+            $this->validator->validate('Bearer znwcwk0WpP1y0qrUSd/J6KToSlXdceGBaliVLhYYjRESQoVZI1aZTX9cRfBfIpOBnMcyTF3Izs9H8918OwiqBHsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAxOjAwOjAwIn0=');
+            $this->fail();
+        } catch (InvalidTokenException $e) {
+            $this->assertSame('client no longer registered', $e->getDescription());
+        }
     }
 
     public function testValidPublicKeyToken()
@@ -109,37 +113,46 @@ class BearerValidatorTest extends TestCase
         $this->assertSame('issuer.example.org', $tokenInfo->getIssuer());
     }
 
-    /**
-     * @expectedException \fkooman\OAuth\Server\Exception\InvalidTokenException
-     */
     public function testInvalidSyntax()
     {
-        $this->validator->validate('Bearer %%%%');
+        try {
+            $this->validator->validate('Bearer %%%%');
+            $this->fail();
+        } catch (InvalidTokenException $e) {
+            $this->assertSame('bearer credential syntax error', $e->getDescription());
+        }
     }
 
-    /**
-     * @expectedException \fkooman\OAuth\Server\Exception\InvalidTokenException
-     */
     public function testExpiredToken()
     {
-        $this->validator->setDateTime(new DateTime('2017-01-01'));
-        $this->validator->validate('Bearer znwcwk0WpP1y0qrUSd/J6KToSlXdceGBaliVLhYYjRESQoVZI1aZTX9cRfBfIpOBnMcyTF3Izs9H8918OwiqBHsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAxOjAwOjAwIn0=');
+        try {
+            $this->validator->setDateTime(new DateTime('2017-01-01'));
+            $this->validator->validate('Bearer znwcwk0WpP1y0qrUSd/J6KToSlXdceGBaliVLhYYjRESQoVZI1aZTX9cRfBfIpOBnMcyTF3Izs9H8918OwiqBHsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAxOjAwOjAwIn0=');
+            $this->fail();
+        } catch (InvalidTokenException $e) {
+            $this->assertSame('token expired', $e->getDescription());
+        }
     }
 
-    /**
-     * @expectedException \fkooman\OAuth\Server\Exception\InvalidTokenException
-     */
-    public function testInvalidSignatureKey()
+    public function testInvalidSignatureWrongKey()
     {
-        $this->validator->validate('Bearer qrCFqzPz4ac7U8%2FfSOa6ReXvDJ6D8zsz1VNK%2FyEHrryWHpHanbHjVgL6Ss%2BpLenWgTVTOHcLLv1aT3D1RTnmAnsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoidG9rZW4tY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9');
+        $this->storage->storeAuthorization('foo', 'token-client', 'config', 'random_1');
+        try {
+            $this->validator->validate('Bearer qrCFqzPz4ac7U8/fSOa6ReXvDJ6D8zsz1VNK/yEHrryWHpHanbHjVgL6Ss+pLenWgTVTOHcLLv1aT3D1RTnmAnsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoidG9rZW4tY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9');
+            $this->fail();
+        } catch (InvalidTokenException $e) {
+            $this->assertSame('invalid signature', $e->getDescription());
+        }
     }
 
-    /**
-     * @expectedException \fkooman\OAuth\Server\Exception\InvalidTokenException
-     */
     public function testBasicAuthentication()
     {
-        $this->validator->validate('Basic AAA===');
+        try {
+            $this->validator->validate('Basic AAA==');
+            $this->fail();
+        } catch (InvalidTokenException $e) {
+            $this->assertSame('bearer credential syntax error', $e->getDescription());
+        }
     }
 
     public function testAnyScope()
