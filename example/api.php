@@ -96,6 +96,7 @@ try {
     }
 } catch (OAuthException $e) {
     // the Exception contains an JsonResponse
+    error_log(var_export($e->getJsonResponse(), true));
     $e->getJsonResponse()->send();
 } catch (Exception $e) {
     // typically your HTTP framework would take care of this, but here
