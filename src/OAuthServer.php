@@ -100,7 +100,7 @@ class OAuthServer
      */
     public function getPublicKey()
     {
-        return Base64::encode(SodiumCompat::crypto_sign_publickey($this->keyPair));
+        return Base64::encode(sodium_crypto_sign_publickey($this->keyPair));
     }
 
     /**
@@ -253,8 +253,8 @@ class OAuthServer
 
         // verify the authorization code
         $signedCode = Base64::decode($postData['code']);
-        $publicKey = SodiumCompat::crypto_sign_publickey($this->keyPair);
-        if (false === $jsonCode = SodiumCompat::crypto_sign_open($signedCode, $publicKey)) {
+        $publicKey = sodium_crypto_sign_publickey($this->keyPair);
+        if (false === $jsonCode = sodium_crypto_sign_open($signedCode, $publicKey)) {
             throw new InvalidGrantException('"code" has invalid signature');
         }
 
@@ -333,8 +333,8 @@ class OAuthServer
     {
         // verify the refresh code
         $signedRefreshToken = Base64::decode($postData['refresh_token']);
-        $publicKey = SodiumCompat::crypto_sign_publickey($this->keyPair);
-        if (false === $jsonRefreshToken = SodiumCompat::crypto_sign_open($signedRefreshToken, $publicKey)) {
+        $publicKey = sodium_crypto_sign_publickey($this->keyPair);
+        if (false === $jsonRefreshToken = sodium_crypto_sign_open($signedRefreshToken, $publicKey)) {
             throw new InvalidGrantException('"refresh_token" has invalid signature');
         }
 
@@ -422,9 +422,9 @@ class OAuthServer
         }
 
         return Base64::encode(
-            SodiumCompat::crypto_sign(
+            sodium_crypto_sign(
                 $jsonString,
-                SodiumCompat::crypto_sign_secretkey($this->keyPair)
+                sodium_crypto_sign_secretkey($this->keyPair)
             )
         );
     }
@@ -454,9 +454,9 @@ class OAuthServer
         }
 
         return Base64::encode(
-            SodiumCompat::crypto_sign(
+            sodium_crypto_sign(
                 $jsonString,
-                SodiumCompat::crypto_sign_secretkey($this->keyPair)
+                sodium_crypto_sign_secretkey($this->keyPair)
             )
         );
     }
@@ -494,9 +494,9 @@ class OAuthServer
         }
 
         return Base64::encode(
-            SodiumCompat::crypto_sign(
+            sodium_crypto_sign(
                 $jsonString,
-                SodiumCompat::crypto_sign_secretkey($this->keyPair)
+                sodium_crypto_sign_secretkey($this->keyPair)
             )
         );
     }

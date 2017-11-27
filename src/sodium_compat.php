@@ -22,78 +22,60 @@
  * SOFTWARE.
  */
 
-namespace fkooman\OAuth\Server;
-
 /**
- * Class to work as a compatibility layer to support all versions of PHP
- * sodium integration out there.
+ * Compatibility layer for libsodium with namespace. We *require* PHP >= 7.2
+ * sodium OR pecl-libsodium.
  *
- * This class supports:
- * - PECL libsodium 1.x for older version of PHP (EPEL)
- * - PECL libsodium 2.x for PHP >= 7.0
- * - PHP sodium for PHP >= 7.2
- *
- * Method PHPdoc shamelessly taken from paragonie/sodium_compat
+ * Method PHPdoc inspired by paragonie/sodium_compat
  *
  * @see https://github.com/paragonie/sodium_compat
  */
-class SodiumCompat
-{
+if (!is_callable('sodium_crypto_sign_publickey')) {
     /**
      * @param string $keypair
      *
      * @return string
      */
-    public static function crypto_sign_publickey($keypair)
+    function sodium_crypto_sign_publickey($keypair)
     {
-        if (is_callable('sodium_crypto_sign_publickey')) {
-            return sodium_crypto_sign_publickey($keypair);
-        }
-
         return \Sodium\crypto_sign_publickey($keypair);
     }
+}
 
+if (!is_callable('sodium_crypto_sign')) {
     /**
      * @param string $message
      * @param string $sk
      *
      * @return string
      */
-    public static function crypto_sign($message, $sk)
+    function sodium_crypto_sign($message, $sk)
     {
-        if (is_callable('sodium_crypto_sign')) {
-            return sodium_crypto_sign($message, $sk);
-        }
-
         return \Sodium\crypto_sign($message, $sk);
     }
+}
 
+if (!is_callable('sodium_crypto_sign_secretkey')) {
     /**
      * @param string $keypair
      *
      * @return string
      */
-    public static function crypto_sign_secretkey($keypair)
+    function sodium_crypto_sign_secretkey($keypair)
     {
-        if (is_callable('sodium_crypto_sign_secretkey')) {
-            return sodium_crypto_sign_secretkey($keypair);
-        }
-
         return \Sodium\crypto_sign_secretkey($keypair);
     }
+}
 
+if (!is_callable('sodium_crypto_sign_open')) {
     /**
      * @param string $signedMessage
      * @param string $pk
      *
      * @return false|string
      */
-    public static function crypto_sign_open($signedMessage, $pk)
+    function sodium_crypto_sign_open($signedMessage, $pk)
     {
-        if (is_callable('sodium_crypto_sign_open')) {
-            return sodium_crypto_sign_open($signedMessage, $pk);
-        }
-
         return \Sodium\crypto_sign_open($signedMessage, $pk);
     }
 }

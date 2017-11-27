@@ -57,7 +57,7 @@ class BearerValidator
     {
         $this->storage = $storage;
         $this->getClientInfo = $getClientInfo;
-        $this->publicKey = SodiumCompat::crypto_sign_publickey(Base64::decode($keyPair));
+        $this->publicKey = sodium_crypto_sign_publickey(Base64::decode($keyPair));
         $this->dateTime = new DateTime();
     }
 
@@ -103,7 +103,7 @@ class BearerValidator
             $signedBearerToken = Base64::decode($bearerToken);
 
             // check whether the access_token was signed by us
-            if (false !== $jsonToken = SodiumCompat::crypto_sign_open($signedBearerToken, $this->publicKey)) {
+            if (false !== $jsonToken = sodium_crypto_sign_open($signedBearerToken, $this->publicKey)) {
                 $tokenInfo = $this->validateTokenInfo(json_decode($jsonToken, true));
 
                 // as it is signed by us, the client MUST still be there
@@ -126,7 +126,7 @@ class BearerValidator
             // client is still actually registered, as we trust the remote
             // server to do the right thing.
             foreach ($this->foreignKeys as $tokenIssuer => $publicKey) {
-                if (false !== $jsonToken = SodiumCompat::crypto_sign_open($signedBearerToken, $publicKey)) {
+                if (false !== $jsonToken = sodium_crypto_sign_open($signedBearerToken, $publicKey)) {
                     $tokenInfo = $this->validateTokenInfo(json_decode($jsonToken, true));
                     $tokenInfo->setIssuer($tokenIssuer);
 
