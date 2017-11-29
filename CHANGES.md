@@ -1,8 +1,13 @@
 # ChangeLog
 
-## 2.0.1 (...)
+## 2.0.1 (2017-11-29)
 - rework (lib)sodium compatiblity
 - encode the authorization code "url safe" without padding
+  - this fixes incompatibilities with Internet Explorer 11
+  - this invalidates "in flight" authorization codes when a user is 
+    authorizing at that particular moment. As codes are only valid for 5 
+    minutes and the typical flow takes only a few seconds, this seems
+    acceptable
 
 ## 2.0.0 (2017.11-14)
 - remove "implicit grant" support, only support "autorization code"
