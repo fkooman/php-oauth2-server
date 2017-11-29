@@ -2,6 +2,7 @@
 
 ## 2.0.1 (...)
 - rework (lib)sodium compatiblity
+- encode the authorization code "url safe" without padding
 
 ## 2.0.0 (2017.11-14)
 - remove "implicit grant" support, only support "autorization code"

@@ -252,7 +252,7 @@ class OAuthServer
         $this->verifyClientCredentials($postData['client_id'], $clientInfo, $authUser, $authPass);
 
         // verify the authorization code
-        $signedCode = Base64::decode($postData['code']);
+        $signedCode = Base64UrlSafe::decode($postData['code']);
         $publicKey = sodium_crypto_sign_publickey($this->keyPair);
         if (false === $jsonCode = sodium_crypto_sign_open($signedCode, $publicKey)) {
             throw new InvalidGrantException('"code" has invalid signature');
@@ -493,11 +493,14 @@ class OAuthServer
             throw new ServerErrorException('unable to encode JSON');
         }
 
-        return Base64::encode(
-            sodium_crypto_sign(
-                $jsonString,
-                sodium_crypto_sign_secretkey($this->keyPair)
-            )
+        return rtrim(
+            Base64UrlSafe::encode(
+                sodium_crypto_sign(
+                    $jsonString,
+                    sodium_crypto_sign_secretkey($this->keyPair)
+                )
+            ),
+            '='
         );
     }
 
@@ -587,7 +590,10 @@ class OAuthServer
             if (false === hash_equals(
                 $codeInfo['code_challenge'],
                 // https://github.com/paragonie/constant_time_encoding/issues/9
-                // it's unknown if rtrim() is cache-timing-safe.
+                // it's unknown if rtrim() is cache-timing-safe. This is fixed
+                // in version 2.2 of paragonie/constant_time_encoding, but that
+                // version requires php ^7, so we can't use it yet, we would
+                // use Base64UrlSafe::encodeUnpadded then
                 rtrim(
                     Base64UrlSafe::encode(
                         hash(
