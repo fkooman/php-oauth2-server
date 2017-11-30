@@ -124,6 +124,26 @@ class OAuthServer
     }
 
     /**
+     * Validates the authorization request from the client and returns
+     * authorize response in case the client does NOT require approval by the
+     * user (resource owner).
+     *
+     * @param array  $getData
+     * @param string $userId
+     *
+     * @return Http\Response|false
+     */
+    public function getAuthorizeResponse(array $getData, $userId)
+    {
+        $clientInfo = $this->validateAuthorizeRequest($getData);
+        if ($clientInfo->getRequireApproval()) {
+            return false;
+        }
+
+        return $this->postAuthorize($getData, ['approve' => 'yes'], $userId);
+    }
+
+    /**
      * Handles POST request to the "/authorize" endpoint of the OAuth server.
      *
      * This is typically the "form submit" on the "authorize dialog" shown in

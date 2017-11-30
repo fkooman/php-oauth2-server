@@ -49,6 +49,7 @@ class OAuthServerTest extends TestCase
                 'redirect_uri_list' => ['http://example.org/code-cb'],
                 'response_type' => 'code',
                 'display_name' => 'Code Client',
+                'require_approval' => false,
             ],
             'code-client-query-redirect' => [
                 'response_type' => 'code',
@@ -106,6 +107,29 @@ class OAuthServerTest extends TestCase
                     'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
                 ]
             )
+        );
+    }
+
+    public function testGetAuthorizeResponse()
+    {
+        $authorizeResponse = $this->server->getAuthorizeResponse(
+            [
+                'client_id' => 'code-client',
+                'redirect_uri' => 'http://example.org/code-cb',
+                'response_type' => 'code',
+                'scope' => 'config',
+                'state' => '12345',
+                'code_challenge_method' => 'S256',
+                'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+            ],
+            'foo'
+        );
+        $this->assertSame(
+            [
+                'Location' => 'http://example.org/code-cb?code=nmVljssjTwA29QjWrzieuAQjwR0yJo6DodWaTAa72t03WWyGDA8ajTdUy0Dzklrzx4kUjkL7MX_BaE2PUuykBHsidHlwZSI6ImF1dGhvcml6YXRpb25fY29kZSIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsInJlZGlyZWN0X3VyaSI6Imh0dHA6XC9cL2V4YW1wbGUub3JnXC9jb2RlLWNiIiwiY29kZV9jaGFsbGVuZ2UiOiJFOU1lbGhvYTJPd3ZGckVNVEpndUNIYW9lSzF0OFVSV2J1R0pTc3R3LWNNIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDA6MDU6MDAifQ&state=12345',
+                'Content-Type' => 'text/html; charset=utf-8',
+            ],
+            $authorizeResponse->getHeaders()
         );
     }
 

@@ -37,6 +37,9 @@ class ClientInfo
     /** @var string|null */
     private $clientSecret = null;
 
+    /** @var bool */
+    private $requireApproval = true;
+
     /**
      * @param array $clientInfo
      */
@@ -50,6 +53,9 @@ class ClientInfo
         }
         $this->redirectUriList = $clientInfo['redirect_uri_list'];
 
+        if (array_key_exists('require_approval', $clientInfo)) {
+            $this->requireApproval = (bool) $clientInfo['require_approval'];
+        }
         if (array_key_exists('display_name', $clientInfo)) {
             $this->displayName = $clientInfo['display_name'];
         }
@@ -72,6 +78,14 @@ class ClientInfo
     public function getSecret()
     {
         return $this->clientSecret;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getRequireApproval()
+    {
+        return $this->requireApproval;
     }
 
     /**

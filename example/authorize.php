@@ -43,6 +43,7 @@ try {
                 'redirect_uri_list' => ['http://localhost:8081/callback.php'],
                 'display_name' => 'Demo Client',
                 'client_secret' => 'demo_secret',
+                //'require_approval' => false,
             ],
         ];
 
@@ -73,6 +74,13 @@ try {
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'GET':
         case 'HEAD':
+            // optional "shortcut" to avoid "Approval" dialog if the client has
+            // the flag "require_approval" set to false
+            if ($authorizeResponse = $oauthServer->getAuthorizeResponse($_GET, $userId)) {
+                $authorizeResponse->send();
+                break;
+            }
+
             // this is an authorization request, parse all parameters and
             // return an array with data that you can use to ask the user
             // for authorization, this is a very minimal HTML form example

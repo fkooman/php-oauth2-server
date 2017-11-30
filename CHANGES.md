@@ -1,5 +1,9 @@
 # ChangeLog
 
+## 2.1.0 (...)
+- make it possible to disable requiring user approval for authorization of
+  trusted clients
+
 ## 2.0.1 (2017-11-29)
 - rework (lib)sodium compatiblity
 - encode the authorization code "url safe" without padding

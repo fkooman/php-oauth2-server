@@ -43,6 +43,7 @@ try {
                 'redirect_uri_list' => ['http://localhost:8081/callback.php'],
                 'display_name' => 'Demo Client',
                 'client_secret' => 'demo_secret',
+                //'require_approval' => false,
             ],
         ];
 
