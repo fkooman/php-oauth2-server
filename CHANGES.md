@@ -1,6 +1,6 @@
 # ChangeLog
 
-## 2.1.0 (...)
+## 2.1.0 (2017-11-30)
 - make it possible to disable requiring user approval for authorization of
   trusted clients
 
