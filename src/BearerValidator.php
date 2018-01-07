@@ -29,6 +29,7 @@ use fkooman\OAuth\Server\Exception\InsufficientScopeException;
 use fkooman\OAuth\Server\Exception\InvalidTokenException;
 use fkooman\OAuth\Server\Exception\ServerErrorException;
 use ParagonIE\ConstantTime\Base64;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 use RangeException;
 
 class BearerValidator
@@ -99,12 +100,15 @@ class BearerValidator
     {
         self::validateBearerCredentials($authorizationHeader);
         try {
-            $bearerToken = substr($authorizationHeader, 7);
-            $signedBearerToken = Base64::decode($bearerToken);
+            $encodedSignedStr = substr($authorizationHeader, 7);
+            // support old Base64 encoded strings as well...
+            $encodedSignedStr = str_replace(['+', '/'], ['-', '_'], $encodedSignedStr);
+            $signedStr = Base64UrlSafe::decode($encodedSignedStr);
 
             // check whether the access_token was signed by us
-            if (false !== $jsonToken = sodium_crypto_sign_open($signedBearerToken, $this->publicKey)) {
-                $tokenInfo = $this->validateTokenInfo(json_decode($jsonToken, true));
+            $jsonToken = sodium_crypto_sign_open($signedStr, $this->publicKey);
+            if (false !== $jsonToken) {
+                $tokenInfo = $this->validateTokenInfo(self::jsonDecode($jsonToken));
 
                 // as it is signed by us, the client MUST still be there
                 if (false === call_user_func($this->getClientInfo, $tokenInfo->getClientId())) {
@@ -126,8 +130,9 @@ class BearerValidator
             // client is still actually registered, as we trust the remote
             // server to do the right thing.
             foreach ($this->foreignKeys as $tokenIssuer => $publicKey) {
-                if (false !== $jsonToken = sodium_crypto_sign_open($signedBearerToken, $publicKey)) {
-                    $tokenInfo = $this->validateTokenInfo(json_decode($jsonToken, true));
+                $jsonToken = sodium_crypto_sign_open($signedStr, $publicKey);
+                if (false !== $jsonToken) {
+                    $tokenInfo = $this->validateTokenInfo(self::jsonDecode($jsonToken));
                     $tokenInfo->setIssuer($tokenIssuer);
 
                     return $tokenInfo;
@@ -182,6 +187,21 @@ class BearerValidator
         if (!$hasAny) {
             throw new InsufficientScopeException(sprintf('not any of scopes "%s" granted', implode(' ', $requiredScopeList)));
         }
+    }
+
+    /**
+     * @param string $jsonStr
+     *
+     * @return array
+     */
+    private static function jsonDecode($jsonStr)
+    {
+        $jsonData = json_decode($jsonStr, true);
+        if (null === $jsonData && JSON_ERROR_NONE !== json_last_error()) {
+            throw new ServerErrorException('unable to decode JSON');
+        }
+
+        return $jsonData;
     }
 
     /**

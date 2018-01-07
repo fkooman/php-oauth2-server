@@ -272,13 +272,7 @@ class OAuthServer
         $this->verifyClientCredentials($postData['client_id'], $clientInfo, $authUser, $authPass);
 
         // verify the authorization code
-        $signedCode = Base64UrlSafe::decode($postData['code']);
-        $publicKey = sodium_crypto_sign_publickey($this->keyPair);
-        if (false === $jsonCode = sodium_crypto_sign_open($signedCode, $publicKey)) {
-            throw new InvalidGrantException('"code" has invalid signature');
-        }
-
-        $codeInfo = json_decode($jsonCode, true);
+        $codeInfo = $this->verify($postData['code']);
         if ('authorization_code' !== $codeInfo['type']) {
             throw new InvalidGrantException('"code" is not of type authorization_code');
         }
@@ -352,13 +346,7 @@ class OAuthServer
     private function postTokenRefreshToken(array $postData, $authUser, $authPass)
     {
         // verify the refresh code
-        $signedRefreshToken = Base64::decode($postData['refresh_token']);
-        $publicKey = sodium_crypto_sign_publickey($this->keyPair);
-        if (false === $jsonRefreshToken = sodium_crypto_sign_open($signedRefreshToken, $publicKey)) {
-            throw new InvalidGrantException('"refresh_token" has invalid signature');
-        }
-
-        $refreshTokenInfo = json_decode($jsonRefreshToken, true);
+        $refreshTokenInfo = $this->verify($postData['refresh_token']);
         if ('refresh_token' !== $refreshTokenInfo['type']) {
             throw new InvalidGrantException('"refresh_token" is not of type refresh_token');
         }
@@ -426,7 +414,7 @@ class OAuthServer
         // "auth_key" as a tag for the issued access tokens
         $expiresAt = date_add(clone $this->dateTime, new DateInterval(sprintf('PT%dS', $this->expiresIn)));
 
-        $jsonString = json_encode(
+        return $this->sign(
             [
                 'type' => 'access_token',
                 'auth_key' => $authKey, // to bind it to the authorization
@@ -435,17 +423,6 @@ class OAuthServer
                 'scope' => $scope,
                 'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
             ]
-        );
-
-        if (false === $jsonString) {
-            throw new ServerErrorException('unable to encode JSON');
-        }
-
-        return Base64::encode(
-            sodium_crypto_sign(
-                $jsonString,
-                sodium_crypto_sign_secretkey($this->keyPair)
-            )
         );
     }
 
@@ -459,7 +436,7 @@ class OAuthServer
      */
     private function getRefreshToken($userId, $clientId, $scope, $authKey)
     {
-        $jsonString = json_encode(
+        return $this->sign(
             [
                 'type' => 'refresh_token',
                 'auth_key' => $authKey, // to bind it to the authorization
@@ -467,17 +444,6 @@ class OAuthServer
                 'client_id' => $clientId,
                 'scope' => $scope,
             ]
-        );
-
-        if (false === $jsonString) {
-            throw new ServerErrorException('unable to encode JSON');
-        }
-
-        return Base64::encode(
-            sodium_crypto_sign(
-                $jsonString,
-                sodium_crypto_sign_secretkey($this->keyPair)
-            )
         );
     }
 
@@ -496,7 +462,7 @@ class OAuthServer
         // authorization codes expire after 5 minutes
         $expiresAt = date_add(clone $this->dateTime, new DateInterval('PT5M'));
 
-        $jsonString = json_encode(
+        return $this->sign(
             [
                 'type' => 'authorization_code',
                 'auth_key' => $authKey,
@@ -507,20 +473,6 @@ class OAuthServer
                 'code_challenge' => $codeChallenge,
                 'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
             ]
-        );
-
-        if (false === $jsonString) {
-            throw new ServerErrorException('unable to encode JSON');
-        }
-
-        return rtrim(
-            Base64UrlSafe::encode(
-                sodium_crypto_sign(
-                    $jsonString,
-                    sodium_crypto_sign_secretkey($this->keyPair)
-                )
-            ),
-            '='
         );
     }
 
@@ -642,5 +594,50 @@ class OAuthServer
         }
 
         return $clientInfo;
+    }
+
+    /**
+     * @param array $data
+     *
+     * @return string
+     */
+    private function sign(array $data)
+    {
+        $jsonString = json_encode($data);
+        if (false === $jsonString) {
+            throw new ServerErrorException('unable to encode JSON');
+        }
+
+        return rtrim(
+            Base64UrlSafe::encode(
+                sodium_crypto_sign(
+                    $jsonString,
+                    sodium_crypto_sign_secretkey($this->keyPair)
+                )
+            ),
+            '='
+        );
+    }
+
+    /**
+     * @param string $encodedSignedStr
+     *
+     * @return array
+     */
+    private function verify($encodedSignedStr)
+    {
+        // support old Base64 encoded strings as well...
+        $encodedSignedStr = str_replace(['+', '/'], ['-', '_'], $encodedSignedStr);
+        $signedStr = Base64UrlSafe::decode($encodedSignedStr);
+        $str = sodium_crypto_sign_open($signedStr, sodium_crypto_sign_publickey($this->keyPair));
+        if (false === $str) {
+            throw new InvalidGrantException('invalid signature');
+        }
+        $codeTokenInfo = json_decode($str, true);
+        if (null === $codeTokenInfo && JSON_ERROR_NONE !== json_last_error()) {
+            throw new ServerErrorException('unable to decode JSON');
+        }
+
+        return $codeTokenInfo;
     }
 }

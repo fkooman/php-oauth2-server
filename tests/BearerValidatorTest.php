@@ -87,6 +87,17 @@ class BearerValidatorTest extends TestCase
         $this->assertNull($tokenInfo->getIssuer());
     }
 
+    public function testValidBase64UrlSafeToken()
+    {
+        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
+        $tokenInfo = $this->validator->validate('Bearer znwcwk0WpP1y0qrUSd_J6KToSlXdceGBaliVLhYYjRESQoVZI1aZTX9cRfBfIpOBnMcyTF3Izs9H8918OwiqBHsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAxOjAwOjAwIn0');
+        $this->assertSame('random_1', $tokenInfo->getAuthKey());
+        $this->assertSame('foo', $tokenInfo->getUserId());
+        $this->assertSame('config', $tokenInfo->getScope());
+        $this->assertSame(3600, $tokenInfo->getExpiresIn(new DateTime('2016-01-01')));
+        $this->assertNull($tokenInfo->getIssuer());
+    }
+
     public function testDeletedClient()
     {
         try {

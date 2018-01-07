@@ -1,5 +1,9 @@
 # ChangeLog
 
+## 2.2.0 (...)
+- all issued tokens are also "url safe" now (without padding), Base64 encoded 
+  tokens are still accepted
+
 ## 2.1.0 (2017-11-30)
 - make it possible to disable requiring user approval for authorization of
   trusted clients
