@@ -56,6 +56,9 @@ class OAuthServer
     /** @var \DateInterval */
     private $accessTokenExpiry;
 
+    /** @var \DateInterval */
+    private $refreshTokenExpiry;
+
     /**
      * @param Storage  $storage
      * @param callable $getClientInfo
@@ -69,6 +72,7 @@ class OAuthServer
         $this->random = new Random();
         $this->dateTime = new DateTimeImmutable();
         $this->accessTokenExpiry = new DateInterval('PT1H');    // 1 hour
+        $this->refreshTokenExpiry = new DateInterval('P1Y');    // 1 year
     }
 
     /**
@@ -101,15 +105,19 @@ class OAuthServer
 
     /**
      * @param DateInterval $accessTokenExpiry
+     * @param DateInterval $refreshTokenExpiry
      *
      * @return void
      */
-    public function setExpiry(DateInterval $accessTokenExpiry)
+    public function setExpiry(DateInterval $accessTokenExpiry, DateInterval $refreshTokenExpiry)
     {
         $this->accessTokenExpiry = $accessTokenExpiry;
+        $this->refreshTokenExpiry = $refreshTokenExpiry;
     }
 
     /**
+     * @deprecated
+     *
      * @return string
      */
     public function getPublicKey()
@@ -450,6 +458,8 @@ class OAuthServer
      */
     private function getRefreshToken($userId, $clientId, $scope, $authKey)
     {
+        $expiresAt = $this->dateTime->add($this->refreshTokenExpiry);
+
         return $this->sign(
             [
                 'type' => 'refresh_token',
@@ -457,6 +467,7 @@ class OAuthServer
                 'user_id' => $userId,
                 'client_id' => $clientId,
                 'scope' => $scope,
+                'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
             ]
         );
     }
@@ -515,13 +526,22 @@ class OAuthServer
      */
     private function verifyRefreshTokenInfo(array $postData, array $refreshTokenInfo)
     {
+        // check refresh_token expiry
+        if (array_key_exists('expires_at', $refreshTokenInfo)) {
+            // versions of fkooman/oauth2-server < 2.2.0 did not have expiring
+            // refresh tokens, we accept those without verifying the expiry
+            if ($this->dateTime >= new DateTimeImmutable($refreshTokenInfo['expires_at'])) {
+                throw new InvalidGrantException('"refresh_token" is expired');
+            }
+        }
+
         if ($postData['scope'] !== $refreshTokenInfo['scope']) {
             throw new InvalidRequestException('unexpected "scope"');
         }
 
         // make sure the authorization still exists
         if (!$this->storage->hasAuthorization($refreshTokenInfo['auth_key'])) {
-            throw new InvalidGrantException('refresh_token is no longer authorized');
+            throw new InvalidGrantException('"refresh_token" is no longer authorized');
         }
     }
 

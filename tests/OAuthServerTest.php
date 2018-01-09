@@ -213,7 +213,7 @@ class OAuthServerTest extends TestCase
         $this->assertSame(
             [
                 'access_token' => 'znwcwk0WpP1y0qrUSd_J6KToSlXdceGBaliVLhYYjRESQoVZI1aZTX9cRfBfIpOBnMcyTF3Izs9H8918OwiqBHsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxIDAxOjAwOjAwIn0',
-                'refresh_token' => 'wi5vLrEtTVmTFfI-lLCfVVg3b6punZLQs6-N_8Q67ybHLEqdDzxXYjD3FePW3KmMW0NhVqMOFge52h8U30lQC3sidHlwZSI6InJlZnJlc2hfdG9rZW4iLCJhdXRoX2tleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50Iiwic2NvcGUiOiJjb25maWcifQ',
+                'refresh_token' => '70aldQhpAKU_cldItiItk7Y-LknAMce6kq9ECGiBFQ5zEne0YC0hOBjjONAFuDDE2dH9miMTA8D36Dl-dNWLA3sidHlwZSI6InJlZnJlc2hfdG9rZW4iLCJhdXRoX2tleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNy0wMS0wMSAwMDowMDowMCJ9',
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
@@ -237,7 +237,7 @@ class OAuthServerTest extends TestCase
         $this->assertSame(
             [
                 'access_token' => 'A5G2q7GegYUXU4zP6PwnMqMRbTKTFuq78KxEUxZx20iogM_5Wiv2LnoKWk-3T7VJoc7fdxeDJG9HQnKns7ynCXsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQtc2VjcmV0Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9',
-                'refresh_token' => 'uMCJapjl8ZBWIeid8fSgA6urOwNZMGw7GBHz2lP1g9BrIM1Epkui0NiDQ_Un4dq8h7HoCGyhUBJ326zdIcJ2AnsidHlwZSI6InJlZnJlc2hfdG9rZW4iLCJhdXRoX2tleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50LXNlY3JldCIsInNjb3BlIjoiY29uZmlnIn0',
+                'refresh_token' => 'C-hFiA6eqQsik8HTa5vAxTTDnMgTHM76mecS9CVI59yLMYiHLAthY8D_2wNQrMLe8VRG6O56xP67t6whspTdCHsidHlwZSI6InJlZnJlc2hfdG9rZW4iLCJhdXRoX2tleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50LXNlY3JldCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTctMDEtMDEgMDA6MDA6MDAifQ',
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
@@ -368,8 +368,10 @@ class OAuthServerTest extends TestCase
         }
     }
 
-    public function testRefreshToken()
+    public function testRefreshTokenWithoutExpiry()
     {
+        // this is an "old" refresh_token that did not yet contain "expires_at"
+        //
         // the authorization MUST exist for the refresh token to work
         $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
         $tokenResponse = $this->server->postToken(
@@ -389,6 +391,47 @@ class OAuthServerTest extends TestCase
             ],
             json_decode($tokenResponse->getBody(), true)
         );
+    }
+
+    public function testNonExpiredRefreshToken()
+    {
+        $this->storage->storeAuthorization('foo', 'code-client-secret', 'config', 'random_1');
+        $tokenResponse = $this->server->postToken(
+            [
+                'grant_type' => 'refresh_token',
+                'refresh_token' => 'C-hFiA6eqQsik8HTa5vAxTTDnMgTHM76mecS9CVI59yLMYiHLAthY8D_2wNQrMLe8VRG6O56xP67t6whspTdCHsidHlwZSI6InJlZnJlc2hfdG9rZW4iLCJhdXRoX2tleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50LXNlY3JldCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTctMDEtMDEgMDA6MDA6MDAifQ',
+                'scope' => 'config',
+            ],
+            'code-client-secret',
+            '123456'
+        );
+        $this->assertSame(
+            [
+                'access_token' => 'A5G2q7GegYUXU4zP6PwnMqMRbTKTFuq78KxEUxZx20iogM_5Wiv2LnoKWk-3T7VJoc7fdxeDJG9HQnKns7ynCXsidHlwZSI6ImFjY2Vzc190b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQtc2VjcmV0Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMTowMDowMCJ9',
+                'token_type' => 'bearer',
+                'expires_in' => 3600,
+            ],
+            json_decode($tokenResponse->getBody(), true)
+        );
+    }
+
+    public function testExpiredRefreshToken()
+    {
+        try {
+            $this->server->setDateTime(new DateTime('2019-01-01'));
+            $this->storage->storeAuthorization('foo', 'code-client-secret', 'config', 'random_1');
+            $tokenResponse = $this->server->postToken(
+                [
+                    'grant_type' => 'refresh_token',
+                    'refresh_token' => 'C-hFiA6eqQsik8HTa5vAxTTDnMgTHM76mecS9CVI59yLMYiHLAthY8D_2wNQrMLe8VRG6O56xP67t6whspTdCHsidHlwZSI6InJlZnJlc2hfdG9rZW4iLCJhdXRoX2tleSI6InJhbmRvbV8xIiwidXNlcl9pZCI6ImZvbyIsImNsaWVudF9pZCI6ImNvZGUtY2xpZW50LXNlY3JldCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTctMDEtMDEgMDA6MDA6MDAifQ',
+                    'scope' => 'config',
+                ],
+                'code-client-secret',
+                '123456'
+            );
+        } catch (InvalidGrantException $e) {
+            $this->assertSame('"refresh_token" is expired', $e->getDescription());
+        }
     }
 
     public function testLoopbackClient()
