@@ -3,8 +3,6 @@
 ## 2.2.0 (...)
 - all issued tokens are also "URL safe" now (without padding), Base64 encoded 
   tokens issued in previous versions are still valid
-- use `DateTimeImmutable` instead of `DateTime` to simplify code (no need to 
-  `clone`)
 - introduce `OAuthServer::setExpiry` to allow specifying `DateInterval`
 - deprecate `OAuthServer::setExpiresIn`
 - allow specifying expiry for refresh tokens through `OAuthServer::setExpiry` 

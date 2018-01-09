@@ -26,7 +26,6 @@ namespace fkooman\OAuth\Server;
 
 use DateInterval;
 use DateTime;
-use DateTimeImmutable;
 use fkooman\OAuth\Server\Exception\InvalidClientException;
 use fkooman\OAuth\Server\Exception\InvalidGrantException;
 use fkooman\OAuth\Server\Exception\InvalidRequestException;
@@ -50,7 +49,7 @@ class OAuthServer
     /** @var RandomInterface */
     private $random;
 
-    /** @var \DateTimeImmutable */
+    /** @var \DateTime */
     private $dateTime;
 
     /** @var \DateInterval */
@@ -70,7 +69,7 @@ class OAuthServer
         $this->getClientInfo = $getClientInfo;
         $this->keyPair = Base64::decode($keyPair);
         $this->random = new Random();
-        $this->dateTime = new DateTimeImmutable();
+        $this->dateTime = new DateTime();
         $this->accessTokenExpiry = new DateInterval('PT1H');    // 1 hour
         $this->refreshTokenExpiry = new DateInterval('P1Y');    // 1 year
     }
@@ -88,7 +87,7 @@ class OAuthServer
      */
     public function setDateTime(DateTime $dateTime)
     {
-        $this->dateTime = DateTimeImmutable::createFromMutable($dateTime);
+        $this->dateTime = $dateTime;
     }
 
     /**
@@ -300,7 +299,7 @@ class OAuthServer
         }
 
         // check authorization code expiry
-        if ($this->dateTime >= new DateTimeImmutable($codeInfo['expires_at'])) {
+        if ($this->dateTime >= new DateTime($codeInfo['expires_at'])) {
             throw new InvalidGrantException('"authorization_code" is expired');
         }
 
@@ -434,7 +433,7 @@ class OAuthServer
         // for prevention of replays of authorization codes and the revocation
         // of access tokens when an authorization code is replayed, we use the
         // "auth_key" as a tag for the issued access tokens
-        $expiresAt = $this->dateTime->add($this->accessTokenExpiry);
+        $expiresAt = date_add(clone $this->dateTime, $this->accessTokenExpiry);
 
         return $this->sign(
             [
@@ -458,7 +457,7 @@ class OAuthServer
      */
     private function getRefreshToken($userId, $clientId, $scope, $authKey)
     {
-        $expiresAt = $this->dateTime->add($this->refreshTokenExpiry);
+        $expiresAt = date_add(clone $this->dateTime, $this->refreshTokenExpiry);
 
         return $this->sign(
             [
@@ -485,7 +484,7 @@ class OAuthServer
     private function getAuthorizationCode($userId, $clientId, $scope, $redirectUri, $authKey, $codeChallenge)
     {
         // authorization codes expire after 5 minutes
-        $expiresAt = $this->dateTime->add(new DateInterval('PT5M'));
+        $expiresAt = date_add($this->dateTime, new DateInterval('PT5M'));
 
         return $this->sign(
             [
@@ -530,7 +529,7 @@ class OAuthServer
         if (array_key_exists('expires_at', $refreshTokenInfo)) {
             // versions of fkooman/oauth2-server < 2.2.0 did not have expiring
             // refresh tokens, we accept those without verifying the expiry
-            if ($this->dateTime >= new DateTimeImmutable($refreshTokenInfo['expires_at'])) {
+            if ($this->dateTime >= new DateTime($refreshTokenInfo['expires_at'])) {
                 throw new InvalidGrantException('"refresh_token" is expired');
             }
         }
@@ -682,6 +681,6 @@ class OAuthServer
      */
     private function toExpiresIn(DateInterval $dateInterval)
     {
-        return $this->dateTime->add($dateInterval)->getTimestamp() - $this->dateTime->getTimestamp();
+        return date_add(clone $this->dateTime, $dateInterval)->getTimestamp() - $this->dateTime->getTimestamp();
     }
 }
