@@ -26,6 +26,7 @@ namespace fkooman\OAuth\Server;
 
 use DateInterval;
 use DateTime;
+use DateTimeImmutable;
 use fkooman\OAuth\Server\Exception\InvalidClientException;
 use fkooman\OAuth\Server\Exception\InvalidGrantException;
 use fkooman\OAuth\Server\Exception\InvalidRequestException;
@@ -49,11 +50,11 @@ class OAuthServer
     /** @var RandomInterface */
     private $random;
 
-    /** @var \DateTime */
+    /** @var \DateTimeImmutable */
     private $dateTime;
 
-    /** @var int */
-    private $expiresIn = 3600;
+    /** @var \DateInterval */
+    private $accessTokenExpiry;
 
     /**
      * @param Storage  $storage
@@ -66,7 +67,8 @@ class OAuthServer
         $this->getClientInfo = $getClientInfo;
         $this->keyPair = Base64::decode($keyPair);
         $this->random = new Random();
-        $this->dateTime = new DateTime();
+        $this->dateTime = new DateTimeImmutable();
+        $this->accessTokenExpiry = new DateInterval('PT1H');    // 1 hour
     }
 
     /**
@@ -82,17 +84,29 @@ class OAuthServer
      */
     public function setDateTime(DateTime $dateTime)
     {
-        $this->dateTime = $dateTime;
+        $this->dateTime = DateTimeImmutable::createFromMutable($dateTime);
     }
 
     /**
      * @param int $expiresIn the time (in seconds) an access token will be valid
      *
+     * @deprecated use setExpiry
+     *
      * @return void
      */
     public function setExpiresIn($expiresIn)
     {
-        $this->expiresIn = $expiresIn;
+        $this->accessTokenExpiry = new DateInterval(sprintf('PT%dS', $expiresIn));
+    }
+
+    /**
+     * @param DateInterval $accessTokenExpiry
+     *
+     * @return void
+     */
+    public function setExpiry(DateInterval $accessTokenExpiry)
+    {
+        $this->accessTokenExpiry = $accessTokenExpiry;
     }
 
     /**
@@ -278,7 +292,7 @@ class OAuthServer
         }
 
         // check authorization code expiry
-        if ($this->dateTime >= new DateTime($codeInfo['expires_at'])) {
+        if ($this->dateTime >= new DateTimeImmutable($codeInfo['expires_at'])) {
             throw new InvalidGrantException('"authorization_code" is expired');
         }
 
@@ -322,7 +336,7 @@ class OAuthServer
                 'access_token' => $accessToken,
                 'refresh_token' => $refreshToken,
                 'token_type' => 'bearer',
-                'expires_in' => $this->expiresIn,
+                'expires_in' => $this->toExpiresIn($this->accessTokenExpiry),
             ],
             // The authorization server MUST include the HTTP "Cache-Control"
             // response header field [RFC2616] with a value of "no-store" in any
@@ -369,7 +383,7 @@ class OAuthServer
             [
                 'access_token' => $accessToken,
                 'token_type' => 'bearer',
-                'expires_in' => $this->expiresIn,
+                'expires_in' => $this->toExpiresIn($this->accessTokenExpiry),
             ],
             // The authorization server MUST include the HTTP "Cache-Control"
             // response header field [RFC2616] with a value of "no-store" in any
@@ -412,7 +426,7 @@ class OAuthServer
         // for prevention of replays of authorization codes and the revocation
         // of access tokens when an authorization code is replayed, we use the
         // "auth_key" as a tag for the issued access tokens
-        $expiresAt = date_add(clone $this->dateTime, new DateInterval(sprintf('PT%dS', $this->expiresIn)));
+        $expiresAt = $this->dateTime->add($this->accessTokenExpiry);
 
         return $this->sign(
             [
@@ -460,7 +474,7 @@ class OAuthServer
     private function getAuthorizationCode($userId, $clientId, $scope, $redirectUri, $authKey, $codeChallenge)
     {
         // authorization codes expire after 5 minutes
-        $expiresAt = date_add(clone $this->dateTime, new DateInterval('PT5M'));
+        $expiresAt = $this->dateTime->add(new DateInterval('PT5M'));
 
         return $this->sign(
             [
@@ -639,5 +653,15 @@ class OAuthServer
         }
 
         return $codeTokenInfo;
+    }
+
+    /**
+     * @param DateInterval $dateInterval
+     *
+     * @return int
+     */
+    private function toExpiresIn(DateInterval $dateInterval)
+    {
+        return $this->dateTime->add($dateInterval)->getTimestamp() - $this->dateTime->getTimestamp();
     }
 }
