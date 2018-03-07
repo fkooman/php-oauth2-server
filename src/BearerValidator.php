@@ -81,7 +81,7 @@ class BearerValidator
             throw new InvalidTokenException('not an access token');
         }
 
-        return new TokenInfo(
+        $tokenInfo = new TokenInfo(
             $listOfClaims['auth_key'],
             $listOfClaims['user_id'],
             $listOfClaims['client_id'],
