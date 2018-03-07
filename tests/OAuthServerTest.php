@@ -338,7 +338,7 @@ class OAuthServerTest extends TestCase
             );
             $this->fail();
         } catch (InvalidGrantException $e) {
-            $this->assertSame('"authorization_code" is expired', $e->getDescription());
+            $this->assertSame('code or token expired', $e->getDescription());
         }
     }
 
@@ -424,7 +424,7 @@ class OAuthServerTest extends TestCase
                 '123456'
             );
         } catch (InvalidGrantException $e) {
-            $this->assertSame('"refresh_token" is expired', $e->getDescription());
+            $this->assertSame('code or token expired', $e->getDescription());
         }
     }
 

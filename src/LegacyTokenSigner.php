@@ -101,7 +101,7 @@ class LegacyTokenSigner implements TokenSignerInterface
             // versions of fkooman/oauth2-server < 2.2.0 did not have expiring
             // refresh tokens, we accept those without verifying the expiry
             if ($this->dateTime >= new DateTime($codeTokenInfo['expires_at'])) {
-                throw new InvalidGrantException('code/token expired');
+                throw new InvalidGrantException('code or token expired');
             }
         }
 

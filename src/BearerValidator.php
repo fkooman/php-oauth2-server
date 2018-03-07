@@ -75,7 +75,19 @@ class BearerValidator
         self::validateBearerCredentials($authorizationHeader);
         $providedToken = substr($authorizationHeader, 7);
         $listOfClaims = $this->tokenSigner->parse($providedToken);
-        $tokenInfo = $this->validateTokenInfo($listOfClaims);
+
+        // type MUST be "access_token"
+        if ('access_token' !== $listOfClaims['type']) {
+            throw new InvalidTokenException('not an access token');
+        }
+
+        return new TokenInfo(
+            $listOfClaims['auth_key'],
+            $listOfClaims['user_id'],
+            $listOfClaims['client_id'],
+            $listOfClaims['scope'],
+            new DateTime() // FIXME XXX what to use here? Do we really need to expose this?!
+        );
 
         // as it is signed by us, the client MUST still be there
         if (false === call_user_func($this->getClientInfo, $tokenInfo->getClientId())) {
@@ -129,32 +141,6 @@ class BearerValidator
         if (!$hasAny) {
             throw new InsufficientScopeException(sprintf('not any of scopes "%s" granted', implode(' ', $requiredScopeList)));
         }
-    }
-
-    /**
-     * @param array $tokenInfo
-     *
-     * @return TokenInfo
-     */
-    private function validateTokenInfo(array $tokenInfo)
-    {
-        // type MUST be "access_token"
-        if ('access_token' !== $tokenInfo['type']) {
-            throw new InvalidTokenException('not an access token');
-        }
-
-        $expiresAt = new DateTime($tokenInfo['expires_at']);
-        if ($this->dateTime >= $expiresAt) {
-            throw new InvalidTokenException('token expired');
-        }
-
-        return new TokenInfo(
-            $tokenInfo['auth_key'],
-            $tokenInfo['user_id'],
-            $tokenInfo['client_id'],
-            $tokenInfo['scope'],
-            $expiresAt
-        );
     }
 
     /**
