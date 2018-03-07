@@ -29,6 +29,7 @@ use DateTime;
 use fkooman\OAuth\Server\Exception\InvalidClientException;
 use fkooman\OAuth\Server\Exception\InvalidGrantException;
 use fkooman\OAuth\Server\Exception\InvalidRequestException;
+use fkooman\OAuth\Server\Exception\InvalidTokenException;
 use fkooman\OAuth\Server\Http\JsonResponse;
 use fkooman\OAuth\Server\Http\RedirectResponse;
 use ParagonIE\ConstantTime\Base64UrlSafe;
@@ -225,6 +226,25 @@ class OAuthServer
     }
 
     /**
+     * @param string $requiredType
+     * @param string $providedType
+     *
+     * @return void
+     */
+    public static function requireType($requiredType, $providedType)
+    {
+        // make sure we have the required type
+        if ($requiredType !== $providedType) {
+            $errorMsg = sprintf('expected "%s", got "%s"', $requiredType, $providedType);
+            if ('access_token' === $requiredType) {
+                throw new InvalidTokenException($errorMsg);
+            }
+
+            throw new InvalidGrantException($errorMsg);
+        }
+    }
+
+    /**
      * Validate the request to the "/authorize" endpoint.
      *
      * @param array $getData
@@ -261,11 +281,8 @@ class OAuthServer
         $this->verifyClientCredentials($postData['client_id'], $clientInfo, $authUser, $authPass);
 
         // verify the authorization code
-        $codeInfo = $this->tokenSigner->parse($postData['code']);
-//        var_dump($codeInfo);
-        if ('authorization_code' !== $codeInfo['type']) {
-            throw new InvalidGrantException('"code" is not of type authorization_code');
-        }
+        $codeInfo = $this->tokenSigner->parse($postData['code'], 'authorization_code');
+        self::requireType('authorization_code', $codeInfo['type']);
 
         // parameters in POST body need to match the parameters stored with
         // the code
@@ -331,10 +348,8 @@ class OAuthServer
     private function postTokenRefreshToken(array $postData, $authUser, $authPass)
     {
         // verify the refresh code
-        $refreshTokenInfo = $this->tokenSigner->parse($postData['refresh_token']);
-        if ('refresh_token' !== $refreshTokenInfo['type']) {
-            throw new InvalidGrantException('"refresh_token" is not of type refresh_token');
-        }
+        $refreshTokenInfo = $this->tokenSigner->parse($postData['refresh_token'], 'refresh_token');
+        self::requireType('refresh_token', $refreshTokenInfo['type']);
 
         $clientInfo = $this->getClient($refreshTokenInfo['client_id']);
         $this->verifyClientCredentials($refreshTokenInfo['client_id'], $clientInfo, $authUser, $authPass);

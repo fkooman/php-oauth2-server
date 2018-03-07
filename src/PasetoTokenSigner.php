@@ -62,10 +62,13 @@ class PasetoTokenSigner implements TokenSignerInterface
 
     /**
      * @param string $providedToken
+     * @param string $requireType
+     *
+     * @throws \fkooman\OAuth\Server\Exception\InvalidGrantException|\fkooman\OAuth\Server\Exception\InvalidTokenException
      *
      * @return array
      */
-    public function parse($providedToken)
+    public function parse($providedToken, $requireType)
     {
         $parser = Parser::getPublic(
             $this->secretKey->getPublicKey(),
@@ -75,7 +78,10 @@ class PasetoTokenSigner implements TokenSignerInterface
         try {
             $token = $parser->parse($providedToken);
 
-            return $token->getClaims();
+            $listOfClaims = $token->getClaims();
+            unset($listOfClaims['exp']);
+
+            return $listOfClaims;
         } catch (PasetoException $ex) {
             // XXX actually do something useful here, sync with other impls
             // THROW something?

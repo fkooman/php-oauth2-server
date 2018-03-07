@@ -38,10 +38,11 @@ interface TokenSignerInterface
 
     /**
      * @param string $providedToken
+     * @param string $requireType
      *
-     * @throws \fkooman\OAuth\Server\Exception\InvalidGrantException
+     * @throws \fkooman\OAuth\Server\Exception\InvalidGrantException|\fkooman\OAuth\Server\Exception\InvalidTokenException
      *
      * @return array
      */
-    public function parse($providedToken);
+    public function parse($providedToken, $requireType);
 }

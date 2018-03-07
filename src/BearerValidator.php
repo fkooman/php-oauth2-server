@@ -74,19 +74,14 @@ class BearerValidator
     {
         self::validateBearerCredentials($authorizationHeader);
         $providedToken = substr($authorizationHeader, 7);
-        $listOfClaims = $this->tokenSigner->parse($providedToken);
-
-        // type MUST be "access_token"
-        if ('access_token' !== $listOfClaims['type']) {
-            throw new InvalidTokenException('not an access token');
-        }
+        $listOfClaims = $this->tokenSigner->parse($providedToken, 'access_token');
+        OAuthServer::requireType('access_token', $listOfClaims['type']);
 
         $tokenInfo = new TokenInfo(
             $listOfClaims['auth_key'],
             $listOfClaims['user_id'],
             $listOfClaims['client_id'],
-            $listOfClaims['scope'],
-            new DateTime() // FIXME XXX what to use here? Do we really need to expose this?!
+            $listOfClaims['scope']
         );
 
         // as it is signed by us, the client MUST still be there

@@ -24,8 +24,6 @@
 
 namespace fkooman\OAuth\Server;
 
-use DateTime;
-
 class TokenInfo
 {
     /** @var string */
@@ -40,26 +38,21 @@ class TokenInfo
     /** @var string */
     private $scope;
 
-    /** @var \DateTime */
-    private $expiresAt;
-
     /** @var string|null */
     private $tokenIssuer = null;
 
     /**
-     * @param string    $authKey
-     * @param string    $userId
-     * @param string    $clientId
-     * @param string    $scope
-     * @param \DateTime $expiresAt
+     * @param string $authKey
+     * @param string $userId
+     * @param string $clientId
+     * @param string $scope
      */
-    public function __construct($authKey, $userId, $clientId, $scope, DateTime $expiresAt)
+    public function __construct($authKey, $userId, $clientId, $scope)
     {
         $this->authKey = $authKey;
         $this->userId = $userId;
         $this->clientId = $clientId;
         $this->scope = $scope;
-        $this->expiresAt = $expiresAt;
     }
 
     /**
@@ -102,16 +95,6 @@ class TokenInfo
     public function getScope()
     {
         return $this->scope;
-    }
-
-    /**
-     * @param \DateTime $dateTime
-     *
-     * @return int
-     */
-    public function getExpiresIn(DateTime $dateTime)
-    {
-        return $this->expiresAt->getTimestamp() - $dateTime->getTimestamp();
     }
 
     /**

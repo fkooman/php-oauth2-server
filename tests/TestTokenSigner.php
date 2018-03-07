@@ -26,6 +26,7 @@ namespace fkooman\OAuth\Server\Tests;
 
 use DateTime;
 use fkooman\OAuth\Server\Exception\InvalidGrantException;
+use fkooman\OAuth\Server\Exception\InvalidTokenException;
 use fkooman\OAuth\Server\TokenSignerInterface;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 
@@ -59,23 +60,29 @@ class TestTokenSigner implements TokenSignerInterface
 
     /**
      * @param string $providedToken
+     * @param string $requireType
      *
-     * @throws \fkooman\OAuth\Server\Exception\InvalidGrantException
+     * @throws \fkooman\OAuth\Server\Exception\InvalidGrantException|\fkooman\OAuth\Server\Exception\InvalidTokenException
      *
      * @return array
      */
-    public function parse($providedToken)
+    public function parse($providedToken, $requireType)
     {
         $parsedToken = json_decode(
             Base64UrlSafe::decode($providedToken),
             true
         );
 
+        // verify it is not expired
         if (array_key_exists('expires_at', $parsedToken)) {
             // versions of fkooman/oauth2-server < 2.2.0 did not have expiring
             // refresh tokens, we accept those without verifying the expiry
             if ($this->dateTime >= new DateTime($parsedToken['expires_at'])) {
-                throw new InvalidGrantException('code or token expired');
+                if ('access_token' === $requireType) {
+                    throw new InvalidTokenException('"access_token" expired');
+                }
+
+                throw new InvalidGrantException(sprintf('"%s" expired', $requireType));
             }
         }
 

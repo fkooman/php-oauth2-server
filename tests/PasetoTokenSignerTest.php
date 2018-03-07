@@ -48,12 +48,13 @@ class PasetoTokenSignerTest extends TestCase
     public function testSign()
     {
         $this->assertSame(
-            ['foo' => 'bar'],
+            ['foo' => 'bar', 'type' => 'access_token'],
             $this->tokenSigner->parse(
                 $this->tokenSigner->sign(
-                    ['foo' => 'bar'],
+                    ['foo' => 'bar', 'type' => 'access_token'],
                     (new DateTime())->add(new DateInterval('PT1H'))
-                )
+                ),
+                'access_token'
             )
         );
     }
