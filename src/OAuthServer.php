@@ -29,10 +29,8 @@ use DateTime;
 use fkooman\OAuth\Server\Exception\InvalidClientException;
 use fkooman\OAuth\Server\Exception\InvalidGrantException;
 use fkooman\OAuth\Server\Exception\InvalidRequestException;
-use fkooman\OAuth\Server\Exception\ServerErrorException;
-use fkooman\OAuth\Server\Http\HtmlResponse;
 use fkooman\OAuth\Server\Http\JsonResponse;
-use ParagonIE\ConstantTime\Base64;
+use fkooman\OAuth\Server\Http\RedirectResponse;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 
 class OAuthServer
@@ -43,8 +41,8 @@ class OAuthServer
     /** @var callable */
     private $getClientInfo;
 
-    /** @var string */
-    private $keyPair;
+    /** @var TokenSignerInterface */
+    private $tokenSigner;
 
     /** @var RandomInterface */
     private $random;
@@ -59,15 +57,15 @@ class OAuthServer
     private $refreshTokenExpiry;
 
     /**
-     * @param Storage  $storage
-     * @param callable $getClientInfo
-     * @param string   $keyPair       Base64 encoded output of crypto_sign_keypair()
+     * @param Storage              $storage
+     * @param callable             $getClientInfo
+     * @param TokenSignerInterface $tokenSigner
      */
-    public function __construct(Storage $storage, callable $getClientInfo, $keyPair)
+    public function __construct(Storage $storage, callable $getClientInfo, TokenSignerInterface $tokenSigner)
     {
         $this->storage = $storage;
         $this->getClientInfo = $getClientInfo;
-        $this->keyPair = Base64::decode($keyPair);
+        $this->tokenSigner = $tokenSigner;
         $this->random = new Random();
         $this->dateTime = new DateTime();
         $this->accessTokenExpiry = new DateInterval('PT1H');    // 1 hour
@@ -91,18 +89,6 @@ class OAuthServer
     }
 
     /**
-     * @param int $expiresIn the time (in seconds) an access token will be valid
-     *
-     * @deprecated use setExpiry
-     *
-     * @return void
-     */
-    public function setExpiresIn($expiresIn)
-    {
-        $this->accessTokenExpiry = new DateInterval(sprintf('PT%dS', $expiresIn));
-    }
-
-    /**
      * @param DateInterval $accessTokenExpiry
      * @param DateInterval $refreshTokenExpiry
      *
@@ -112,16 +98,6 @@ class OAuthServer
     {
         $this->accessTokenExpiry = $accessTokenExpiry;
         $this->refreshTokenExpiry = $refreshTokenExpiry;
-    }
-
-    /**
-     * @deprecated
-     *
-     * @return string
-     */
-    public function getPublicKey()
-    {
-        return Base64::encode(sodium_crypto_sign_publickey($this->keyPair));
     }
 
     /**
@@ -174,7 +150,7 @@ class OAuthServer
      * @param array  $postData
      * @param string $userId
      *
-     * @return HtmlResponse
+     * @return \fkooman\OAuth\Server\Http\RedirectResponse
      */
     public function postAuthorize(array $getData, array $postData, $userId)
     {
@@ -183,18 +159,14 @@ class OAuthServer
 
         if ('no' === $postData['approve']) {
             // user did not approve, tell OAuth client
-            return new HtmlResponse(
-                '',
-                [
-                    'Location' => self::prepareRedirectUri(
-                        $getData['redirect_uri'],
-                        [
-                            'error' => 'access_denied',
-                            'state' => $getData['state'],
-                        ]
-                    ),
-                ],
-                302
+            return new RedirectResponse(
+                self::prepareRedirectUri(
+                    $getData['redirect_uri'],
+                    [
+                        'error' => 'access_denied',
+                        'state' => $getData['state'],
+                    ]
+                )
             );
         }
 
@@ -218,18 +190,14 @@ class OAuthServer
             array_key_exists('code_challenge', $getData) ? $getData['code_challenge'] : null
         );
 
-        return new HtmlResponse(
-            '',
-            [
-                'Location' => self::prepareRedirectUri(
-                    $getData['redirect_uri'],
-                    [
-                        'code' => $authorizationCode,
-                        'state' => $getData['state'],
-                    ]
-                ),
-            ],
-            302
+        return new RedirectResponse(
+            self::prepareRedirectUri(
+                $getData['redirect_uri'],
+                [
+                    'code' => $authorizationCode,
+                    'state' => $getData['state'],
+                ]
+            )
         );
     }
 
@@ -293,14 +261,10 @@ class OAuthServer
         $this->verifyClientCredentials($postData['client_id'], $clientInfo, $authUser, $authPass);
 
         // verify the authorization code
-        $codeInfo = $this->verify($postData['code']);
+        $codeInfo = $this->tokenSigner->parse($postData['code']);
+//        var_dump($codeInfo);
         if ('authorization_code' !== $codeInfo['type']) {
             throw new InvalidGrantException('"code" is not of type authorization_code');
-        }
-
-        // check authorization code expiry
-        if ($this->dateTime >= new DateTime($codeInfo['expires_at'])) {
-            throw new InvalidGrantException('"authorization_code" is expired');
         }
 
         // parameters in POST body need to match the parameters stored with
@@ -367,7 +331,7 @@ class OAuthServer
     private function postTokenRefreshToken(array $postData, $authUser, $authPass)
     {
         // verify the refresh code
-        $refreshTokenInfo = $this->verify($postData['refresh_token']);
+        $refreshTokenInfo = $this->tokenSigner->parse($postData['refresh_token']);
         if ('refresh_token' !== $refreshTokenInfo['type']) {
             throw new InvalidGrantException('"refresh_token" is not of type refresh_token');
         }
@@ -435,15 +399,15 @@ class OAuthServer
         // "auth_key" as a tag for the issued access tokens
         $expiresAt = date_add(clone $this->dateTime, $this->accessTokenExpiry);
 
-        return $this->sign(
+        return $this->tokenSigner->sign(
             [
                 'type' => 'access_token',
                 'auth_key' => $authKey, // to bind it to the authorization
                 'user_id' => $userId,
                 'client_id' => $clientId,
                 'scope' => $scope,
-                'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
-            ]
+            ],
+            $expiresAt
         );
     }
 
@@ -459,15 +423,15 @@ class OAuthServer
     {
         $expiresAt = date_add(clone $this->dateTime, $this->refreshTokenExpiry);
 
-        return $this->sign(
+        return $this->tokenSigner->sign(
             [
                 'type' => 'refresh_token',
                 'auth_key' => $authKey, // to bind it to the authorization
                 'user_id' => $userId,
                 'client_id' => $clientId,
                 'scope' => $scope,
-                'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
-            ]
+            ],
+            $expiresAt
         );
     }
 
@@ -486,7 +450,7 @@ class OAuthServer
         // authorization codes expire after 5 minutes
         $expiresAt = date_add($this->dateTime, new DateInterval('PT5M'));
 
-        return $this->sign(
+        return $this->tokenSigner->sign(
             [
                 'type' => 'authorization_code',
                 'auth_key' => $authKey,
@@ -495,8 +459,8 @@ class OAuthServer
                 'scope' => $scope,
                 'redirect_uri' => $redirectUri,
                 'code_challenge' => $codeChallenge,
-                'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
-            ]
+            ],
+            $expiresAt
         );
     }
 
@@ -525,15 +489,8 @@ class OAuthServer
      */
     private function verifyRefreshTokenInfo(array $postData, array $refreshTokenInfo)
     {
-        // check refresh_token expiry
-        if (array_key_exists('expires_at', $refreshTokenInfo)) {
-            // versions of fkooman/oauth2-server < 2.2.0 did not have expiring
-            // refresh tokens, we accept those without verifying the expiry
-            if ($this->dateTime >= new DateTime($refreshTokenInfo['expires_at'])) {
-                throw new InvalidGrantException('"refresh_token" is expired');
-            }
-        }
-
+        // XXX should we check if of type 'refresh_token' ??
+        // XXX it is done somewhere... but actually correct?!
         if ($postData['scope'] !== $refreshTokenInfo['scope']) {
             throw new InvalidRequestException('unexpected "scope"');
         }
@@ -627,51 +584,6 @@ class OAuthServer
         }
 
         return $clientInfo;
-    }
-
-    /**
-     * @param array $data
-     *
-     * @return string
-     */
-    private function sign(array $data)
-    {
-        $jsonString = json_encode($data);
-        if (false === $jsonString) {
-            throw new ServerErrorException('unable to encode JSON');
-        }
-
-        return rtrim(
-            Base64UrlSafe::encode(
-                sodium_crypto_sign(
-                    $jsonString,
-                    sodium_crypto_sign_secretkey($this->keyPair)
-                )
-            ),
-            '='
-        );
-    }
-
-    /**
-     * @param string $encodedSignedStr
-     *
-     * @return array
-     */
-    private function verify($encodedSignedStr)
-    {
-        // support old Base64 encoded strings as well...
-        $encodedSignedStr = str_replace(['+', '/'], ['-', '_'], $encodedSignedStr);
-        $signedStr = Base64UrlSafe::decode($encodedSignedStr);
-        $str = sodium_crypto_sign_open($signedStr, sodium_crypto_sign_publickey($this->keyPair));
-        if (false === $str) {
-            throw new InvalidGrantException('invalid signature');
-        }
-        $codeTokenInfo = json_decode($str, true);
-        if (null === $codeTokenInfo && JSON_ERROR_NONE !== json_last_error()) {
-            throw new ServerErrorException('unable to decode JSON');
-        }
-
-        return $codeTokenInfo;
     }
 
     /**

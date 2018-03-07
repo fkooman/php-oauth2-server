@@ -27,10 +27,6 @@ namespace fkooman\OAuth\Server;
 use DateTime;
 use fkooman\OAuth\Server\Exception\InsufficientScopeException;
 use fkooman\OAuth\Server\Exception\InvalidTokenException;
-use fkooman\OAuth\Server\Exception\ServerErrorException;
-use ParagonIE\ConstantTime\Base64;
-use ParagonIE\ConstantTime\Base64UrlSafe;
-use RangeException;
 
 class BearerValidator
 {
@@ -40,25 +36,22 @@ class BearerValidator
     /** @var callable */
     private $getClientInfo;
 
-    /** @var string */
-    private $publicKey;
-
-    /** @var array */
-    private $foreignKeys = [];
+    /** @var TokenSignerInterface */
+    private $tokenSigner;
 
     /** @var \DateTime */
     private $dateTime;
 
     /**
-     * @param Storage  $storage
-     * @param callable $getClientInfo
-     * @param string   $keyPair       the Base64 encoded keyPair
+     * @param Storage              $storage
+     * @param callable             $getClientInfo
+     * @param TokenSignerInterface $tokenSigner
      */
-    public function __construct(Storage $storage, callable $getClientInfo, $keyPair)
+    public function __construct(Storage $storage, callable $getClientInfo, TokenSignerInterface $tokenSigner)
     {
         $this->storage = $storage;
         $this->getClientInfo = $getClientInfo;
-        $this->publicKey = sodium_crypto_sign_publickey(Base64::decode($keyPair));
+        $this->tokenSigner = $tokenSigner;
         $this->dateTime = new DateTime();
     }
 
@@ -73,25 +66,6 @@ class BearerValidator
     }
 
     /**
-     * Set additional public keys to use for access_token validation. These are
-     * _NOT_ validated in the database.
-     *
-     * @param array $foreignKeys the Base64 encoded public key(s)
-     *
-     * @return void
-     */
-    public function setForeignKeys(array $foreignKeys)
-    {
-        $this->foreignKeys = [];
-        foreach ($foreignKeys as $tokenIssuer => $publicKey) {
-            if (!is_string($tokenIssuer)) {
-                throw new ServerErrorException('tokenIssuer MUST be string');
-            }
-            $this->foreignKeys[$tokenIssuer] = Base64::decode($publicKey);
-        }
-    }
-
-    /**
      * @param string $authorizationHeader
      *
      * @return TokenInfo
@@ -99,53 +73,21 @@ class BearerValidator
     public function validate($authorizationHeader)
     {
         self::validateBearerCredentials($authorizationHeader);
-        try {
-            $encodedSignedStr = substr($authorizationHeader, 7);
-            // support old Base64 encoded strings as well...
-            $encodedSignedStr = str_replace(['+', '/'], ['-', '_'], $encodedSignedStr);
-            $signedStr = Base64UrlSafe::decode($encodedSignedStr);
+        $providedToken = substr($authorizationHeader, 7);
+        $listOfClaims = $this->tokenSigner->parse($providedToken);
+        $tokenInfo = $this->validateTokenInfo($listOfClaims);
 
-            // check whether the access_token was signed by us
-            $jsonToken = sodium_crypto_sign_open($signedStr, $this->publicKey);
-            if (false !== $jsonToken) {
-                $tokenInfo = $this->validateTokenInfo(self::jsonDecode($jsonToken));
-
-                // as it is signed by us, the client MUST still be there
-                if (false === call_user_func($this->getClientInfo, $tokenInfo->getClientId())) {
-                    throw new InvalidTokenException('client no longer registered');
-                }
-
-                // it MUST exist in the DB as well, otherwise it was revoked...
-                if (!$this->storage->hasAuthorization($tokenInfo->getAuthKey())) {
-                    throw new InvalidTokenException('authorization for client no longer exists');
-                }
-
-                return $tokenInfo;
-            }
-
-            // it was not our signature, maybe it is one of the OPTIONAL
-            // additionally configured public keys
-            //
-            // NOTE: this cannot check for revocation and also not if the
-            // client is still actually registered, as we trust the remote
-            // server to do the right thing.
-            foreach ($this->foreignKeys as $tokenIssuer => $publicKey) {
-                $jsonToken = sodium_crypto_sign_open($signedStr, $publicKey);
-                if (false !== $jsonToken) {
-                    $tokenInfo = $this->validateTokenInfo(self::jsonDecode($jsonToken));
-                    $tokenInfo->setIssuer($tokenIssuer);
-
-                    return $tokenInfo;
-                }
-            }
-
-            // non of the additional public keys (if they were set) were able
-            // to validate the token
-            throw new InvalidTokenException('invalid signature');
-        } catch (RangeException $e) {
-            // Base64::decode throws this exception if string is not valid Base64
-            throw new InvalidTokenException('invalid token format');
+        // as it is signed by us, the client MUST still be there
+        if (false === call_user_func($this->getClientInfo, $tokenInfo->getClientId())) {
+            throw new InvalidTokenException('client no longer registered');
         }
+
+        // it MUST exist in the DB as well, otherwise it was revoked...
+        if (!$this->storage->hasAuthorization($tokenInfo->getAuthKey())) {
+            throw new InvalidTokenException('authorization for client no longer exists');
+        }
+
+        return $tokenInfo;
     }
 
     /**
@@ -187,21 +129,6 @@ class BearerValidator
         if (!$hasAny) {
             throw new InsufficientScopeException(sprintf('not any of scopes "%s" granted', implode(' ', $requiredScopeList)));
         }
-    }
-
-    /**
-     * @param string $jsonStr
-     *
-     * @return array
-     */
-    private static function jsonDecode($jsonStr)
-    {
-        $jsonData = json_decode($jsonStr, true);
-        if (null === $jsonData && JSON_ERROR_NONE !== json_last_error()) {
-            throw new ServerErrorException('unable to decode JSON');
-        }
-
-        return $jsonData;
     }
 
     /**

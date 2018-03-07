@@ -29,6 +29,7 @@ require_once sprintf('%s/vendor/autoload.php', $baseDir);
 use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\Exception\OAuthException;
 use fkooman\OAuth\Server\Http\JsonResponse;
+use fkooman\OAuth\Server\LegacyTokenSigner;
 use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\Storage;
 
@@ -62,12 +63,14 @@ try {
     $oauthServer = new OAuthServer(
         $storage,
         $getClientInfo,
-        '2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol'
+        new LegacyTokenSigner(
+            '2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol'
+        )
     );
 
-    // we expire issued access_tokens after 30 seconds, the default is 3600
-    // seconds (1 hour)
-    $oauthServer->setExpiresIn(30);
+    // expire access_token after 30 seconds, and refresh_token after 5 minutes
+    // DEFAULT: 1 hour / 180 days
+    $oauthServer->setExpiry(new DateInterval('PT30S'), new DateInterval('PT360S'));
 
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'POST':
