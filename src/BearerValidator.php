@@ -35,22 +35,22 @@ class BearerValidator
     /** @var callable */
     private $getClientInfo;
 
-    /** @var TokenSignerInterface */
-    private $tokenSigner;
+    /** @var SignerInterface */
+    private $signer;
 
     /** @var \DateTime */
     private $dateTime;
 
     /**
-     * @param Storage              $storage
-     * @param callable             $getClientInfo
-     * @param TokenSignerInterface $tokenSigner
+     * @param Storage         $storage
+     * @param callable        $getClientInfo
+     * @param SignerInterface $signer
      */
-    public function __construct(Storage $storage, callable $getClientInfo, TokenSignerInterface $tokenSigner)
+    public function __construct(Storage $storage, callable $getClientInfo, SignerInterface $signer)
     {
         $this->storage = $storage;
         $this->getClientInfo = $getClientInfo;
-        $this->tokenSigner = $tokenSigner;
+        $this->signer = $signer;
         $this->dateTime = new DateTime();
     }
 
@@ -73,7 +73,7 @@ class BearerValidator
     {
         SyntaxValidator::validateBearerToken($authorizationHeader);
         $providedToken = substr($authorizationHeader, 7);
-        $listOfClaims = $this->tokenSigner->parse($providedToken, 'access_token');
+        $listOfClaims = $this->signer->verify($providedToken);
         OAuthServer::requireType('access_token', $listOfClaims['type']);
 
         $tokenInfo = new TokenInfo(

@@ -30,7 +30,7 @@ use fkooman\OAuth\Server\BearerValidator;
 use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\Exception\OAuthException;
 use fkooman\OAuth\Server\Http\JsonResponse;
-use fkooman\OAuth\Server\LegacyTokenSigner;
+use fkooman\OAuth\Server\SodiumSigner;
 use fkooman\OAuth\Server\Storage;
 
 try {
@@ -63,7 +63,7 @@ try {
     $bearerValidator = new BearerValidator(
         $storage,
         $getClientInfo,
-        new LegacyTokenSigner(
+        new SodiumSigner(
             '2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol'
         )
     );

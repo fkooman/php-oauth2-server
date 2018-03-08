@@ -29,8 +29,8 @@ require_once sprintf('%s/vendor/autoload.php', $baseDir);
 use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\Exception\OAuthException;
 use fkooman\OAuth\Server\Http\HtmlResponse;
-use fkooman\OAuth\Server\LegacyTokenSigner;
 use fkooman\OAuth\Server\OAuthServer;
+use fkooman\OAuth\Server\SodiumSigner;
 use fkooman\OAuth\Server\Storage;
 
 try {
@@ -63,7 +63,7 @@ try {
     $oauthServer = new OAuthServer(
         $storage,
         $getClientInfo,
-        new LegacyTokenSigner(
+        new SodiumSigner(
             '2y5vJlGqpjTzwr3Ym3UqNwJuI1BKeLs53fc6Zf84kbYcP2/6Ar7zgiPS6BL4bvCaWN4uatYfuP7Dj/QvdctqJRw/b/oCvvOCI9LoEvhu8JpY3i5q1h+4/sOP9C91y2ol'
         )
     );

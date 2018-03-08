@@ -83,9 +83,7 @@ class OAuthServerTest extends TestCase
         $this->server = new OAuthServer(
             $this->storage,
             $getClientInfo,
-            new TestTokenSigner(
-                new DateTime('2016-01-01')
-            )
+            new TestSigner()
         );
         $this->server->setDateTime(new DateTime('2016-01-01'));
         $this->server->setRandom(new TestRandom());

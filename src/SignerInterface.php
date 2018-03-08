@@ -24,25 +24,19 @@
 
 namespace fkooman\OAuth\Server;
 
-use DateTime;
-
-interface TokenSignerInterface
+interface SignerInterface
 {
     /**
-     * @param array     $listOfClaims
-     * @param \DateTime $expiresAt
+     * @param array $listOfClaims
      *
      * @return string
      */
-    public function sign(array $listOfClaims, DateTime $expiresAt);
+    public function sign(array $listOfClaims);
 
     /**
-     * @param string $providedToken
-     * @param string $requireType
-     *
-     * @throws \fkooman\OAuth\Server\Exception\InvalidGrantException|\fkooman\OAuth\Server\Exception\InvalidTokenException
+     * @param string $receivedCodeToken
      *
      * @return array
      */
-    public function parse($providedToken, $requireType);
+    public function verify($receivedCodeToken);
 }

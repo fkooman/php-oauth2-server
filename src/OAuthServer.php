@@ -42,8 +42,8 @@ class OAuthServer
     /** @var callable */
     private $getClientInfo;
 
-    /** @var TokenSignerInterface */
-    private $tokenSigner;
+    /** @var SignerInterface */
+    private $signer;
 
     /** @var RandomInterface */
     private $random;
@@ -58,15 +58,15 @@ class OAuthServer
     private $refreshTokenExpiry;
 
     /**
-     * @param Storage              $storage
-     * @param callable             $getClientInfo
-     * @param TokenSignerInterface $tokenSigner
+     * @param Storage         $storage
+     * @param callable        $getClientInfo
+     * @param SignerInterface $signer
      */
-    public function __construct(Storage $storage, callable $getClientInfo, TokenSignerInterface $tokenSigner)
+    public function __construct(Storage $storage, callable $getClientInfo, SignerInterface $signer)
     {
         $this->storage = $storage;
         $this->getClientInfo = $getClientInfo;
-        $this->tokenSigner = $tokenSigner;
+        $this->signer = $signer;
         $this->random = new Random();
         $this->dateTime = new DateTime();
         $this->accessTokenExpiry = new DateInterval('PT1H');    // 1 hour
@@ -281,8 +281,9 @@ class OAuthServer
         $this->verifyClientCredentials($postData['client_id'], $clientInfo, $authUser, $authPass);
 
         // verify the authorization code
-        $codeInfo = $this->tokenSigner->parse($postData['code'], 'authorization_code');
+        $codeInfo = $this->signer->verify($postData['code']);
         self::requireType('authorization_code', $codeInfo['type']);
+        // XXX verify EXPIRY!
 
         // parameters in POST body need to match the parameters stored with
         // the code
@@ -348,8 +349,9 @@ class OAuthServer
     private function postTokenRefreshToken(array $postData, $authUser, $authPass)
     {
         // verify the refresh code
-        $refreshTokenInfo = $this->tokenSigner->parse($postData['refresh_token'], 'refresh_token');
+        $refreshTokenInfo = $this->signer->verify($postData['refresh_token']);
         self::requireType('refresh_token', $refreshTokenInfo['type']);
+        // XXX verify EXPIRY!
 
         $clientInfo = $this->getClient($refreshTokenInfo['client_id']);
         $this->verifyClientCredentials($refreshTokenInfo['client_id'], $clientInfo, $authUser, $authPass);
@@ -414,15 +416,15 @@ class OAuthServer
         // "auth_key" as a tag for the issued access tokens
         $expiresAt = date_add(clone $this->dateTime, $this->accessTokenExpiry);
 
-        return $this->tokenSigner->sign(
+        return $this->signer->sign(
             [
                 'type' => 'access_token',
                 'auth_key' => $authKey, // to bind it to the authorization
                 'user_id' => $userId,
                 'client_id' => $clientId,
                 'scope' => $scope,
-            ],
-            $expiresAt
+                'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+            ]
         );
     }
 
@@ -438,15 +440,15 @@ class OAuthServer
     {
         $expiresAt = date_add(clone $this->dateTime, $this->refreshTokenExpiry);
 
-        return $this->tokenSigner->sign(
+        return $this->signer->sign(
             [
                 'type' => 'refresh_token',
                 'auth_key' => $authKey, // to bind it to the authorization
                 'user_id' => $userId,
                 'client_id' => $clientId,
                 'scope' => $scope,
-            ],
-            $expiresAt
+                'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+            ]
         );
     }
 
@@ -465,7 +467,7 @@ class OAuthServer
         // authorization codes expire after 5 minutes
         $expiresAt = date_add($this->dateTime, new DateInterval('PT5M'));
 
-        return $this->tokenSigner->sign(
+        return $this->signer->sign(
             [
                 'type' => 'authorization_code',
                 'auth_key' => $authKey,
@@ -474,8 +476,8 @@ class OAuthServer
                 'scope' => $scope,
                 'redirect_uri' => $redirectUri,
                 'code_challenge' => $codeChallenge,
-            ],
-            $expiresAt
+                'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+            ]
         );
     }
 

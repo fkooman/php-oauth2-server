@@ -65,7 +65,7 @@ class BearerValidatorTest extends TestCase
         $this->validator = new BearerValidator(
             $this->storage,
             $getClientInfo,
-            new TestTokenSigner(new DateTime('2016-01-01'))
+            new TestSigner()
         );
         $this->validator->setDateTime(new DateTime('2016-01-01'));
     }

@@ -24,36 +24,22 @@
 
 namespace fkooman\OAuth\Server\Tests;
 
-use DateTime;
-use fkooman\OAuth\Server\Exception\InvalidGrantException;
-use fkooman\OAuth\Server\Exception\InvalidTokenException;
-use fkooman\OAuth\Server\TokenSignerInterface;
+use fkooman\OAuth\Server\SignerInterface;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 
 /**
  * Dummy "TokenSigner", does not actually sign anything, just contains the
  * data that would be signed by an actual implementation.
  */
-class TestTokenSigner implements TokenSignerInterface
+class TestSigner implements SignerInterface
 {
-    /** @var \DateTime */
-    private $dateTime;
-
-    public function __construct(DateTime $dateTime)
-    {
-        $this->dateTime = $dateTime;
-    }
-
     /**
-     * @param array     $listOfClaims
-     * @param \DateTime $expiresAt
+     * @param array $listOfClaims
      *
      * @return string
      */
-    public function sign(array $listOfClaims, DateTime $expiresAt)
+    public function sign(array $listOfClaims)
     {
-        $listOfClaims['expires_at'] = $expiresAt->format('Y-m-d H:i:s');
-
         return rtrim(
             Base64UrlSafe::encode(
                 json_encode($listOfClaims)
@@ -63,33 +49,15 @@ class TestTokenSigner implements TokenSignerInterface
     }
 
     /**
-     * @param string $providedToken
-     * @param string $requireType
-     *
-     * @throws \fkooman\OAuth\Server\Exception\InvalidGrantException|\fkooman\OAuth\Server\Exception\InvalidTokenException
+     * @param string $receivedCodeToken
      *
      * @return array
      */
-    public function parse($providedToken, $requireType)
+    public function verify($receivedCodeToken)
     {
-        $parsedToken = json_decode(
-            Base64UrlSafe::decode($providedToken),
+        return json_decode(
+            Base64UrlSafe::decode($receivedCodeToken),
             true
         );
-
-        // verify it is not expired
-        if (array_key_exists('expires_at', $parsedToken)) {
-            // versions of fkooman/oauth2-server < 2.2.0 did not have expiring
-            // refresh tokens, we accept those without verifying the expiry
-            if ($this->dateTime >= new DateTime($parsedToken['expires_at'])) {
-                if ('access_token' === $requireType) {
-                    throw new InvalidTokenException('"access_token" expired');
-                }
-
-                throw new InvalidGrantException(sprintf('"%s" expired', $requireType));
-            }
-        }
-
-        return $parsedToken;
     }
 }
