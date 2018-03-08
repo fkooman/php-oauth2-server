@@ -32,99 +32,92 @@ use RangeException;
 
 class SodiumSigner implements SignerInterface
 {
-    /** @var string|null */
-    private $secretKey = null;
+    /** @var string */
+    private $secretKey;
 
-    /** @var array */
-    private $publicKeyList = [];
+    /** @var string */
+    private $publicKey;
 
     /**
-     * @param string|null $keyPair
-     * @param array       $publicKeyList
+     * @param string $keyPair
      */
-    public function __construct($keyPair = null, array $publicKeyList = [])
+    public function __construct($keyPair)
     {
-        if (null !== $keyPair) {
-            if (SODIUM_CRYPTO_SIGN_KEYPAIRBYTES !== strlen($keyPair)) {
-                throw new ServerErrorException('invalid keypair length');
-            }
-            $this->secretKey = sodium_crypto_sign_secretkey($keyPair);
-            $this->publicKeyList[] = sodium_crypto_sign_publickey($keyPair);
+        if (SODIUM_CRYPTO_SIGN_KEYPAIRBYTES !== strlen($keyPair)) {
+            throw new ServerErrorException('invalid keypair');
         }
-        $this->publicKeyList += $publicKeyList;
+        $this->secretKey = sodium_crypto_sign_secretkey($keyPair);
+        $this->publicKey = sodium_crypto_sign_publickey($keyPair);
     }
 
     /**
      * @param array $listOfClaims
      *
+     * @throws Exception\SignerException
+     *
      * @return string
      */
     public function sign(array $listOfClaims)
     {
-        if (null === $this->secretKey) {
-            throw new ServerErrorException('secret key MUST be set');
-        }
-
         $jsonString = json_encode($listOfClaims);
-        // XXX json error last
-        if (false === $jsonString) {
-            throw new ServerErrorException('unable to encode JSON');
+        if (false === $jsonString && JSON_ERROR_NONE !== json_last_error()) {
+            throw new SignerException('unable to encode JSON');
         }
 
-        // XXX handle errors better! e.g. with keys
         // Base64UrlSafe without padding
         return rtrim(
             Base64UrlSafe::encode(
-                sodium_crypto_sign(
-                    $jsonString,
-                    sodium_crypto_sign_secretkey($this->secretKey)
-                )
+                sodium_crypto_sign($jsonString, $this->secretKey)
             ),
             '='
         );
     }
 
     /**
-     * @param string $receivedCodeToken
+     * @param string $inputTokenStr
+     *
+     * @throws Exception\SignerException
      *
      * @return array
      */
-    public function verify($receivedCodeToken)
+    public function verify($inputTokenStr)
     {
-        if (0 === count($this->publicKeyList)) {
-            throw new ServerErrorException('at least one public key MUST be set');
-        }
-
-        $receivedCodeToken = self::normalize($receivedCodeToken);
-
-        // Base64UrlSafe decode
         try {
-            if (false === $decodedReceivedCodeToken = Base64UrlSafe::decode($receivedCodeToken)) {
-                // paragonie/constant_time_encoding v1.0.1 sometimes returns
-                // false when decoding fails, so handle this here as well
-                throw new SignerException('Base64 decode error');
-            }
-        } catch (RangeException $e) {
-            throw new SignerException('Base64 decode error');
-        }
+            $decodedTokenStr = self::decodeBase64(
+                self::normalize($inputTokenStr)
+            );
 
-        // verify signature and extract JSON
-        foreach ($this->publicKeyList as $publicKey) {
-            if (false === $codeTokenJson = sodium_crypto_sign_open($decodedReceivedCodeToken, $publicKey)) {
-                // this publicKey didn't work, if we have more try those,
-                // if not we will fall through...
-                continue;
+            if (false === $jsonString = sodium_crypto_sign_open($decodedTokenStr, $this->publicKey)) {
+                throw new SignerException('invalid signature');
             }
 
-            $codeTokenInfo = json_decode($codeTokenJson, true);
-            if (null === $codeTokenInfo && JSON_ERROR_NONE !== json_last_error()) {
+            $listOfClaims = json_decode($jsonString, true);
+            if (null === $listOfClaims && JSON_ERROR_NONE !== json_last_error()) {
                 throw new SignerException('unable to decode JSON');
             }
 
-            return $codeTokenInfo;
+            return $listOfClaims;
+        } catch (RangeException $e) {
+            throw new SignerException('unable to decode Base64');
+        }
+    }
+
+    /**
+     * @param string $inputStr
+     *
+     * @return string
+     */
+    private static function decodeBase64($inputStr)
+    {
+        // Base64UrlSafe decode
+        if (false === $outputStr = Base64UrlSafe::decode($inputStr)) {
+            // paragonie/constant_time_encoding v1.0.1 sometimes returns
+            // false when decoding fails, so handle this here as well
+            // https://github.com/paragonie/constant_time_encoding/issues/14
+            throw new RangeException('Base64::decode() only expects characters in the correct base64 alphabet');
         }
 
-        throw new SignerException('invalid signature');
+        return $outputStr;
     }
 
     /**
