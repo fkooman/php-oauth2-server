@@ -22,7 +22,11 @@
  * SOFTWARE.
  */
 
-/**
+if (!defined('SODIUM_CRYPTO_SIGN_KEYPAIRBYTES')) {
+    define('SODIUM_CRYPTO_SIGN_KEYPAIRBYTES', \Sodium\CRYPTO_SIGN_KEYPAIRBYTES);
+}
+
+/*
  * Compatibility layer for libsodium with namespace. We *require* PHP >= 7.2
  * sodium OR pecl-libsodium.
  *

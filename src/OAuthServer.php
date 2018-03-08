@@ -91,13 +91,21 @@ class OAuthServer
 
     /**
      * @param DateInterval $accessTokenExpiry
+     *
+     * @return void
+     */
+    public function setAccessTokenExpiry(DateInterval $accessTokenExpiry)
+    {
+        $this->accessTokenExpiry = $accessTokenExpiry;
+    }
+
+    /**
      * @param DateInterval $refreshTokenExpiry
      *
      * @return void
      */
-    public function setExpiry(DateInterval $accessTokenExpiry, DateInterval $refreshTokenExpiry)
+    public function setRefreshTokenExpiry(DateInterval $refreshTokenExpiry)
     {
-        $this->accessTokenExpiry = $accessTokenExpiry;
         $this->refreshTokenExpiry = $refreshTokenExpiry;
     }
 

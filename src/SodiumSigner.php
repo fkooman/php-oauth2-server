@@ -25,27 +25,33 @@
 namespace fkooman\OAuth\Server;
 
 use fkooman\OAuth\Server\Exception\ServerErrorException;
+use fkooman\OAuth\Server\Exception\SignerException;
 use ParagonIE\ConstantTime\Base64;
 use ParagonIE\ConstantTime\Base64UrlSafe;
+use RangeException;
 
 class SodiumSigner implements SignerInterface
 {
     /** @var string|null */
-    private $secretKey;
+    private $secretKey = null;
 
     /** @var array */
-    private $publicKeyList;
+    private $publicKeyList = [];
 
     /**
-     * @param string|null $secretKey
+     * @param string|null $keyPair
      * @param array       $publicKeyList
      */
-    public function __construct($secretKey = null, array $publicKeyList = [])
+    public function __construct($keyPair = null, array $publicKeyList = [])
     {
-        $this->secretKey = $secretKey;
-        // XXX extract the public key from secretKey thingy and add it to
-        // publicKeyList and append the provided publicKeyList to this list
-        $this->publicKeyList = $publicKeyList;
+        if (null !== $keyPair) {
+            if (SODIUM_CRYPTO_SIGN_KEYPAIRBYTES !== strlen($keyPair)) {
+                throw new ServerErrorException('invalid keypair length');
+            }
+            $this->secretKey = sodium_crypto_sign_secretkey($keyPair);
+            $this->publicKeyList[] = sodium_crypto_sign_publickey($keyPair);
+        }
+        $this->publicKeyList += $publicKeyList;
     }
 
     /**
@@ -96,24 +102,29 @@ class SodiumSigner implements SignerInterface
             if (false === $decodedReceivedCodeToken = Base64UrlSafe::decode($receivedCodeToken)) {
                 // paragonie/constant_time_encoding v1.0.1 sometimes returns
                 // false when decoding fails, so handle this here as well
-                throw new RangeException('Base64 decode error');
+                throw new SignerException('Base64 decode error');
             }
         } catch (RangeException $e) {
-            throw new ParseException('Base64 decode error');
+            throw new SignerException('Base64 decode error');
         }
 
-        // Verify signature and extract JSON
+        // verify signature and extract JSON
+        foreach ($this->publicKeyList as $publicKey) {
+            if (false === $codeTokenJson = sodium_crypto_sign_open($decodedReceivedCodeToken, $publicKey)) {
+                // this publicKey didn't work, if we have more try those,
+                // if not we will fall through...
+                continue;
+            }
 
-        $str = sodium_crypto_sign_open($signedStr, sodium_crypto_sign_publickey($this->keyPair));
-        if (false === $str) {
-            throw new ParseException('invalid signature');
-        }
-        $codeTokenInfo = json_decode($str, true);
-        if (null === $codeTokenInfo && JSON_ERROR_NONE !== json_last_error()) {
-            throw new ParseException('unable to decode JSON');
+            $codeTokenInfo = json_decode($codeTokenJson, true);
+            if (null === $codeTokenInfo && JSON_ERROR_NONE !== json_last_error()) {
+                throw new SignerException('unable to decode JSON');
+            }
+
+            return $codeTokenInfo;
         }
 
-        return $codeTokenInfo;
+        throw new SignerException('invalid signature');
     }
 
     /**
