@@ -283,7 +283,11 @@ class OAuthServer
         // verify the authorization code
         $codeInfo = $this->signer->verify($postData['code']);
         self::requireType('authorization_code', $codeInfo['type']);
-        // XXX verify EXPIRY!
+
+        // check authorization_code expiry
+        if ($this->dateTime >= new DateTime($codeInfo['expires_at'])) {
+            throw new InvalidGrantException('"authorization_code" expired');
+        }
 
         // parameters in POST body need to match the parameters stored with
         // the code
@@ -351,14 +355,29 @@ class OAuthServer
         // verify the refresh code
         $refreshTokenInfo = $this->signer->verify($postData['refresh_token']);
         self::requireType('refresh_token', $refreshTokenInfo['type']);
-        // XXX verify EXPIRY!
+
+        // check refresh_token expiry
+        if (array_key_exists('expires_at', $refreshTokenInfo)) {
+            // versions of fkooman/oauth2-server < 2.2.0 did not have expiring
+            // refresh tokens, we accept those without verifying the expiry
+            if ($this->dateTime >= new DateTime($refreshTokenInfo['expires_at'])) {
+                throw new InvalidGrantException('"refresh_token" expired');
+            }
+        }
 
         $clientInfo = $this->getClient($refreshTokenInfo['client_id']);
         $this->verifyClientCredentials($refreshTokenInfo['client_id'], $clientInfo, $authUser, $authPass);
 
         // parameters in POST body need to match the parameters stored with
         // the refresh token
-        $this->verifyRefreshTokenInfo($postData, $refreshTokenInfo);
+        if ($postData['scope'] !== $refreshTokenInfo['scope']) {
+            throw new InvalidRequestException('unexpected "scope"');
+        }
+
+        // make sure the authorization still exists
+        if (!$this->storage->hasAuthorization($refreshTokenInfo['auth_key'])) {
+            throw new InvalidGrantException('"refresh_token" is no longer authorized');
+        }
 
         $accessToken = $this->getAccessToken(
             $refreshTokenInfo['user_id'],
@@ -495,26 +514,6 @@ class OAuthServer
 
         if ($postData['redirect_uri'] !== $codeInfo['redirect_uri']) {
             throw new InvalidRequestException('unexpected "redirect_uri"');
-        }
-    }
-
-    /**
-     * @param array $postData
-     * @param array $refreshTokenInfo
-     *
-     * @return void
-     */
-    private function verifyRefreshTokenInfo(array $postData, array $refreshTokenInfo)
-    {
-        // XXX should we check if of type 'refresh_token' ??
-        // XXX it is done somewhere... but actually correct?!
-        if ($postData['scope'] !== $refreshTokenInfo['scope']) {
-            throw new InvalidRequestException('unexpected "scope"');
-        }
-
-        // make sure the authorization still exists
-        if (!$this->storage->hasAuthorization($refreshTokenInfo['auth_key'])) {
-            throw new InvalidGrantException('"refresh_token" is no longer authorized');
         }
     }
 

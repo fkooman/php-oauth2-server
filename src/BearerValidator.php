@@ -76,6 +76,11 @@ class BearerValidator
         $listOfClaims = $this->signer->verify($providedToken);
         OAuthServer::requireType('access_token', $listOfClaims['type']);
 
+        // check access_token expiry
+        if ($this->dateTime >= new DateTime($listOfClaims['expires_at'])) {
+            throw new InvalidTokenException('"access_token" expired');
+        }
+
         $tokenInfo = new TokenInfo(
             $listOfClaims['auth_key'],
             $listOfClaims['user_id'],
