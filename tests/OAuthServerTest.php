@@ -128,6 +128,7 @@ class OAuthServerTest extends TestCase
             ],
             'foo'
         );
+        $this->assertInstanceOf('\fkooman\OAuth\Server\Http\Response', $authorizeResponse);
         $this->assertSame(
             [
                 'Location' => 'http://example.org/code-cb?code=eyJ0eXBlIjoiYXV0aG9yaXphdGlvbl9jb2RlIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwicmVkaXJlY3RfdXJpIjoiaHR0cDpcL1wvZXhhbXBsZS5vcmdcL2NvZGUtY2IiLCJjb2RlX2NoYWxsZW5nZSI6IkU5TWVsaG9hMk93dkZyRU1USmd1Q0hhb2VLMXQ4VVJXYnVHSlNzdHctY00iLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMDowNTowMCJ9&state=12345',

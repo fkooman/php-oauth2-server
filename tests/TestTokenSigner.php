@@ -30,6 +30,10 @@ use fkooman\OAuth\Server\Exception\InvalidTokenException;
 use fkooman\OAuth\Server\TokenSignerInterface;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 
+/**
+ * Dummy "TokenSigner", does not actually sign anything, just contains the
+ * data that would be signed by an actual implementation.
+ */
 class TestTokenSigner implements TokenSignerInterface
 {
     /** @var \DateTime */
