@@ -27,10 +27,8 @@ namespace fkooman\OAuth\Server\Tests;
 use DateTime;
 use fkooman\OAuth\Server\BearerValidator;
 use fkooman\OAuth\Server\ClientInfo;
-use fkooman\OAuth\Server\Exception\InsufficientScopeException;
 use fkooman\OAuth\Server\Exception\InvalidTokenException;
 use fkooman\OAuth\Server\Storage;
-use fkooman\OAuth\Server\TokenInfo;
 use PDO;
 use PHPUnit\Framework\TestCase;
 
@@ -100,7 +98,7 @@ class BearerValidatorTest extends TestCase
             $this->validator->validate('Bearer %%%%');
             $this->fail();
         } catch (InvalidTokenException $e) {
-            $this->assertSame('bearer credential syntax error', $e->getDescription());
+            $this->assertSame('invalid Bearer token', $e->getDescription());
         }
     }
 
@@ -120,71 +118,7 @@ class BearerValidatorTest extends TestCase
             $this->validator->validate('Basic AAA==');
             $this->fail();
         } catch (InvalidTokenException $e) {
-            $this->assertSame('bearer credential syntax error', $e->getDescription());
-        }
-    }
-
-    public function testAnyScope()
-    {
-        try {
-            $tokenInfo = new TokenInfo(
-                'auth_key',
-                'user_id',
-                'client_id',
-                'foo bar'
-            );
-            BearerValidator::requireAnyScope($tokenInfo, ['baz', 'bar', 'foo']);
-            $this->assertTrue(true);
-        } catch (InsufficientScopeException $e) {
-            $this->fail();
-        }
-    }
-
-    public function testAllScope()
-    {
-        try {
-            $tokenInfo = new TokenInfo(
-                'auth_key',
-                'user_id',
-                'client_id',
-                'foo bar baz'
-            );
-            BearerValidator::requireAllScope($tokenInfo, ['baz', 'bar', 'foo']);
-            $this->assertTrue(true);
-        } catch (InsufficientScopeException $e) {
-            $this->fail();
-        }
-    }
-
-    public function testAnyScopeMissingAll()
-    {
-        try {
-            $tokenInfo = new TokenInfo(
-                'auth_key',
-                'user_id',
-                'client_id',
-                'foo bar'
-            );
-            BearerValidator::requireAnyScope($tokenInfo, ['baz', 'def']);
-            $this->fail();
-        } catch (InsufficientScopeException $e) {
-            $this->assertSame('not any of scopes "baz def" granted', $e->getDescription());
-        }
-    }
-
-    public function testAllScopeMissingOne()
-    {
-        try {
-            $tokenInfo = new TokenInfo(
-                'auth_key',
-                'user_id',
-                'client_id',
-                'foo bar'
-            );
-            BearerValidator::requireAllScope($tokenInfo, ['baz', 'bar', 'foo']);
-            $this->fail();
-        } catch (InsufficientScopeException $e) {
-            $this->assertSame('scope "baz" not granted', $e->getDescription());
+            $this->assertSame('invalid Bearer token', $e->getDescription());
         }
     }
 

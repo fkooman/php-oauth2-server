@@ -26,6 +26,7 @@ namespace fkooman\OAuth\Server;
 
 use fkooman\OAuth\Server\Exception\InvalidRequestException;
 use fkooman\OAuth\Server\Exception\InvalidScopeException;
+use fkooman\OAuth\Server\Exception\InvalidTokenException;
 use fkooman\OAuth\Server\Exception\UnsupportedResponseTypeException;
 
 class SyntaxValidator
@@ -185,6 +186,21 @@ class SyntaxValidator
         // VSCHAR        = %x20-7E
         if (1 !== preg_match('/^[\x20-\x7E]+$/', $refreshToken)) {
             throw new InvalidRequestException('invalid "refresh_token"');
+        }
+    }
+
+    /**
+     * @param string $bearerToken
+     *
+     * @return void
+     */
+    public static function validateBearerToken($bearerToken)
+    {
+        // b64token    = 1*( ALPHA / DIGIT /
+        //                   "-" / "." / "_" / "~" / "+" / "/" ) *"="
+        // credentials = "Bearer" 1*SP b64token
+        if (1 !== preg_match('|^Bearer [a-zA-Z0-9-._~+/]+=*$|', $bearerToken)) {
+            throw new InvalidTokenException('invalid Bearer token');
         }
     }
 }

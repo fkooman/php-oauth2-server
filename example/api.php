@@ -80,9 +80,9 @@ try {
             $tokenInfo = $bearerValidator->validate($authorizationHeader);
 
             // require both the "foo" and "bar" scope
-            BearerValidator::requireAllScope($tokenInfo, ['foo', 'bar']);
+            $tokenInfo->requireAllScope(['foo', 'bar']);
             // require any of "foo" or "bar" scope
-            //BearerValidator::requireAnyScope($tokenInfo, ['foo', 'bar']);
+            //$tokenInfo->requireAnyScope(['foo', 'bar']);
 
             // use "helper" JsonResponse here, typically your HTTP framework
             // will provide this...

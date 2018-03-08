@@ -24,6 +24,8 @@
 
 namespace fkooman\OAuth\Server;
 
+use fkooman\OAuth\Server\Exception\InsufficientScopeException;
+
 class TokenInfo
 {
     /** @var string */
@@ -103,5 +105,44 @@ class TokenInfo
     public function getIssuer()
     {
         return $this->tokenIssuer;
+    }
+
+    /**
+     * @param array $requiredScopeList
+     *
+     * @throws \fkooman\OAuth\Server\Exception\InsufficientScopeException
+     *
+     * @return void
+     */
+    public function requireAllScope(array $requiredScopeList)
+    {
+        $grantedScopeList = explode(' ', $this->scope);
+        foreach ($requiredScopeList as $requiredScope) {
+            if (!in_array($requiredScope, $grantedScopeList, true)) {
+                throw new InsufficientScopeException(sprintf('scope "%s" not granted', $requiredScope));
+            }
+        }
+    }
+
+    /**
+     * @param array $requiredScopeList
+     *
+     * @throws \fkooman\OAuth\Server\Exception\InsufficientScopeException
+     *
+     * @return void
+     */
+    public function requireAnyScope(array $requiredScopeList)
+    {
+        $grantedScopeList = explode(' ', $this->scope);
+        $hasAny = false;
+        foreach ($requiredScopeList as $requiredScope) {
+            if (in_array($requiredScope, $grantedScopeList, true)) {
+                $hasAny = true;
+            }
+        }
+
+        if (!$hasAny) {
+            throw new InsufficientScopeException(sprintf('not any of scopes "%s" granted', implode(' ', $requiredScopeList)));
+        }
     }
 }

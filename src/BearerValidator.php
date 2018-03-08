@@ -25,7 +25,6 @@
 namespace fkooman\OAuth\Server;
 
 use DateTime;
-use fkooman\OAuth\Server\Exception\InsufficientScopeException;
 use fkooman\OAuth\Server\Exception\InvalidTokenException;
 
 class BearerValidator
@@ -72,7 +71,7 @@ class BearerValidator
      */
     public function validate($authorizationHeader)
     {
-        self::validateBearerCredentials($authorizationHeader);
+        SyntaxValidator::validateBearerToken($authorizationHeader);
         $providedToken = substr($authorizationHeader, 7);
         $listOfClaims = $this->tokenSigner->parse($providedToken, 'access_token');
         OAuthServer::requireType('access_token', $listOfClaims['type']);
@@ -95,61 +94,5 @@ class BearerValidator
         }
 
         return $tokenInfo;
-    }
-
-    /**
-     * @param TokenInfo $tokenInfo
-     * @param array     $requiredScopeList
-     *
-     * @throws \fkooman\OAuth\Server\Exception\InsufficientScopeException
-     *
-     * @return void
-     */
-    public static function requireAllScope(TokenInfo $tokenInfo, array $requiredScopeList)
-    {
-        $grantedScopeList = explode(' ', $tokenInfo->getScope());
-        foreach ($requiredScopeList as $requiredScope) {
-            if (!in_array($requiredScope, $grantedScopeList, true)) {
-                throw new InsufficientScopeException(sprintf('scope "%s" not granted', $requiredScope));
-            }
-        }
-    }
-
-    /**
-     * @param TokenInfo $tokenInfo
-     * @param array     $requiredScopeList
-     *
-     * @throws \fkooman\OAuth\Server\Exception\InsufficientScopeException
-     *
-     * @return void
-     */
-    public static function requireAnyScope(TokenInfo $tokenInfo, array $requiredScopeList)
-    {
-        $grantedScopeList = explode(' ', $tokenInfo->getScope());
-        $hasAny = false;
-        foreach ($requiredScopeList as $requiredScope) {
-            if (in_array($requiredScope, $grantedScopeList, true)) {
-                $hasAny = true;
-            }
-        }
-
-        if (!$hasAny) {
-            throw new InsufficientScopeException(sprintf('not any of scopes "%s" granted', implode(' ', $requiredScopeList)));
-        }
-    }
-
-    /**
-     * @param string $bearerCredentials
-     *
-     * @return void
-     */
-    private static function validateBearerCredentials($bearerCredentials)
-    {
-        // b64token    = 1*( ALPHA / DIGIT /
-        //                   "-" / "." / "_" / "~" / "+" / "/" ) *"="
-        // credentials = "Bearer" 1*SP b64token
-        if (1 !== preg_match('|^Bearer [a-zA-Z0-9-._~+/]+=*$|', $bearerCredentials)) {
-            throw new InvalidTokenException('bearer credential syntax error');
-        }
     }
 }
