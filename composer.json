@@ -28,7 +28,6 @@
         "ext-pcre": "*",
         "ext-pdo": "*",
         "paragonie/constant_time_encoding": "^1|^2",
-        "paragonie/paseto": "^0.5.0",
         "paragonie/random_compat": "^1|^2",
         "php": ">=5.4",
         "symfony/polyfill-php56": "^1"
