@@ -77,8 +77,18 @@ class BearerValidatorTest extends TestCase
         $this->assertSame('random_1', $tokenInfo->getAuthKey());
         $this->assertSame('foo', $tokenInfo->getUserId());
         $this->assertSame('config', $tokenInfo->getScope());
-//        $this->assertSame(3600, $tokenInfo->getExpiresIn(new DateTime('2016-01-01')));
         $this->assertNull($tokenInfo->getIssuer());
+    }
+
+    public function testInvalidSignature()
+    {
+        try {
+            $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
+            $tokenInfo = $this->validator->validate('Bearer eyJ0eXBlIjoiYWNjZXNzX3Rva2VuIiwiYXV0aF9rZXkiOiJpbnZhbGlkX3NpZyIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDE6MDA6MDAifQ');
+            $this->fail();
+        } catch (InvalidTokenException $e) {
+            $this->assertSame('"access_token" has invalid signature', $e->getDescription());
+        }
     }
 
     public function testDeletedClient()
