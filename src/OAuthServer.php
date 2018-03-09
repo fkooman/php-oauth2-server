@@ -222,7 +222,6 @@ class OAuthServer
     public function postToken(array $postData, $authUser, $authPass)
     {
         RequestValidator::validateTokenPostParameters($postData);
-
         switch ($postData['grant_type']) {
             case 'authorization_code':
                 return $this->postTokenAuthorizationCode($postData, $authUser, $authPass);
@@ -288,8 +287,12 @@ class OAuthServer
         $clientInfo = $this->getClient($postData['client_id']);
         $this->verifyClientCredentials($postData['client_id'], $clientInfo, $authUser, $authPass);
 
-        // verify the authorization code
+        // verify the authorization code signature
         $codeInfo = $this->signer->verify($postData['code']);
+        if (false === $codeInfo) {
+            throw new InvalidGrantException('"authorization_code" has invalid signature');
+        }
+
         self::requireType('authorization_code', $codeInfo['type']);
 
         // check authorization_code expiry
@@ -360,8 +363,12 @@ class OAuthServer
      */
     private function postTokenRefreshToken(array $postData, $authUser, $authPass)
     {
-        // verify the refresh code
+        // verify the refresh code signature
         $refreshTokenInfo = $this->signer->verify($postData['refresh_token']);
+        if (false === $refreshTokenInfo) {
+            throw new InvalidGrantException('"refresh_token" has invalid signature');
+        }
+
         self::requireType('refresh_token', $refreshTokenInfo['type']);
 
         // check refresh_token expiry

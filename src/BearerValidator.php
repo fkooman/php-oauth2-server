@@ -74,6 +74,9 @@ class BearerValidator
         SyntaxValidator::validateBearerToken($authorizationHeader);
         $providedToken = substr($authorizationHeader, 7);
         $listOfClaims = $this->signer->verify($providedToken);
+        if (false === $listOfClaims) {
+            throw new InvalidTokenException('"access_token" has invalid signature');
+        }
         OAuthServer::requireType('access_token', $listOfClaims['type']);
 
         // check access_token expiry

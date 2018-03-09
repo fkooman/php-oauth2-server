@@ -34,9 +34,9 @@ interface SignerInterface
     public function sign(array $listOfClaims);
 
     /**
-     * @param string $receivedCodeToken
+     * @param string $inputTokenStr
      *
-     * @return array
+     * @return false|array
      */
-    public function verify($receivedCodeToken);
+    public function verify($inputTokenStr);
 }

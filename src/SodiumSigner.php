@@ -24,8 +24,8 @@
 
 namespace fkooman\OAuth\Server;
 
+use fkooman\OAuth\Server\Exception\InvalidRequestException;
 use fkooman\OAuth\Server\Exception\ServerErrorException;
-use fkooman\OAuth\Server\Exception\SignerException;
 use ParagonIE\ConstantTime\Base64;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use RangeException;
@@ -53,15 +53,13 @@ class SodiumSigner implements SignerInterface
     /**
      * @param array $listOfClaims
      *
-     * @throws Exception\SignerException
-     *
      * @return string
      */
     public function sign(array $listOfClaims)
     {
         $jsonString = json_encode($listOfClaims);
         if (false === $jsonString && JSON_ERROR_NONE !== json_last_error()) {
-            throw new SignerException('unable to encode JSON');
+            throw new ServerErrorException('unable to encode JSON');
         }
 
         // Base64UrlSafe without padding
@@ -76,9 +74,7 @@ class SodiumSigner implements SignerInterface
     /**
      * @param string $inputTokenStr
      *
-     * @throws Exception\SignerException
-     *
-     * @return array
+     * @return false|array
      */
     public function verify($inputTokenStr)
     {
@@ -88,17 +84,21 @@ class SodiumSigner implements SignerInterface
             );
 
             if (false === $jsonString = sodium_crypto_sign_open($decodedTokenStr, $this->publicKey)) {
-                throw new SignerException('invalid signature');
+                return false;
             }
 
             $listOfClaims = json_decode($jsonString, true);
             if (null === $listOfClaims && JSON_ERROR_NONE !== json_last_error()) {
-                throw new SignerException('unable to decode JSON');
+                // this should NEVER happen, as we encode the JSON, so we
+                // should also be able to parse it!
+                throw new ServerErrorException('unable to decode JSON');
             }
 
             return $listOfClaims;
         } catch (RangeException $e) {
-            throw new SignerException('unable to decode Base64');
+            // this indicates the provided Base64 encoded token is malformed,
+            // this is an "user" error!
+            throw new InvalidRequestException('unable to decode Base64');
         }
     }
 

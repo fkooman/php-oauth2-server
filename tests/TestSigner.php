@@ -49,14 +49,14 @@ class TestSigner implements SignerInterface
     }
 
     /**
-     * @param string $receivedCodeToken
+     * @param string $inputTokenStr
      *
-     * @return array
+     * @return false|array
      */
-    public function verify($receivedCodeToken)
+    public function verify($inputTokenStr)
     {
         return json_decode(
-            Base64UrlSafe::decode($receivedCodeToken),
+            Base64UrlSafe::decode($inputTokenStr),
             true
         );
     }
