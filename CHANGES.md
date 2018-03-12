@@ -1,5 +1,23 @@
 # ChangeLog
 
+## 3.0.0 (...)
+- many API changes
+  - remove `OAuthServer::setExpiry`, `OAuthServer::setExpiresIn`
+  - add `OAuthServer::setAccessTokenExpiry` and 
+    `OAuthServer::setRefreshTokenExpiry`
+  - `OAuthServer` constructor takes `SignerInterface` now instead of a string
+    keypair, implementation available as `SodiumSigner`
+  - add `SodiumSigner` that is compatible with previously issued access and 
+    refresh tokens
+  - the `TokenInfo` object now has the `requireAnyScope` and `requireAllScope` 
+    methods instead of `BearerValidator`
+  - `SodiumSigner` takes the decoded keypair as parameter, no longer Base64 
+    encoded
+- introduce `RedirectResponse` for handling redirects instead of 
+  `HtmlResponse`
+- change date format to `DateTime::ATOM` format
+- depend on `paragonie/constant_time_encoding` version `^1` explicitly for now
+
 ## 2.2.0 (2018-01-10)
 - all issued tokens are also "URL safe" now (without padding), Base64 encoded 
   tokens issued in previous versions are still valid
