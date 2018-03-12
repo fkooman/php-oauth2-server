@@ -457,7 +457,7 @@ class OAuthServer
                 'user_id' => $userId,
                 'client_id' => $clientId,
                 'scope' => $scope,
-                'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+                'expires_at' => $expiresAt->format(DateTime::ATOM),
             ]
         );
     }
@@ -481,7 +481,7 @@ class OAuthServer
                 'user_id' => $userId,
                 'client_id' => $clientId,
                 'scope' => $scope,
-                'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+                'expires_at' => $expiresAt->format(DateTime::ATOM),
             ]
         );
     }
@@ -510,7 +510,7 @@ class OAuthServer
                 'scope' => $scope,
                 'redirect_uri' => $redirectUri,
                 'code_challenge' => $codeChallenge,
-                'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+                'expires_at' => $expiresAt->format(DateTime::ATOM),
             ]
         );
     }

@@ -79,7 +79,7 @@ class SodiumSigner implements SignerInterface
     public function verify($inputTokenStr)
     {
         try {
-            $decodedTokenStr = self::decodeBase64(
+            $decodedTokenStr = Base64UrlSafe::decode(
                 self::normalize($inputTokenStr)
             );
 
@@ -100,24 +100,6 @@ class SodiumSigner implements SignerInterface
             // this is an "user" error!
             throw new InvalidRequestException('unable to decode Base64');
         }
-    }
-
-    /**
-     * @param string $inputStr
-     *
-     * @return string
-     */
-    private static function decodeBase64($inputStr)
-    {
-        // Base64UrlSafe decode
-        if (false === $outputStr = Base64UrlSafe::decode($inputStr)) {
-            // paragonie/constant_time_encoding v1.0.1 sometimes returns
-            // false when decoding fails, so handle this here as well
-            // https://github.com/paragonie/constant_time_encoding/issues/14
-            throw new RangeException('Base64::decode() only expects characters in the correct base64 alphabet');
-        }
-
-        return $outputStr;
     }
 
     /**
