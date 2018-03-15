@@ -22,50 +22,14 @@
  * SOFTWARE.
  */
 
-namespace fkooman\OAuth\Server\Tests;
+namespace fkooman\OAuth\Server;
 
-use fkooman\OAuth\Server\SignerInterface;
-use fkooman\OAuth\Server\VerifierInterface;
-use ParagonIE\ConstantTime\Base64UrlSafe;
-
-/**
- * Dummy "Signer", does not actually sign anything, just contains the data that
- * would be signed by an actual implementation.
- */
-class TestSigner implements SignerInterface, VerifierInterface
+interface VerifierInterface
 {
-    /**
-     * @param array $listOfClaims
-     *
-     * @return string
-     */
-    public function sign(array $listOfClaims)
-    {
-        return rtrim(
-            Base64UrlSafe::encode(
-                json_encode($listOfClaims)
-            ),
-            '='
-        );
-    }
-
     /**
      * @param string $inputTokenStr
      *
      * @return false|array
      */
-    public function verify($inputTokenStr)
-    {
-        $jsonData = json_decode(
-            Base64UrlSafe::decode($inputTokenStr),
-            true
-        );
-
-        // simulate an invalid signature
-        if ('invalid_sig' === $jsonData['auth_key']) {
-            return false;
-        }
-
-        return $jsonData;
-    }
+    public function verify($inputTokenStr);
 }

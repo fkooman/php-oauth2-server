@@ -35,22 +35,22 @@ class BearerValidator
     /** @var callable */
     private $getClientInfo;
 
-    /** @var SignerInterface */
-    private $signer;
+    /** @var VerifierInterface */
+    private $verifier;
 
     /** @var \DateTime */
     private $dateTime;
 
     /**
-     * @param Storage         $storage
-     * @param callable        $getClientInfo
-     * @param SignerInterface $signer
+     * @param Storage           $storage
+     * @param callable          $getClientInfo
+     * @param VerifierInterface $verifier
      */
-    public function __construct(Storage $storage, callable $getClientInfo, SignerInterface $signer)
+    public function __construct(Storage $storage, callable $getClientInfo, VerifierInterface $verifier)
     {
         $this->storage = $storage;
         $this->getClientInfo = $getClientInfo;
-        $this->signer = $signer;
+        $this->verifier = $verifier;
         $this->dateTime = new DateTime();
     }
 
@@ -73,7 +73,7 @@ class BearerValidator
     {
         SyntaxValidator::validateBearerToken($authorizationHeader);
         $providedToken = substr($authorizationHeader, 7);
-        $listOfClaims = $this->signer->verify($providedToken);
+        $listOfClaims = $this->verifier->verify($providedToken);
         if (false === $listOfClaims) {
             throw new InvalidTokenException('"access_token" has invalid signature');
         }

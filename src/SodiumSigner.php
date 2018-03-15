@@ -30,7 +30,7 @@ use ParagonIE\ConstantTime\Base64;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use RangeException;
 
-class SodiumSigner implements SignerInterface
+class SodiumSigner implements SignerInterface, VerifierInterface
 {
     /** @var string */
     private $secretKey;
