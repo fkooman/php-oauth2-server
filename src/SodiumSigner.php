@@ -36,7 +36,7 @@ class SodiumSigner implements SignerInterface
     private $secretKey;
 
     /** @var array */
-    private $publicKeyList;
+    private $publicKeyList = [];
 
     /**
      * @param string $keyPair
@@ -45,10 +45,16 @@ class SodiumSigner implements SignerInterface
     public function __construct($keyPair, array $publicKeyList = [])
     {
         if (SODIUM_CRYPTO_SIGN_KEYPAIRBYTES !== strlen($keyPair)) {
-            throw new ServerErrorException('invalid keypair');
+            throw new ServerErrorException('invalid keypair length');
         }
         $this->secretKey = sodium_crypto_sign_secretkey($keyPair);
-        $this->publicKeyList = [sodium_crypto_sign_publickey($keyPair)] + $publicKeyList;
+        $this->publicKeyList[] = sodium_crypto_sign_publickey($keyPair);
+        foreach ($publicKeyList as $publicKey) {
+            if (SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES !== strlen($publicKey)) {
+                throw new ServerErrorException('invalid public key length');
+            }
+            $this->publicKeyList[] = $publicKey;
+        }
     }
 
     /**
