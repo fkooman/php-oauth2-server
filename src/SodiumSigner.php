@@ -30,24 +30,25 @@ use ParagonIE\ConstantTime\Base64;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use RangeException;
 
-class SodiumSigner implements SignerInterface, VerifierInterface
+class SodiumSigner implements SignerInterface
 {
     /** @var string */
     private $secretKey;
 
-    /** @var string */
-    private $publicKey;
+    /** @var array */
+    private $publicKeyList;
 
     /**
      * @param string $keyPair
+     * @param array  $publicKeyList
      */
-    public function __construct($keyPair)
+    public function __construct($keyPair, array $publicKeyList = [])
     {
         if (SODIUM_CRYPTO_SIGN_KEYPAIRBYTES !== strlen($keyPair)) {
             throw new ServerErrorException('invalid keypair');
         }
         $this->secretKey = sodium_crypto_sign_secretkey($keyPair);
-        $this->publicKey = sodium_crypto_sign_publickey($keyPair);
+        $this->publicKeyList = [sodium_crypto_sign_publickey($keyPair)] + $publicKeyList;
     }
 
     /**
@@ -83,18 +84,23 @@ class SodiumSigner implements SignerInterface, VerifierInterface
                 self::normalize($inputTokenStr)
             );
 
-            if (false === $jsonString = sodium_crypto_sign_open($decodedTokenStr, $this->publicKey)) {
-                return false;
+            foreach ($this->publicKeyList as $publicKey) {
+                if (false !== $jsonString = sodium_crypto_sign_open($decodedTokenStr, $publicKey)) {
+                    $listOfClaims = json_decode($jsonString, true);
+                    if (null === $listOfClaims && JSON_ERROR_NONE !== json_last_error()) {
+                        // this should NEVER happen, as we encode the JSON, so we
+                        // should also be able to parse it!
+                        throw new ServerErrorException('unable to decode JSON');
+                    }
+
+                    // add the public_key for later reference
+                    $listOfClaims['public_key'] = $publicKey;
+
+                    return $listOfClaims;
+                }
             }
 
-            $listOfClaims = json_decode($jsonString, true);
-            if (null === $listOfClaims && JSON_ERROR_NONE !== json_last_error()) {
-                // this should NEVER happen, as we encode the JSON, so we
-                // should also be able to parse it!
-                throw new ServerErrorException('unable to decode JSON');
-            }
-
-            return $listOfClaims;
+            return false;
         } catch (RangeException $e) {
             // this indicates the provided Base64 encoded token is malformed,
             // this is an "user" error!

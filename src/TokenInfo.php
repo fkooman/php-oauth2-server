@@ -40,31 +40,23 @@ class TokenInfo
     /** @var string */
     private $scope;
 
-    /** @var string|null */
-    private $tokenIssuer = null;
+    /** @var string */
+    private $publicKey;
 
     /**
      * @param string $authKey
      * @param string $userId
      * @param string $clientId
      * @param string $scope
+     * @param string $publicKey
      */
-    public function __construct($authKey, $userId, $clientId, $scope)
+    public function __construct($authKey, $userId, $clientId, $scope, $publicKey)
     {
         $this->authKey = $authKey;
         $this->userId = $userId;
         $this->clientId = $clientId;
         $this->scope = $scope;
-    }
-
-    /**
-     * @param string $tokenIssuer
-     *
-     * @return void
-     */
-    public function setIssuer($tokenIssuer)
-    {
-        $this->tokenIssuer = $tokenIssuer;
+        $this->publicKey = $publicKey;
     }
 
     /**
@@ -100,11 +92,11 @@ class TokenInfo
     }
 
     /**
-     * @return string|null
+     * @return string
      */
-    public function getIssuer()
+    public function getPublicKey()
     {
-        return $this->tokenIssuer;
+        return $this->publicKey;
     }
 
     /**

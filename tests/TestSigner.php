@@ -25,14 +25,13 @@
 namespace fkooman\OAuth\Server\Tests;
 
 use fkooman\OAuth\Server\SignerInterface;
-use fkooman\OAuth\Server\VerifierInterface;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 
 /**
  * Dummy "Signer", does not actually sign anything, just contains the data that
  * would be signed by an actual implementation.
  */
-class TestSigner implements SignerInterface, VerifierInterface
+class TestSigner implements SignerInterface
 {
     /**
      * @param array $listOfClaims
@@ -65,6 +64,8 @@ class TestSigner implements SignerInterface, VerifierInterface
         if ('invalid_sig' === $jsonData['auth_key']) {
             return false;
         }
+
+        $jsonData['public_key'] = hex2bin('12345abcdefa');
 
         return $jsonData;
     }

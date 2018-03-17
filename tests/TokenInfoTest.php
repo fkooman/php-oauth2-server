@@ -37,7 +37,8 @@ class TokenInfoTest extends TestCase
                 'auth_key',
                 'user_id',
                 'client_id',
-                'foo bar'
+                'foo bar',
+                hex2bin('12345abcdefa')
             );
             $tokenInfo->requireAnyScope(['baz', 'bar', 'foo']);
             $this->assertTrue(true);
@@ -53,7 +54,8 @@ class TokenInfoTest extends TestCase
                 'auth_key',
                 'user_id',
                 'client_id',
-                'foo bar baz'
+                'foo bar baz',
+                hex2bin('12345abcdefa')
             );
             $tokenInfo->requireAllScope(['baz', 'bar', 'foo']);
             $this->assertTrue(true);
@@ -69,7 +71,8 @@ class TokenInfoTest extends TestCase
                 'auth_key',
                 'user_id',
                 'client_id',
-                'foo bar'
+                'foo bar',
+                hex2bin('12345abcdefa')
             );
             $tokenInfo->requireAnyScope(['baz', 'def']);
             $this->fail();
@@ -85,7 +88,8 @@ class TokenInfoTest extends TestCase
                 'auth_key',
                 'user_id',
                 'client_id',
-                'foo bar'
+                'foo bar',
+                hex2bin('12345abcdefa')
             );
             $tokenInfo->requireAllScope(['baz', 'bar', 'foo']);
             $this->fail();

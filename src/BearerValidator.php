@@ -35,18 +35,18 @@ class BearerValidator
     /** @var callable */
     private $getClientInfo;
 
-    /** @var VerifierInterface */
+    /** @var SignerInterface */
     private $verifier;
 
     /** @var \DateTime */
     private $dateTime;
 
     /**
-     * @param Storage           $storage
-     * @param callable          $getClientInfo
-     * @param VerifierInterface $verifier
+     * @param Storage         $storage
+     * @param callable        $getClientInfo
+     * @param SignerInterface $verifier
      */
-    public function __construct(Storage $storage, callable $getClientInfo, VerifierInterface $verifier)
+    public function __construct(Storage $storage, callable $getClientInfo, SignerInterface $verifier)
     {
         $this->storage = $storage;
         $this->getClientInfo = $getClientInfo;
@@ -88,7 +88,8 @@ class BearerValidator
             $listOfClaims['auth_key'],
             $listOfClaims['user_id'],
             $listOfClaims['client_id'],
-            $listOfClaims['scope']
+            $listOfClaims['scope'],
+            $listOfClaims['public_key']
         );
 
         // as it is signed by us, the client MUST still be there
