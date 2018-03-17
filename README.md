@@ -58,11 +58,11 @@ PHP.
 
 On older PHP versions with PECL libsodium version 1.x:
 
-    $ php -r 'echo base64_encode(\Sodium\crypto_sign_keypair());'
+    $ php -r "file_put_contents('server.key', \Sodium\crypto_sign_keypair());"
 
 On PHP >= 7.2 or PECL libsodium version 2.x:
 
-    $ php -r 'echo base64_encode(sodium_crypto_sign_keypair());'
+    $ php -r "file_put_contents('server.key', sodium_crypto_sign_keypair());"
 
 The output of these commands are typically stored in a configuration file and
 used in the `OAuthServer` constructor, see the example.
