@@ -26,7 +26,7 @@ $baseDir = dirname(__DIR__);
 /** @psalm-suppress UnresolvableInclude */
 require_once sprintf('%s/vendor/autoload.php', $baseDir);
 
-use fkooman\OAuth\Server\Http\HtmlResponse;
+use fkooman\OAuth\Server\Http\Response;
 use fkooman\OAuth\Server\Storage;
 
 try {
@@ -39,7 +39,7 @@ try {
     $userId = 'foo';
 
     // get all authorizations for this user
-    echo '<ul>';
+    echo '<html><head><title>Revoke</title></head><body><ul>';
     foreach ($storage->getAuthorizations($userId) as $authorization) {
         echo sprintf(
             '<li>deleting authorization for user "%s", client "%s" and scope "%s"</li>',
@@ -49,15 +49,15 @@ try {
         );
         $storage->deleteAuthorization($userId, $authorization['client_id'], $authorization['scope']);
     }
-    echo '</ul>';
+    echo '</ul></body></html>';
 } catch (Exception $e) {
     // typically your HTTP framework would take care of this, but here
     // in "plain" PHP we have to take care of it... here we catch all
     // "internal server" errors
-    $htmlResponse = new HtmlResponse(
+    $httpResponse = new Response(
         sprintf('[500] %s', $e->getMessage()),
-        [],
+        ['Content-Type' => 'text/html'],
         500
     );
-    $htmlResponse->send();
+    $httpResponse->send();
 }

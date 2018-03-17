@@ -59,11 +59,11 @@ try {
         return new ClientInfo($oauthClients[$clientId]);
     };
 
-    // the 3rd argument is a generated keypair, see README
     $bearerValidator = new BearerValidator(
         $storage,
         $getClientInfo,
         new SodiumSigner(
+            // see README on how to generate a "server.key"
             file_get_contents('server.key')
         )
     );

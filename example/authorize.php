@@ -28,7 +28,7 @@ require_once sprintf('%s/vendor/autoload.php', $baseDir);
 
 use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\Exception\OAuthException;
-use fkooman\OAuth\Server\Http\HtmlResponse;
+use fkooman\OAuth\Server\Http\Response;
 use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\SodiumSigner;
 use fkooman\OAuth\Server\Storage;
@@ -59,11 +59,11 @@ try {
         return new ClientInfo($oauthClients[$clientId]);
     };
 
-    // the 3rd argument is a generated keypair, see README
     $oauthServer = new OAuthServer(
         $storage,
         $getClientInfo,
         new SodiumSigner(
+            // see README on how to generate a "server.key"
             file_get_contents('server.key')
         )
     );
@@ -92,41 +92,42 @@ try {
             // return an array with data that you can use to ask the user
             // for authorization, this is a very minimal HTML form example
             $authorizeVariables = $oauthServer->getAuthorize($_GET);
-            $htmlResponse = new HtmlResponse(
-                sprintf('<html><head><title>Authorize</title></head><body><pre>%s</pre><form method="post"><button type="submit" name="approve" value="yes">Approve</button><button type="submit" name="approve" value="no">Reject</button></form></body></html>', var_export($authorizeVariables, true))
+            $httpResponse = new Response(
+                sprintf('<html><head><title>Authorize</title></head><body><pre>%s</pre><form method="post"><button type="submit" name="approve" value="yes">Approve</button><button type="submit" name="approve" value="no">Reject</button></form></body></html>', var_export($authorizeVariables, true)),
+                ['Content-Type' => 'text/html']
             );
-            // the HtmlResponse is a simple HTTP wrapper that has the
+            // the Response object is a simple HTTP wrapper that has the
             // statusCode, responseHeaders and responseBody, here we send it
             // directly, if you use a framework you can extract those and pass
             // them along...
-            $htmlResponse->send();
+            $httpResponse->send();
             break;
         case 'POST':
             // you MUST implement CSRF protection!
-            $htmlResponse = $oauthServer->postAuthorize($_GET, $_POST, $userId);
-            $htmlResponse->send();
+            $httpResponse = $oauthServer->postAuthorize($_GET, $_POST, $userId);
+            $httpResponse->send();
             break;
         default:
             // typically your HTTP framework would take care of this, but here
             // in "plain" PHP we have to take care of it...
-            $htmlResponse = new HtmlResponse('[405] Method Not Allowed', ['Allow' => 'GET,HEAD,POST'], 405);
-            $htmlResponse->send();
+            $httpResponse = new Response('[405] Method Not Allowed', ['Content-Type' => 'text/html', 'Allow' => 'GET,HEAD,POST'], 405);
+            $httpResponse->send();
     }
 } catch (OAuthException $e) {
-    $htmlResponse = new HtmlResponse(
+    $httpResponse = new Response(
         sprintf('[%s] %s (%s)', $e->getCode(), $e->getMessage(), $e->getDescription()),
-        [],
+        ['Content-Type' => 'text/html'],
         400
     );
-    $htmlResponse->send();
+    $httpResponse->send();
 } catch (Exception $e) {
     // typically your HTTP framework would take care of this, but here
     // in "plain" PHP we have to take care of it... here we catch all
     // "internal server" errors
-    $htmlResponse = new HtmlResponse(
+    $httpResponse = new Response(
         sprintf('[500] %s', $e->getMessage()),
-        [],
+        ['Content-Type' => 'text/html'],
         500
     );
-    $htmlResponse->send();
+    $httpResponse->send();
 }
