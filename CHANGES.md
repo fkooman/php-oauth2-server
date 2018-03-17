@@ -13,6 +13,8 @@
     methods instead of `BearerValidator`
   - `SodiumSigner` takes the decoded keypair as parameter, no longer Base64 
     encoded
+  - `SodiumSigner` takes decoded public keys as the second parameter to the 
+    constructor
 - introduce `RedirectResponse` for handling redirects instead of 
   `HtmlResponse`
 - change date format to `DateTime::ATOM` format
