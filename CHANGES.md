@@ -1,7 +1,7 @@
 # ChangeLog
 
 ## 3.0.0 (...)
-- many API changes
+- API changes
   - remove `OAuthServer::setExpiry`, `OAuthServer::setExpiresIn`
   - add `OAuthServer::setAccessTokenExpiry` and 
     `OAuthServer::setRefreshTokenExpiry`
@@ -16,7 +16,7 @@
 - introduce `RedirectResponse` for handling redirects instead of 
   `HtmlResponse`
 - change date format to `DateTime::ATOM` format
-- depend on `paragonie/constant_time_encoding` version `^1` explicitly for now
+- depend on `paragonie/constant_time_encoding` version `^1` explicitly now
 
 ## 2.2.0 (2018-01-10)
 - all issued tokens are also "URL safe" now (without padding), Base64 encoded 
