@@ -64,8 +64,8 @@ On PHP >= 7.2 or PECL libsodium version 2.x:
 
     $ php -r "file_put_contents('server.key', sodium_crypto_sign_keypair());"
 
-The output of these commands are typically stored in a configuration file and
-used in the `OAuthServer` constructor, see the example.
+The data in `server.key` file can then be used as input to the `SodiumSigner` 
+class, see the example.
 
 # License
 
