@@ -98,7 +98,7 @@ class BearerValidatorTest extends TestCase
             $this->validator->validate('Bearer eyJ0eXBlIjoiYWNjZXNzX3Rva2VuIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDE6MDA6MDAifQ');
             $this->fail();
         } catch (InvalidTokenException $e) {
-            $this->assertSame('client no longer registered', $e->getDescription());
+            $this->assertSame('client "code-client" no longer registered', $e->getDescription());
         }
     }
 

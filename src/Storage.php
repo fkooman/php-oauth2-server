@@ -52,9 +52,6 @@ class Storage
         // we will attempt to store the authKey in the database, there is a
         // duplicate contraint, so it will fail if the identical authKey is
         // already there
-        //
-        // we will also store the datetime, so we can cleanup the table
-        //
         try {
             $stmt = $this->db->prepare(
                 'INSERT INTO auth_key_log (

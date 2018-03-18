@@ -94,12 +94,12 @@ class BearerValidator
 
         // as it is signed by us, the client MUST still be there
         if (false === call_user_func($this->getClientInfo, $tokenInfo->getClientId())) {
-            throw new InvalidTokenException('client no longer registered');
+            throw new InvalidTokenException(sprintf('client "%s" no longer registered', $tokenInfo->getClientId()));
         }
 
         // it MUST exist in the DB as well, otherwise it was revoked...
         if (!$this->storage->hasAuthorization($tokenInfo->getAuthKey())) {
-            throw new InvalidTokenException('authorization for client no longer exists');
+            throw new InvalidTokenException(sprintf('authorization for client "%s" no longer exists', $tokenInfo->getClientId()));
         }
 
         return $tokenInfo;
