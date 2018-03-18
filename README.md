@@ -59,13 +59,16 @@ PHP.
 On older PHP versions with PECL libsodium version 1.x:
 
     $ php -r "file_put_contents('server.key', \Sodium\crypto_sign_keypair());"
+    $ php -r "file_put_contents('public.key', \Sodium\crypto_sign_publickey(file_get_contents('server.key')));"
 
 On PHP >= 7.2 or PECL libsodium version 2.x:
 
     $ php -r "file_put_contents('server.key', sodium_crypto_sign_keypair());"
+    $ php -r "file_put_contents('public.key', sodium_crypto_sign_publickey(file_get_contents('server.key')));"
 
 The data in `server.key` file can then be used as input to the `SodiumSigner` 
-class, see the example.
+class, see the example. The `public.key` file will contain only the public 
+component of the keypair.
 
 # License
 
