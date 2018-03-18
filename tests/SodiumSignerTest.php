@@ -44,6 +44,7 @@ class SodiumSignerTest extends TestCase
         $this->assertSame(
             [
                 'foo' => 'bar',
+                'is_local' => true,
                 'public_key' => hex2bin('8eb83482647f677615be50834ba9043588a5c07e62be88ba80ab7f2c6785f76d'),
             ],
             $sodiumSigner->verify(
@@ -73,6 +74,7 @@ class SodiumSignerTest extends TestCase
         $this->assertSame(
             [
                 'foo' => 'bar',
+                'is_local' => false,
                 'public_key' => hex2bin('8eb83482647f677615be50834ba9043588a5c07e62be88ba80ab7f2c6785f76d'),
             ],
             $sodiumSigner->verify(

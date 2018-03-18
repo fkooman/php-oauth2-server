@@ -65,6 +65,7 @@ class TestSigner implements SignerInterface
             return false;
         }
 
+        $jsonData['is_local'] = true;
         $jsonData['public_key'] = hex2bin('12345abcdefa');
 
         return $jsonData;

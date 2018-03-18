@@ -90,7 +90,8 @@ class SodiumSigner implements SignerInterface
                 self::normalize($inputTokenStr)
             );
 
-            foreach ($this->publicKeyList as $publicKey) {
+            for ($i = 0; $i < count($this->publicKeyList); ++$i) {
+                $publicKey = $this->publicKeyList[$i];
                 if (false !== $jsonString = sodium_crypto_sign_open($decodedTokenStr, $publicKey)) {
                     $listOfClaims = json_decode($jsonString, true);
                     if (null === $listOfClaims && JSON_ERROR_NONE !== json_last_error()) {
@@ -99,6 +100,8 @@ class SodiumSigner implements SignerInterface
                         throw new ServerErrorException('unable to decode JSON');
                     }
 
+                    // mark the signature as "local"
+                    $listOfClaims['is_local'] = 0 === $i;
                     // add the public_key for later reference
                     $listOfClaims['public_key'] = $publicKey;
 
