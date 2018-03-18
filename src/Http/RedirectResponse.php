@@ -32,6 +32,13 @@ class RedirectResponse extends Response
      */
     public function __construct($redirectUri, $statusCode = 302)
     {
-        parent::__construct('', ['Location' => $redirectUri], $statusCode);
+        parent::__construct(
+            '',
+            [
+                'Location' => $redirectUri,
+                'Content-Type' => 'text/html; charset=utf-8',
+            ],
+            $statusCode
+        );
     }
 }
