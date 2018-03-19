@@ -28,6 +28,7 @@ use fkooman\OAuth\Server\Exception\InvalidRequestException;
 use fkooman\OAuth\Server\Exception\ServerErrorException;
 use ParagonIE\ConstantTime\Base64;
 use ParagonIE\ConstantTime\Base64UrlSafe;
+use ParagonIE\ConstantTime\Binary;
 use RangeException;
 
 class SodiumSigner implements SignerInterface
@@ -44,17 +45,17 @@ class SodiumSigner implements SignerInterface
      */
     public function __construct($keyPair, array $publicKeyList = [])
     {
-        if (SODIUM_CRYPTO_SIGN_KEYPAIRBYTES !== strlen($keyPair)) {
+        if (SODIUM_CRYPTO_SIGN_KEYPAIRBYTES !== Binary::safeStrlen($keyPair)) {
             throw new ServerErrorException('invalid keypair length');
         }
         $this->secretKey = sodium_crypto_sign_secretkey($keyPair);
         $this->publicKeyList['local'] = sodium_crypto_sign_publickey($keyPair);
 
         foreach ($publicKeyList as $keyId => $publicKey) {
-            if (!is_string($keyId) || 0 >= strlen($keyId) || 'local' === $keyId) {
+            if (!is_string($keyId) || 0 >= Binary::safeStrlen($keyId) || 'local' === $keyId) {
                 throw new ServerErrorException('keyId MUST be non-empty string != "local"');
             }
-            if (SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES !== strlen($publicKey)) {
+            if (SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES !== Binary::safeStrlen($publicKey)) {
                 throw new ServerErrorException(sprintf('invalid public key length for key "%s"', $keyId));
             }
             $this->publicKeyList[$keyId] = $publicKey;

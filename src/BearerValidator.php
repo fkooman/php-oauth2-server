@@ -26,6 +26,7 @@ namespace fkooman\OAuth\Server;
 
 use DateTime;
 use fkooman\OAuth\Server\Exception\InvalidTokenException;
+use ParagonIE\ConstantTime\Binary;
 
 class BearerValidator
 {
@@ -72,7 +73,7 @@ class BearerValidator
     public function validate($authorizationHeader)
     {
         SyntaxValidator::validateBearerToken($authorizationHeader);
-        $providedToken = substr($authorizationHeader, 7);
+        $providedToken = Binary::safeSubstr($authorizationHeader, 7);
         $listOfClaims = $this->verifier->verify($providedToken);
         if (false === $listOfClaims) {
             throw new InvalidTokenException('"access_token" has invalid signature');
