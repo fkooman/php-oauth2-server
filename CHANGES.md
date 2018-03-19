@@ -18,8 +18,8 @@
 - introduce `RedirectResponse` for handling redirects;
 - remove `HtmlResponse`
 - change date format to `DateTime::ATOM` format in issued tokens
-- no longer expire refresh tokens by default, require explicit call to
-  `OAuthServer::setRefreshTokenExpiry`
+- no longer expire refresh tokens by default, requiring explicit call to
+  `OAuthServer::setRefreshTokenExpiry` to make refresh tokens expire
 
 ## 2.2.0 (2018-01-10)
 - all issued tokens are also "URL safe" now (without padding), Base64 encoded 

@@ -70,6 +70,29 @@ The data in `server.key` file can then be used as input to the `SodiumSigner`
 class, see the example. The `public.key` file will contain only the public 
 component of the keypair.
 
+# Accepting Additional Public Keys
+
+The `BearerValidator` class can be configured to accept additional public keys 
+in addition to the "local" one that is also used for signing authorization 
+codes, refresh tokens and access tokens.
+
+This can be configured by specifying a second parameter to the `SodiumSigner` 
+constructor, using a mapping between key identifiers (key ID) and the 
+(binary) public key. For example:
+
+    $sodiumSigner = new SodiumSigner(
+        file_get_contents('server_1.key'),  // local key
+        [
+            'server_2' => file_get_contents('server_2_public.key'), // remote key
+            'server_3' => file_get_contents('server_3_public.key'), // remote key
+        ]
+    );
+
+The `TokenInfo::getKeyId` method can be used to verify which public key was 
+used to verify the Bearer token. If the local key was used, this call will 
+return `local`, otherwise the Key ID as configured. Here that would be either 
+`server_1` or `server_2`.
+
 # License
 
 [MIT](LICENSE).
