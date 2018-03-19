@@ -91,7 +91,7 @@ constructor, using a mapping between key identifiers (key ID) and the
 The `TokenInfo::getKeyId` method can be used to verify which public key was 
 used to verify the Bearer token. If the local key was used, this call will 
 return `local`, otherwise the Key ID as configured. Here that would be either 
-`server_1` or `server_2`.
+`server_2` or `server_3`.
 
 # License
 
