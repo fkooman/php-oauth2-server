@@ -67,7 +67,9 @@ class SodiumSignerTest extends TestCase
         $sodiumSigner = new SodiumSigner(
             file_get_contents(sprintf('%s/data/server_2.key', __DIR__)),
             [
+                'remote_0' => hex2bin('8eb83482647f677615be50834ba9043588a5c07e62be88ba80ab7f2c6785f75d'),
                 'remote' => hex2bin('8eb83482647f677615be50834ba9043588a5c07e62be88ba80ab7f2c6785f76d'),
+                'remote_2' => hex2bin('8eb83482647f677615be50834ba9043588a5c07e62be88ba80ab7f2c6785f77d'),
             ]
         );
         $this->assertSame(
