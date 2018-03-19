@@ -7,18 +7,19 @@
     `OAuthServer::setRefreshTokenExpiry`
   - `OAuthServer` constructor takes `SignerInterface` now instead of a string
     keypair, implementation available as `SodiumSigner`
-  - add `SodiumSigner` that is compatible with previously issued access and 
-    refresh tokens
+  - add `SodiumSigner` which is compatible with previously issued access and 
+    refresh tokens (from version ^2)
   - the `TokenInfo` object now has the `requireAnyScope` and `requireAllScope` 
     methods instead of `BearerValidator`
   - `SodiumSigner` takes the decoded keypair as parameter, no longer Base64 
     encoded
   - `SodiumSigner` takes decoded public keys as the second parameter to the 
-    constructor
-- introduce `RedirectResponse` for handling redirects instead of 
-  `HtmlResponse`
-- change date format to `DateTime::ATOM` format
-- depend on `paragonie/constant_time_encoding` version `^1` explicitly now
+    constructor, where the array key is the key ID
+- introduce `RedirectResponse` for handling redirects;
+- remove `HtmlResponse`
+- change date format to `DateTime::ATOM` format in issued tokens
+- no longer expire refresh tokens by default, require explicit call to
+  `OAuthServer::setRefreshTokenExpiry`
 
 ## 2.2.0 (2018-01-10)
 - all issued tokens are also "URL safe" now (without padding), Base64 encoded 

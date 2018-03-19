@@ -54,8 +54,8 @@ class OAuthServer
     /** @var \DateInterval */
     private $accessTokenExpiry;
 
-    /** @var \DateInterval */
-    private $refreshTokenExpiry;
+    /** @var null|\DateInterval */
+    private $refreshTokenExpiry = null;
 
     /**
      * @param Storage         $storage
@@ -70,7 +70,6 @@ class OAuthServer
         $this->random = new Random();
         $this->dateTime = new DateTime();
         $this->accessTokenExpiry = new DateInterval('PT1H');    // 1 hour
-        $this->refreshTokenExpiry = new DateInterval('P1Y');    // 1 year
     }
 
     /**
@@ -371,10 +370,9 @@ class OAuthServer
 
         self::requireType('refresh_token', $refreshTokenInfo['type']);
 
-        // check refresh_token expiry
+        // check refresh_token expiry, refresh token expiry is OPTIONAL,
+        // disable by default...
         if (array_key_exists('expires_at', $refreshTokenInfo)) {
-            // versions of fkooman/oauth2-server < 2.2.0 did not have expiring
-            // refresh tokens, we accept those without verifying the expiry
             if ($this->dateTime >= new DateTime($refreshTokenInfo['expires_at'])) {
                 throw new InvalidGrantException('"refresh_token" expired');
             }
@@ -472,18 +470,20 @@ class OAuthServer
      */
     private function getRefreshToken($userId, $clientId, $scope, $authKey)
     {
-        $expiresAt = date_add(clone $this->dateTime, $this->refreshTokenExpiry);
+        $refreshTokenInfo = [
+            'type' => 'refresh_token',
+            'auth_key' => $authKey, // to bind it to the authorization
+            'user_id' => $userId,
+            'client_id' => $clientId,
+            'scope' => $scope,
+        ];
 
-        return $this->signer->sign(
-            [
-                'type' => 'refresh_token',
-                'auth_key' => $authKey, // to bind it to the authorization
-                'user_id' => $userId,
-                'client_id' => $clientId,
-                'scope' => $scope,
-                'expires_at' => $expiresAt->format(DateTime::ATOM),
-            ]
-        );
+        if (null !== $this->refreshTokenExpiry) {
+            $expiresAt = date_add(clone $this->dateTime, $this->refreshTokenExpiry);
+            $refreshTokenInfo['expires_at'] = $expiresAt->format(DateTime::ATOM);
+        }
+
+        return $this->signer->sign($refreshTokenInfo);
     }
 
     /**

@@ -84,7 +84,7 @@ class BearerValidatorTest extends TestCase
     {
         try {
             $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
-            $tokenInfo = $this->validator->validate('Bearer eyJ0eXBlIjoiYWNjZXNzX3Rva2VuIiwiYXV0aF9rZXkiOiJpbnZhbGlkX3NpZyIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDE6MDA6MDAifQ');
+            $this->validator->validate('Bearer eyJ0eXBlIjoiYWNjZXNzX3Rva2VuIiwiYXV0aF9rZXkiOiJpbnZhbGlkX3NpZyIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDE6MDA6MDAifQ');
             $this->fail();
         } catch (InvalidTokenException $e) {
             $this->assertSame('"access_token" has invalid signature', $e->getDescription());

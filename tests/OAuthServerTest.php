@@ -24,6 +24,7 @@
 
 namespace fkooman\OAuth\Server\Tests;
 
+use DateInterval;
 use DateTime;
 use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\Exception\InvalidClientException;
@@ -87,6 +88,7 @@ class OAuthServerTest extends TestCase
         );
         $this->server->setDateTime(new DateTime('2016-01-01'));
         $this->server->setRandom(new TestRandom());
+        $this->server->setRefreshTokenExpiry(new DateInterval('P1Y'));
     }
 
     public function testAuthorizeCode()
@@ -252,7 +254,7 @@ class OAuthServerTest extends TestCase
     {
         try {
             $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
-            $tokenResponse = $this->server->postToken(
+            $this->server->postToken(
                 [
                     'grant_type' => 'authorization_code',
                     'code' => 'eyJ0eXBlIjoiYXV0aG9yaXphdGlvbl9jb2RlIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwicmVkaXJlY3RfdXJpIjoiaHR0cDpcL1wvZXhhbXBsZS5vcmdcL2NvZGUtY2IiLCJjb2RlX2NoYWxsZW5nZSI6IkU5TWVsaG9hMk93dkZyRU1USmd1Q0hhb2VLMXQ4VVJXYnVHSlNzdHctY00iLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMDowNTowMCJ9',
@@ -416,7 +418,7 @@ class OAuthServerTest extends TestCase
     {
         try {
             $this->storage->storeAuthorization('foo', 'code-client-secret', 'config', 'random_1');
-            $tokenResponse = $this->server->postToken(
+            $this->server->postToken(
                 [
                     'grant_type' => 'refresh_token',
                     'refresh_token' => 'eyJ0eXBlIjoicmVmcmVzaF90b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQtc2VjcmV0Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNS0wMS0wMSAwMDowMDowMCJ9Cg',
