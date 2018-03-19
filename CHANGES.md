@@ -1,6 +1,6 @@
 # ChangeLog
 
-## 3.0.0 (...)
+## 3.0.0 (2018-03-19)
 - API changes
   - remove `OAuthServer::setExpiry`, `OAuthServer::setExpiresIn`
   - add `OAuthServer::setAccessTokenExpiry` and 

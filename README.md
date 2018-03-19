@@ -7,7 +7,7 @@ to be compatible with PHP 5.4.
 the League of Extraordinary Packages! It can be found 
 [here](https://oauth2.thephpleague.com/).
 
-# Clients
+# Client Support
 
 All (optional) OAuth authorization and token request parameters MUST always be
 sent.
@@ -21,7 +21,7 @@ sent.
 - Does not force a framework on you;
 - There will be no toggles to shoot yourself in the foot;
 - Supports [PKCE](https://tools.ietf.org/html/rfc7636);
-- Supports refresh tokens;
+- Supports (expiring) refresh tokens;
 - Do NOT implement RFC 6749 (#4.1.2.1) error response (except for 
   `access_denied`);
 
@@ -59,16 +59,16 @@ PHP.
 On older PHP versions with PECL libsodium version 1.x:
 
     $ php -r "file_put_contents('server.key', \Sodium\crypto_sign_keypair());"
-    $ php -r "file_put_contents('public.key', \Sodium\crypto_sign_publickey(file_get_contents('server.key')));"
+    $ php -r "file_put_contents('server_public.key', \Sodium\crypto_sign_publickey(file_get_contents('server.key')));"
 
 On PHP >= 7.2 or PECL libsodium version 2.x:
 
     $ php -r "file_put_contents('server.key', sodium_crypto_sign_keypair());"
-    $ php -r "file_put_contents('public.key', sodium_crypto_sign_publickey(file_get_contents('server.key')));"
+    $ php -r "file_put_contents('server_public.key', sodium_crypto_sign_publickey(file_get_contents('server.key')));"
 
 The data in `server.key` file can then be used as input to the `SodiumSigner` 
-class, see the example. The `public.key` file will contain only the public 
-component of the keypair.
+class, see the example. The `server_public.key` file will contain only the 
+public component of the keypair.
 
 # Accepting Additional Public Keys
 
