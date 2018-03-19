@@ -40,28 +40,23 @@ class TokenInfo
     /** @var string */
     private $scope;
 
-    /** @var bool */
-    private $isLocal;
-
     /** @var string */
-    private $publicKey;
+    private $keyId;
 
     /**
      * @param string $authKey
      * @param string $userId
      * @param string $clientId
      * @param string $scope
-     * @param bool   $isLocal
-     * @param string $publicKey
+     * @param string $keyId
      */
-    public function __construct($authKey, $userId, $clientId, $scope, $isLocal, $publicKey)
+    public function __construct($authKey, $userId, $clientId, $scope, $keyId)
     {
         $this->authKey = $authKey;
         $this->userId = $userId;
         $this->clientId = $clientId;
         $this->scope = $scope;
-        $this->isLocal = $isLocal;
-        $this->publicKey = $publicKey;
+        $this->keyId = $keyId;
     }
 
     /**
@@ -97,19 +92,11 @@ class TokenInfo
     }
 
     /**
-     * @return bool
-     */
-    public function getIsLocal()
-    {
-        return $this->isLocal;
-    }
-
-    /**
      * @return string
      */
-    public function getPublicKey()
+    public function getKeyId()
     {
-        return $this->publicKey;
+        return $this->keyId;
     }
 
     /**

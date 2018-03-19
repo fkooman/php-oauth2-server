@@ -44,8 +44,7 @@ class SodiumSignerTest extends TestCase
         $this->assertSame(
             [
                 'foo' => 'bar',
-                'is_local' => true,
-                'public_key' => hex2bin('8eb83482647f677615be50834ba9043588a5c07e62be88ba80ab7f2c6785f76d'),
+                'key_id' => 'local',
             ],
             $sodiumSigner->verify(
                 's2J7rZp6UK9xiXSa9fZ6CjDbotGnx7YrAtD84w5WyMU_-RnkVlw6FxCsPSrgP7njSXgL-Wsa6O8HvEW3aSYaAXsiZm9vIjoiYmFyIn0'
@@ -68,14 +67,13 @@ class SodiumSignerTest extends TestCase
         $sodiumSigner = new SodiumSigner(
             file_get_contents(sprintf('%s/data/server_2.key', __DIR__)),
             [
-                hex2bin('8eb83482647f677615be50834ba9043588a5c07e62be88ba80ab7f2c6785f76d'),
+                'remote' => hex2bin('8eb83482647f677615be50834ba9043588a5c07e62be88ba80ab7f2c6785f76d'),
             ]
         );
         $this->assertSame(
             [
                 'foo' => 'bar',
-                'is_local' => false,
-                'public_key' => hex2bin('8eb83482647f677615be50834ba9043588a5c07e62be88ba80ab7f2c6785f76d'),
+                'key_id' => 'remote',
             ],
             $sodiumSigner->verify(
                 's2J7rZp6UK9xiXSa9fZ6CjDbotGnx7YrAtD84w5WyMU_-RnkVlw6FxCsPSrgP7njSXgL-Wsa6O8HvEW3aSYaAXsiZm9vIjoiYmFyIn0'

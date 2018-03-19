@@ -89,11 +89,10 @@ class BearerValidator
             $listOfClaims['user_id'],
             $listOfClaims['client_id'],
             $listOfClaims['scope'],
-            $listOfClaims['is_local'],
-            $listOfClaims['public_key']
+            $listOfClaims['key_id']
         );
 
-        if ($tokenInfo->getIsLocal()) {
+        if ('local' === $tokenInfo->getKeyId()) {
             // as it is signed by us, the client MUST still be there
             if (false === call_user_func($this->getClientInfo, $tokenInfo->getClientId())) {
                 throw new InvalidTokenException(sprintf('client "%s" no longer registered', $tokenInfo->getClientId()));

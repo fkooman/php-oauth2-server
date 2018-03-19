@@ -48,12 +48,16 @@ class SodiumSigner implements SignerInterface
             throw new ServerErrorException('invalid keypair length');
         }
         $this->secretKey = sodium_crypto_sign_secretkey($keyPair);
-        $this->publicKeyList[] = sodium_crypto_sign_publickey($keyPair);
-        foreach ($publicKeyList as $publicKey) {
-            if (SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES !== strlen($publicKey)) {
-                throw new ServerErrorException('invalid public key length');
+        $this->publicKeyList['local'] = sodium_crypto_sign_publickey($keyPair);
+
+        foreach ($publicKeyList as $keyId => $publicKey) {
+            if (!is_string($keyId) || 0 >= strlen($keyId) || 'local' === $keyId) {
+                throw new ServerErrorException('keyId MUST be non-empty string != "local"');
             }
-            $this->publicKeyList[] = $publicKey;
+            if (SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES !== strlen($publicKey)) {
+                throw new ServerErrorException(sprintf('invalid public key length for key "%s"', $keyId));
+            }
+            $this->publicKeyList[$keyId] = $publicKey;
         }
     }
 
@@ -90,8 +94,7 @@ class SodiumSigner implements SignerInterface
                 self::normalize($inputTokenStr)
             );
 
-            for ($i = 0; $i < count($this->publicKeyList); ++$i) {
-                $publicKey = $this->publicKeyList[$i];
+            foreach ($this->publicKeyList as $keyId => $publicKey) {
                 if (false !== $jsonString = sodium_crypto_sign_open($decodedTokenStr, $publicKey)) {
                     $listOfClaims = json_decode($jsonString, true);
                     if (null === $listOfClaims && JSON_ERROR_NONE !== json_last_error()) {
@@ -99,11 +102,7 @@ class SodiumSigner implements SignerInterface
                         // should also be able to parse it!
                         throw new ServerErrorException('unable to decode JSON');
                     }
-
-                    // mark the signature as "local"
-                    $listOfClaims['is_local'] = 0 === $i;
-                    // add the public_key for later reference
-                    $listOfClaims['public_key'] = $publicKey;
+                    $listOfClaims['key_id'] = $keyId;
 
                     return $listOfClaims;
                 }

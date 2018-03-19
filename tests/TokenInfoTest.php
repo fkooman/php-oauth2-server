@@ -38,8 +38,7 @@ class TokenInfoTest extends TestCase
                 'user_id',
                 'client_id',
                 'foo bar',
-                true,
-                hex2bin('12345abcdefa')
+                'local'
             );
             $tokenInfo->requireAnyScope(['baz', 'bar', 'foo']);
             $this->assertTrue(true);
@@ -56,8 +55,7 @@ class TokenInfoTest extends TestCase
                 'user_id',
                 'client_id',
                 'foo bar baz',
-                true,
-                hex2bin('12345abcdefa')
+                'local'
             );
             $tokenInfo->requireAllScope(['baz', 'bar', 'foo']);
             $this->assertTrue(true);
@@ -74,8 +72,7 @@ class TokenInfoTest extends TestCase
                 'user_id',
                 'client_id',
                 'foo bar',
-                true,
-                hex2bin('12345abcdefa')
+                'local'
             );
             $tokenInfo->requireAnyScope(['baz', 'def']);
             $this->fail();
@@ -92,8 +89,7 @@ class TokenInfoTest extends TestCase
                 'user_id',
                 'client_id',
                 'foo bar',
-                true,
-                hex2bin('12345abcdefa')
+                'local'
             );
             $tokenInfo->requireAllScope(['baz', 'bar', 'foo']);
             $this->fail();
