@@ -26,7 +26,6 @@ namespace fkooman\OAuth\Server;
 
 use fkooman\OAuth\Server\Exception\InvalidRequestException;
 use fkooman\OAuth\Server\Exception\ServerErrorException;
-use ParagonIE\ConstantTime\Base64;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\ConstantTime\Binary;
 use RangeException;
