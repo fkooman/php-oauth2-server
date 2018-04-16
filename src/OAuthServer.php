@@ -29,7 +29,6 @@ use DateTime;
 use fkooman\OAuth\Server\Exception\InvalidClientException;
 use fkooman\OAuth\Server\Exception\InvalidGrantException;
 use fkooman\OAuth\Server\Exception\InvalidRequestException;
-use fkooman\OAuth\Server\Exception\InvalidTokenException;
 use fkooman\OAuth\Server\Http\JsonResponse;
 use fkooman\OAuth\Server\Http\RedirectResponse;
 use ParagonIE\ConstantTime\Base64UrlSafe;
@@ -168,7 +167,7 @@ class OAuthServer
         if ('no' === $postData['approve']) {
             // user did not approve, tell OAuth client
             return new RedirectResponse(
-                self::prepareRedirectUri(
+                Util::prepareRedirectUri(
                     $getData['redirect_uri'],
                     [
                         'error' => 'access_denied',
@@ -199,7 +198,7 @@ class OAuthServer
         );
 
         return new RedirectResponse(
-            self::prepareRedirectUri(
+            Util::prepareRedirectUri(
                 $getData['redirect_uri'],
                 [
                     'code' => $authorizationCode,
@@ -228,25 +227,6 @@ class OAuthServer
                 return $this->postTokenRefreshToken($postData, $authUser, $authPass);
             default:
                 throw new InvalidRequestException('invalid "grant_type"');
-        }
-    }
-
-    /**
-     * @param string $requiredType
-     * @param string $providedType
-     *
-     * @return void
-     */
-    public static function requireType($requiredType, $providedType)
-    {
-        // make sure we have the required type
-        if ($requiredType !== $providedType) {
-            $errorMsg = sprintf('expected "%s", got "%s"', $requiredType, $providedType);
-            if ('access_token' === $requiredType) {
-                throw new InvalidTokenException($errorMsg);
-            }
-
-            throw new InvalidGrantException($errorMsg);
         }
     }
 
@@ -292,7 +272,7 @@ class OAuthServer
             throw new InvalidGrantException('"authorization_code" has invalid signature');
         }
 
-        self::requireType('authorization_code', $codeInfo['type']);
+        Util::requireType('authorization_code', $codeInfo['type']);
 
         // check authorization_code expiry
         if ($this->dateTime >= new DateTime($codeInfo['expires_at'])) {
@@ -368,7 +348,7 @@ class OAuthServer
             throw new InvalidGrantException('"refresh_token" has invalid signature');
         }
 
-        self::requireType('refresh_token', $refreshTokenInfo['type']);
+        Util::requireType('refresh_token', $refreshTokenInfo['type']);
 
         // check refresh_token expiry, refresh token expiry is OPTIONAL,
         // disable by default...
@@ -414,22 +394,6 @@ class OAuthServer
                 'Cache-Control' => 'no-store',
                 'Pragma' => 'no-cache',
             ]
-        );
-    }
-
-    /**
-     * @param string $redirectUri
-     * @param array  $queryParameters
-     *
-     * @return string
-     */
-    private static function prepareRedirectUri($redirectUri, array $queryParameters)
-    {
-        return sprintf(
-            '%s%s%s',
-            $redirectUri,
-            false === strpos($redirectUri, '?') ? '?' : '&',
-            http_build_query($queryParameters)
         );
     }
 

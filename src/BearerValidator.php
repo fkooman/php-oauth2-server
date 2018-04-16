@@ -78,7 +78,7 @@ class BearerValidator
         if (false === $listOfClaims) {
             throw new InvalidTokenException('"access_token" has invalid signature');
         }
-        OAuthServer::requireType('access_token', $listOfClaims['type']);
+        Util::requireType('access_token', $listOfClaims['type']);
 
         // check access_token expiry
         if ($this->dateTime >= new DateTime($listOfClaims['expires_at'])) {

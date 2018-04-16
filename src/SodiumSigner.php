@@ -68,15 +68,10 @@ class SodiumSigner implements SignerInterface
      */
     public function sign(array $listOfClaims)
     {
-        $jsonString = json_encode($listOfClaims);
-        if (false === $jsonString && JSON_ERROR_NONE !== json_last_error()) {
-            throw new ServerErrorException('unable to encode JSON');
-        }
-
         // Base64UrlSafe without padding
         return rtrim(
             Base64UrlSafe::encode(
-                sodium_crypto_sign($jsonString, $this->secretKey)
+                sodium_crypto_sign(Util::encodeJson($listOfClaims), $this->secretKey)
             ),
             '='
         );
@@ -95,13 +90,9 @@ class SodiumSigner implements SignerInterface
             );
 
             foreach ($this->publicKeyList as $keyId => $publicKey) {
-                if (false !== $jsonString = sodium_crypto_sign_open($decodedTokenStr, $publicKey)) {
-                    $listOfClaims = json_decode($jsonString, true);
-                    if (null === $listOfClaims && JSON_ERROR_NONE !== json_last_error()) {
-                        // this should NEVER happen, as we encode the JSON, so we
-                        // should also be able to parse it!
-                        throw new ServerErrorException('unable to decode JSON');
-                    }
+                $jsonString = sodium_crypto_sign_open($decodedTokenStr, $publicKey);
+                if (false !== $jsonString) {
+                    $listOfClaims = Util::decodeJson($jsonString);
                     $listOfClaims['key_id'] = $keyId;
 
                     return $listOfClaims;

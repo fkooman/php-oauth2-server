@@ -24,7 +24,7 @@
 
 namespace fkooman\OAuth\Server\Http;
 
-use fkooman\OAuth\Server\Exception\ServerErrorException;
+use fkooman\OAuth\Server\Util;
 
 class JsonResponse extends Response
 {
@@ -35,12 +35,11 @@ class JsonResponse extends Response
      */
     public function __construct($jsonData, array $responseHeaders = [], $statusCode = 200)
     {
-        $jsonString = json_encode($jsonData);
-        if (false === $jsonString) {
-            throw new ServerErrorException('unable to encode JSON');
-        }
-
         $responseHeaders['Content-Type'] = 'application/json';
-        parent::__construct($jsonString, $responseHeaders, $statusCode);
+        parent::__construct(
+            Util::encodeJson($jsonData),
+            $responseHeaders,
+            $statusCode
+        );
     }
 }
