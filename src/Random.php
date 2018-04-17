@@ -36,7 +36,7 @@ class Random implements RandomInterface
     public function get($length)
     {
         return Hex::encode(
-            random_bytes($length)
+            \random_bytes($length)
         );
     }
 }

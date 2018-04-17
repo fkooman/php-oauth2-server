@@ -40,7 +40,7 @@ class SyntaxValidator
     {
         // client-id  = *VSCHAR
         // VSCHAR     = %x20-7E
-        if (1 !== preg_match('/^[\x20-\x7E]+$/', $clientId)) {
+        if (1 !== \preg_match('/^[\x20-\x7E]+$/', $clientId)) {
             throw new InvalidRequestException('invalid "client_id"');
         }
     }
@@ -56,7 +56,7 @@ class SyntaxValidator
     {
         // code       = 1*VSCHAR
         // VSCHAR     = %x20-7E
-        if (1 !== preg_match('/^[\x20-\x7E]+$/', $code)) {
+        if (1 !== \preg_match('/^[\x20-\x7E]+$/', $code)) {
             throw new InvalidRequestException('invalid "code"');
         }
     }
@@ -100,8 +100,8 @@ class SyntaxValidator
         // scope       = scope-token *( SP scope-token )
         // scope-token = 1*NQCHAR
         // NQCHAR      = %x21 / %x23-5B / %x5D-7E
-        foreach (explode(' ', $scope) as $scopeToken) {
-            if (1 !== preg_match('/^[\x21\x23-\x5B\x5D-\x7E]+$/', $scopeToken)) {
+        foreach (\explode(' ', $scope) as $scopeToken) {
+            if (1 !== \preg_match('/^[\x21\x23-\x5B\x5D-\x7E]+$/', $scopeToken)) {
                 throw new InvalidScopeException('invalid "scope"');
             }
         }
@@ -116,7 +116,7 @@ class SyntaxValidator
     {
         // state      = 1*VSCHAR
         // VSCHAR     = %x20-7E
-        if (1 !== preg_match('/^[\x20-\x7E]+$/', $state)) {
+        if (1 !== \preg_match('/^[\x20-\x7E]+$/', $state)) {
             throw new InvalidRequestException('invalid "state"');
         }
     }
@@ -144,7 +144,7 @@ class SyntaxValidator
         // unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
         // ALPHA         = %x41-5A / %x61-7A
         // DIGIT         = %x30-39
-        if (1 !== preg_match('/^[\x41-\x5A\x61-\x7A\x30-\x39-._~]{43,128}$/', $codeVerifier)) {
+        if (1 !== \preg_match('/^[\x41-\x5A\x61-\x7A\x30-\x39-._~]{43,128}$/', $codeVerifier)) {
             throw new InvalidRequestException('invalid "code_verifier"');
         }
     }
@@ -158,7 +158,7 @@ class SyntaxValidator
     {
         // it seems the length of the codeChallenge is always 43 because it is
         // the output of the SHA256 hashing algorithm
-        if (1 !== preg_match('/^[\x41-\x5A\x61-\x7A\x30-\x39-_]{43}$/', $codeChallenge)) {
+        if (1 !== \preg_match('/^[\x41-\x5A\x61-\x7A\x30-\x39-_]{43}$/', $codeChallenge)) {
             throw new InvalidRequestException('invalid "code_challenge"');
         }
     }
@@ -170,7 +170,7 @@ class SyntaxValidator
      */
     public static function validateApprove($approve)
     {
-        if (!in_array($approve, ['yes', 'no'], true)) {
+        if (!\in_array($approve, ['yes', 'no'], true)) {
             throw new InvalidRequestException('invalid "approve"');
         }
     }
@@ -184,7 +184,7 @@ class SyntaxValidator
     {
         // refresh-token = 1*VSCHAR
         // VSCHAR        = %x20-7E
-        if (1 !== preg_match('/^[\x20-\x7E]+$/', $refreshToken)) {
+        if (1 !== \preg_match('/^[\x20-\x7E]+$/', $refreshToken)) {
             throw new InvalidRequestException('invalid "refresh_token"');
         }
     }
@@ -199,7 +199,7 @@ class SyntaxValidator
         // b64token    = 1*( ALPHA / DIGIT /
         //                   "-" / "." / "_" / "~" / "+" / "/" ) *"="
         // credentials = "Bearer" 1*SP b64token
-        if (1 !== preg_match('|^Bearer [a-zA-Z0-9-._~+/]+=*$|', $bearerToken)) {
+        if (1 !== \preg_match('|^Bearer [a-zA-Z0-9-._~+/]+=*$|', $bearerToken)) {
             throw new InvalidTokenException('invalid Bearer token');
         }
     }

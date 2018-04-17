@@ -38,6 +38,6 @@ class TestRandom implements RandomInterface
      */
     public function get($length)
     {
-        return sprintf('random_%d', $this->counter++);
+        return \sprintf('random_%d', $this->counter++);
     }
 }

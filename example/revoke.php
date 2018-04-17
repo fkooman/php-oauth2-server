@@ -22,16 +22,16 @@
  * SOFTWARE.
  */
 
-$baseDir = dirname(__DIR__);
+$baseDir = \dirname(__DIR__);
 /** @psalm-suppress UnresolvableInclude */
-require_once sprintf('%s/vendor/autoload.php', $baseDir);
+require_once \sprintf('%s/vendor/autoload.php', $baseDir);
 
 use fkooman\OAuth\Server\Http\Response;
 use fkooman\OAuth\Server\Storage;
 
 try {
     // persistent storage for access_token authorizations
-    $storage = new Storage(new PDO(sprintf('sqlite:%s/data/db.sqlite', $baseDir)));
+    $storage = new Storage(new PDO(\sprintf('sqlite:%s/data/db.sqlite', $baseDir)));
     $storage->init();
 
     // user authentication MUST take place, here we ignore this for simplicity,
@@ -41,7 +41,7 @@ try {
     // get all authorizations for this user
     echo '<html><head><title>Revoke</title></head><body><ul>';
     foreach ($storage->getAuthorizations($userId) as $authorization) {
-        echo sprintf(
+        echo \sprintf(
             '<li>deleting authorization for user "%s", client "%s" and scope "%s"</li>',
             $userId,
             $authorization['client_id'],
@@ -55,7 +55,7 @@ try {
     // in "plain" PHP we have to take care of it... here we catch all
     // "internal server" errors
     $httpResponse = new Response(
-        sprintf('[500] %s', $e->getMessage()),
+        \sprintf('[500] %s', $e->getMessage()),
         ['Content-Type' => 'text/html'],
         500
     );

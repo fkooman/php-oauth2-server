@@ -9,6 +9,7 @@ return PhpCsFixer\Config::create()
             'ordered_imports' => true,
             'ordered_class_elements' => true,
             'array_syntax' => ['syntax' => 'short'],
+            'native_function_invocation' => true,
             'phpdoc_order' => true,
             'phpdoc_no_empty_return' => false,
             'phpdoc_add_missing_param_annotation' => true,
@@ -37,7 +38,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 EOD
-             ]
+             ],
         ]
     )
     ->setFinder(PhpCsFixer\Finder::create()->in(__DIR__));

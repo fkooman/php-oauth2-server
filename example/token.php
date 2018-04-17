@@ -22,9 +22,9 @@
  * SOFTWARE.
  */
 
-$baseDir = dirname(__DIR__);
+$baseDir = \dirname(__DIR__);
 /** @psalm-suppress UnresolvableInclude */
-require_once sprintf('%s/vendor/autoload.php', $baseDir);
+require_once \sprintf('%s/vendor/autoload.php', $baseDir);
 
 use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\Exception\OAuthException;
@@ -35,7 +35,7 @@ use fkooman\OAuth\Server\Storage;
 
 try {
     // persistent storage for access_token authorizations
-    $storage = new Storage(new PDO(sprintf('sqlite:%s/data/db.sqlite', $baseDir)));
+    $storage = new Storage(new PDO(\sprintf('sqlite:%s/data/db.sqlite', $baseDir)));
     $storage->init();
 
     // callback to "convert" a client_id into a ClientInfo object, typically
@@ -52,7 +52,7 @@ try {
         ];
 
         // if the client with this client_id does not exist, we return false...
-        if (!array_key_exists($clientId, $oauthClients)) {
+        if (!\array_key_exists($clientId, $oauthClients)) {
             return false;
         }
 
@@ -64,7 +64,7 @@ try {
         $getClientInfo,
         new SodiumSigner(
             // see README on how to generate a "server.key"
-            file_get_contents('server.key')
+            \file_get_contents('server.key')
         )
     );
 
@@ -76,12 +76,12 @@ try {
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'POST':
             // here we obtain the "Basic Authentication" user and pass
-            $authUser = array_key_exists('PHP_AUTH_USER', $_SERVER) ? $_SERVER['PHP_AUTH_USER'] : null;
-            $authPass = array_key_exists('PHP_AUTH_PW', $_SERVER) ? $_SERVER['PHP_AUTH_PW'] : null;
+            $authUser = \array_key_exists('PHP_AUTH_USER', $_SERVER) ? $_SERVER['PHP_AUTH_USER'] : null;
+            $authPass = \array_key_exists('PHP_AUTH_PW', $_SERVER) ? $_SERVER['PHP_AUTH_PW'] : null;
             $jsonResponse = $oauthServer->postToken($_POST, $authUser, $authPass);
 
             // we print the HTTP response to the "error_log" for easy debugging
-            error_log(var_export($jsonResponse, true));
+            \error_log(\var_export($jsonResponse, true));
             $jsonResponse->send();
             break;
         default:
@@ -97,13 +97,13 @@ try {
                 ],
                 405
             );
-            error_log(var_export($jsonResponse, true));
+            \error_log(\var_export($jsonResponse, true));
             $jsonResponse->send();
     }
 } catch (OAuthException $e) {
     // the Exception also contains a JsonResponse, like above
     $jsonResponse = $e->getJsonResponse();
-    error_log(var_export($jsonResponse, true));
+    \error_log(\var_export($jsonResponse, true));
     $jsonResponse->send();
 } catch (Exception $e) {
     // typically your HTTP framework would take care of this, but here
@@ -117,6 +117,6 @@ try {
         [],
         500
     );
-    error_log(var_export($jsonResponse, true));
+    \error_log(\var_export($jsonResponse, true));
     $jsonResponse->send();
 }

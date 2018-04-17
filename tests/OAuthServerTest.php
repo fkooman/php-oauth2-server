@@ -71,7 +71,7 @@ class OAuthServerTest extends TestCase
         ];
 
         $getClientInfo = function ($clientId) use ($oauthClients) {
-            if (!array_key_exists($clientId, $oauthClients)) {
+            if (!\array_key_exists($clientId, $oauthClients)) {
                 return false;
             }
 
@@ -222,7 +222,7 @@ class OAuthServerTest extends TestCase
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
-            json_decode($tokenResponse->getBody(), true)
+            \json_decode($tokenResponse->getBody(), true)
         );
     }
 
@@ -246,7 +246,7 @@ class OAuthServerTest extends TestCase
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
-            json_decode($tokenResponse->getBody(), true)
+            \json_decode($tokenResponse->getBody(), true)
         );
     }
 
@@ -388,7 +388,7 @@ class OAuthServerTest extends TestCase
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
-            json_decode($tokenResponse->getBody(), true)
+            \json_decode($tokenResponse->getBody(), true)
         );
     }
 
@@ -410,7 +410,7 @@ class OAuthServerTest extends TestCase
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
-            json_decode($tokenResponse->getBody(), true)
+            \json_decode($tokenResponse->getBody(), true)
         );
     }
 
@@ -461,8 +461,8 @@ class OAuthServerTest extends TestCase
         $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_2');
         $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_3');
         $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_4');
-        $this->assertSame(1, count($this->storage->getAuthorizations('foo')));
+        $this->assertSame(1, \count($this->storage->getAuthorizations('foo')));
         $this->storage->deleteAuthorization('foo', 'code-client', 'config');
-        $this->assertSame(0, count($this->storage->getAuthorizations('foo')));
+        $this->assertSame(0, \count($this->storage->getAuthorizations('foo')));
     }
 }

@@ -53,7 +53,7 @@ class BearerValidatorTest extends TestCase
         ];
 
         $getClientInfo = function ($clientId) {
-            if (!array_key_exists($clientId, $this->oauthClients)) {
+            if (!\array_key_exists($clientId, $this->oauthClients)) {
                 return false;
             }
 

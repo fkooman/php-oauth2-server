@@ -22,9 +22,9 @@
  * SOFTWARE.
  */
 
-$baseDir = dirname(__DIR__);
+$baseDir = \dirname(__DIR__);
 /** @psalm-suppress UnresolvableInclude */
-require_once sprintf('%s/vendor/autoload.php', $baseDir);
+require_once \sprintf('%s/vendor/autoload.php', $baseDir);
 
 use fkooman\OAuth\Server\BearerValidator;
 use fkooman\OAuth\Server\ClientInfo;
@@ -35,7 +35,7 @@ use fkooman\OAuth\Server\Storage;
 
 try {
     // persistent storage for access_token authorizations
-    $storage = new Storage(new PDO(sprintf('sqlite:%s/data/db.sqlite', $baseDir)));
+    $storage = new Storage(new PDO(\sprintf('sqlite:%s/data/db.sqlite', $baseDir)));
     $storage->init();
 
     // callback to "convert" a client_id into a ClientInfo object, typically
@@ -52,7 +52,7 @@ try {
         ];
 
         // if the client with this client_id does not exist, we return false...
-        if (!array_key_exists($clientId, $oauthClients)) {
+        if (!\array_key_exists($clientId, $oauthClients)) {
             return false;
         }
 
@@ -64,7 +64,7 @@ try {
         $getClientInfo,
         new SodiumSigner(
             // see README on how to generate a "server.key"
-            file_get_contents('server.key')
+            \file_get_contents('server.key')
         )
     );
 
@@ -103,7 +103,7 @@ try {
     }
 } catch (OAuthException $e) {
     // the Exception contains an JsonResponse
-    error_log(var_export($e->getJsonResponse(), true));
+    \error_log(\var_export($e->getJsonResponse(), true));
     $e->getJsonResponse()->send();
 } catch (Exception $e) {
     // typically your HTTP framework would take care of this, but here

@@ -37,8 +37,8 @@ class Util
      */
     public static function encodeJson($jsonData)
     {
-        $jsonString = json_encode($jsonData);
-        if (false === $jsonString && JSON_ERROR_NONE !== json_last_error()) {
+        $jsonString = \json_encode($jsonData);
+        if (false === $jsonString && JSON_ERROR_NONE !== \json_last_error()) {
             throw new ServerErrorException('unable to encode JSON');
         }
 
@@ -52,8 +52,8 @@ class Util
      */
     public static function decodeJson($jsonString)
     {
-        $jsonData = json_decode($jsonString, true);
-        if (null === $jsonData && JSON_ERROR_NONE !== json_last_error()) {
+        $jsonData = \json_decode($jsonString, true);
+        if (null === $jsonData && JSON_ERROR_NONE !== \json_last_error()) {
             throw new ServerErrorException('unable to decode JSON');
         }
 
@@ -68,11 +68,11 @@ class Util
      */
     public static function prepareRedirectUri($redirectUri, array $queryParameters)
     {
-        return sprintf(
+        return \sprintf(
             '%s%s%s',
             $redirectUri,
-            false === strpos($redirectUri, '?') ? '?' : '&',
-            http_build_query($queryParameters)
+            false === \strpos($redirectUri, '?') ? '?' : '&',
+            \http_build_query($queryParameters)
         );
     }
 
@@ -86,7 +86,7 @@ class Util
     {
         // make sure we have the required type
         if ($requiredType !== $providedType) {
-            $errorMsg = sprintf('expected "%s", got "%s"', $requiredType, $providedType);
+            $errorMsg = \sprintf('expected "%s", got "%s"', $requiredType, $providedType);
             if ('access_token' === $requiredType) {
                 throw new InvalidTokenException($errorMsg);
             }
@@ -105,6 +105,6 @@ class Util
      */
     public static function stripPadding($inputStr)
     {
-        return rtrim($inputStr, '=');
+        return \rtrim($inputStr, '=');
     }
 }

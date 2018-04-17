@@ -51,11 +51,11 @@ class SodiumSigner implements SignerInterface
         $this->publicKeyList['local'] = sodium_crypto_sign_publickey($keyPair);
 
         foreach ($publicKeyList as $keyId => $publicKey) {
-            if (!is_string($keyId) || 0 >= Binary::safeStrlen($keyId) || 'local' === $keyId) {
+            if (!\is_string($keyId) || 0 >= Binary::safeStrlen($keyId) || 'local' === $keyId) {
                 throw new ServerErrorException('keyId MUST be non-empty string != "local"');
             }
             if (SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES !== Binary::safeStrlen($publicKey)) {
-                throw new ServerErrorException(sprintf('invalid public key length for key "%s"', $keyId));
+                throw new ServerErrorException(\sprintf('invalid public key length for key "%s"', $keyId));
             }
             $this->publicKeyList[$keyId] = $publicKey;
         }
@@ -117,7 +117,7 @@ class SodiumSigner implements SignerInterface
         // now we only generate Base64UrlSafe strings (without padding), but
         // we want to accept the old ones as well!
         return Util::stripPadding(
-            str_replace(
+            \str_replace(
                 ['+', '/'],
                 ['-', '_'],
                 $receivedCodeToken

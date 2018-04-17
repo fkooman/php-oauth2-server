@@ -194,7 +194,7 @@ class OAuthServer
             $getData['scope'],
             $getData['redirect_uri'],
             $authKey,
-            array_key_exists('code_challenge', $getData) ? $getData['code_challenge'] : null
+            \array_key_exists('code_challenge', $getData) ? $getData['code_challenge'] : null
         );
 
         return new RedirectResponse(
@@ -352,7 +352,7 @@ class OAuthServer
 
         // check refresh_token expiry, refresh token expiry is OPTIONAL,
         // disable by default...
-        if (array_key_exists('expires_at', $refreshTokenInfo)) {
+        if (\array_key_exists('expires_at', $refreshTokenInfo)) {
             if ($this->dateTime >= new DateTime($refreshTokenInfo['expires_at'])) {
                 throw new InvalidGrantException('"refresh_token" expired');
             }
@@ -410,7 +410,7 @@ class OAuthServer
         // for prevention of replays of authorization codes and the revocation
         // of access tokens when an authorization code is replayed, we use the
         // "auth_key" as a tag for the issued access tokens
-        $expiresAt = date_add(clone $this->dateTime, $this->accessTokenExpiry);
+        $expiresAt = \date_add(clone $this->dateTime, $this->accessTokenExpiry);
 
         return $this->signer->sign(
             [
@@ -443,7 +443,7 @@ class OAuthServer
         ];
 
         if (null !== $this->refreshTokenExpiry) {
-            $expiresAt = date_add(clone $this->dateTime, $this->refreshTokenExpiry);
+            $expiresAt = \date_add(clone $this->dateTime, $this->refreshTokenExpiry);
             $refreshTokenInfo['expires_at'] = $expiresAt->format(DateTime::ATOM);
         }
 
@@ -463,7 +463,7 @@ class OAuthServer
     private function getAuthorizationCode($userId, $clientId, $scope, $redirectUri, $authKey, $codeChallenge)
     {
         // authorization codes expire after 5 minutes
-        $expiresAt = date_add($this->dateTime, new DateInterval('PT5M'));
+        $expiresAt = \date_add($this->dateTime, new DateInterval('PT5M'));
 
         return $this->signer->sign(
             [
@@ -515,11 +515,11 @@ class OAuthServer
                 throw new InvalidClientException('"client_id" does not match authenticating user');
             }
 
-            if (!is_string($authPass)) {
+            if (!\is_string($authPass)) {
                 throw new InvalidClientException('invalid credentials (no authenticating pass)');
             }
 
-            if (false === hash_equals($clientSecret, $authPass)) {
+            if (false === \hash_equals($clientSecret, $authPass)) {
                 throw new InvalidClientException('invalid credentials (invalid authenticating pass)');
             }
         }
@@ -538,16 +538,16 @@ class OAuthServer
     {
         // only for public clients
         if (null === $clientInfo->getSecret()) {
-            if (!array_key_exists('code_verifier', $postData)) {
+            if (!\array_key_exists('code_verifier', $postData)) {
                 throw new InvalidRequestException('missing "code_verifier" parameter');
             }
 
             // compare code_challenge with expected value
-            $strCmp = hash_equals(
+            $strCmp = \hash_equals(
                 $codeInfo['code_challenge'],
                 Util::stripPadding(
                     Base64UrlSafe::encode(
-                        hash(
+                        \hash(
                             'sha256',
                             $postData['code_verifier'],
                             true
@@ -569,7 +569,7 @@ class OAuthServer
      */
     private function getClient($clientId)
     {
-        if (false === $clientInfo = call_user_func($this->getClientInfo, $clientId)) {
+        if (false === $clientInfo = \call_user_func($this->getClientInfo, $clientId)) {
             throw new InvalidClientException('client does not exist with this "client_id"');
         }
 
@@ -583,6 +583,6 @@ class OAuthServer
      */
     private function toExpiresIn(DateInterval $dateInterval)
     {
-        return date_add(clone $this->dateTime, $dateInterval)->getTimestamp() - $this->dateTime->getTimestamp();
+        return \date_add(clone $this->dateTime, $dateInterval)->getTimestamp() - $this->dateTime->getTimestamp();
     }
 }

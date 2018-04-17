@@ -31,15 +31,15 @@
  * @see https://github.com/paragonie/sodium_compat
  */
 
-if (!defined('SODIUM_CRYPTO_SIGN_KEYPAIRBYTES')) {
-    define('SODIUM_CRYPTO_SIGN_KEYPAIRBYTES', \Sodium\CRYPTO_SIGN_KEYPAIRBYTES);
+if (!\defined('SODIUM_CRYPTO_SIGN_KEYPAIRBYTES')) {
+    \define('SODIUM_CRYPTO_SIGN_KEYPAIRBYTES', \Sodium\CRYPTO_SIGN_KEYPAIRBYTES);
 }
 
-if (!defined('SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES')) {
-    define('SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES', \Sodium\CRYPTO_SIGN_PUBLICKEYBYTES);
+if (!\defined('SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES')) {
+    \define('SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES', \Sodium\CRYPTO_SIGN_PUBLICKEYBYTES);
 }
 
-if (!is_callable('sodium_crypto_sign_publickey')) {
+if (!\is_callable('sodium_crypto_sign_publickey')) {
     /**
      * @param string $keypair
      *
@@ -51,7 +51,7 @@ if (!is_callable('sodium_crypto_sign_publickey')) {
     }
 }
 
-if (!is_callable('sodium_crypto_sign')) {
+if (!\is_callable('sodium_crypto_sign')) {
     /**
      * @param string $message
      * @param string $sk
@@ -64,7 +64,7 @@ if (!is_callable('sodium_crypto_sign')) {
     }
 }
 
-if (!is_callable('sodium_crypto_sign_secretkey')) {
+if (!\is_callable('sodium_crypto_sign_secretkey')) {
     /**
      * @param string $keypair
      *
@@ -76,7 +76,7 @@ if (!is_callable('sodium_crypto_sign_secretkey')) {
     }
 }
 
-if (!is_callable('sodium_crypto_sign_open')) {
+if (!\is_callable('sodium_crypto_sign_open')) {
     /**
      * @param string $signedMessage
      * @param string $pk

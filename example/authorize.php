@@ -22,9 +22,9 @@
  * SOFTWARE.
  */
 
-$baseDir = dirname(__DIR__);
+$baseDir = \dirname(__DIR__);
 /** @psalm-suppress UnresolvableInclude */
-require_once sprintf('%s/vendor/autoload.php', $baseDir);
+require_once \sprintf('%s/vendor/autoload.php', $baseDir);
 
 use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\Exception\OAuthException;
@@ -35,7 +35,7 @@ use fkooman\OAuth\Server\Storage;
 
 try {
     // persistent storage for access_token authorizations
-    $storage = new Storage(new PDO(sprintf('sqlite:%s/data/db.sqlite', $baseDir)));
+    $storage = new Storage(new PDO(\sprintf('sqlite:%s/data/db.sqlite', $baseDir)));
     $storage->init();
 
     // callback to "convert" a client_id into a ClientInfo object, typically
@@ -52,7 +52,7 @@ try {
         ];
 
         // if the client with this client_id does not exist, we return false...
-        if (!array_key_exists($clientId, $oauthClients)) {
+        if (!\array_key_exists($clientId, $oauthClients)) {
             return false;
         }
 
@@ -64,7 +64,7 @@ try {
         $getClientInfo,
         new SodiumSigner(
             // see README on how to generate a "server.key"
-            file_get_contents('server.key')
+            \file_get_contents('server.key')
         )
     );
 
@@ -93,7 +93,7 @@ try {
             // for authorization, this is a very minimal HTML form example
             $authorizeVariables = $oauthServer->getAuthorize($_GET);
             $httpResponse = new Response(
-                sprintf('<html><head><title>Authorize</title></head><body><pre>%s</pre><form method="post"><button type="submit" name="approve" value="yes">Approve</button><button type="submit" name="approve" value="no">Reject</button></form></body></html>', var_export($authorizeVariables, true)),
+                \sprintf('<html><head><title>Authorize</title></head><body><pre>%s</pre><form method="post"><button type="submit" name="approve" value="yes">Approve</button><button type="submit" name="approve" value="no">Reject</button></form></body></html>', \var_export($authorizeVariables, true)),
                 ['Content-Type' => 'text/html']
             );
             // the Response object is a simple HTTP wrapper that has the
@@ -115,7 +115,7 @@ try {
     }
 } catch (OAuthException $e) {
     $httpResponse = new Response(
-        sprintf('[%s] %s (%s)', $e->getCode(), $e->getMessage(), $e->getDescription()),
+        \sprintf('[%s] %s (%s)', $e->getCode(), $e->getMessage(), $e->getDescription()),
         ['Content-Type' => 'text/html'],
         400
     );
@@ -125,7 +125,7 @@ try {
     // in "plain" PHP we have to take care of it... here we catch all
     // "internal server" errors
     $httpResponse = new Response(
-        sprintf('[500] %s', $e->getMessage()),
+        \sprintf('[500] %s', $e->getMessage()),
         ['Content-Type' => 'text/html'],
         500
     );

@@ -35,8 +35,8 @@ class RequestValidator
     {
         // REQUIRED
         foreach (['client_id', 'redirect_uri', 'response_type', 'scope', 'state'] as $queryParameter) {
-            if (!array_key_exists($queryParameter, $getData)) {
-                throw new InvalidRequestException(sprintf('missing "%s" parameter', $queryParameter));
+            if (!\array_key_exists($queryParameter, $getData)) {
+                throw new InvalidRequestException(\sprintf('missing "%s" parameter', $queryParameter));
             }
         }
 
@@ -47,10 +47,10 @@ class RequestValidator
         SyntaxValidator::validateState($getData['state']);
 
         // OPTIONAL
-        if (array_key_exists('code_challenge_method', $getData)) {
+        if (\array_key_exists('code_challenge_method', $getData)) {
             SyntaxValidator::validateCodeChallengeMethod($getData['code_challenge_method']);
         }
-        if (array_key_exists('code_challenge', $getData)) {
+        if (\array_key_exists('code_challenge', $getData)) {
             SyntaxValidator::validateCodeChallenge($getData['code_challenge']);
         }
     }
@@ -60,7 +60,7 @@ class RequestValidator
      */
     public static function validateAuthorizePostParameters(array $postData)
     {
-        if (!array_key_exists('approve', $postData)) {
+        if (!\array_key_exists('approve', $postData)) {
             throw new InvalidRequestException('missing "approve" parameter');
         }
 
@@ -73,7 +73,7 @@ class RequestValidator
     public static function validateTokenPostParameters(array $postData)
     {
         // "grant_type" is ALWAYS required
-        if (!array_key_exists('grant_type', $postData)) {
+        if (!\array_key_exists('grant_type', $postData)) {
             throw new InvalidRequestException('missing "grant_type" parameter');
         }
         SyntaxValidator::validateGrantType($postData['grant_type']);
@@ -95,10 +95,10 @@ class RequestValidator
      */
     public static function validatePkceParameters(array $getData)
     {
-        if (!array_key_exists('code_challenge_method', $getData)) {
+        if (!\array_key_exists('code_challenge_method', $getData)) {
             throw new InvalidRequestException('missing "code_challenge_method" parameter');
         }
-        if (!array_key_exists('code_challenge', $getData)) {
+        if (!\array_key_exists('code_challenge', $getData)) {
             throw new InvalidRequestException('missing "code_challenge" parameter');
         }
     }
@@ -109,8 +109,8 @@ class RequestValidator
     private static function validateAuthorizationCode(array $postData)
     {
         foreach (['code', 'redirect_uri', 'client_id'] as $postParameter) {
-            if (!array_key_exists($postParameter, $postData)) {
-                throw new InvalidRequestException(sprintf('missing "%s" parameter', $postParameter));
+            if (!\array_key_exists($postParameter, $postData)) {
+                throw new InvalidRequestException(\sprintf('missing "%s" parameter', $postParameter));
             }
         }
 
@@ -120,7 +120,7 @@ class RequestValidator
         SyntaxValidator::validateClientId($postData['client_id']);
 
         // OPTIONAL
-        if (array_key_exists('code_verifier', $postData)) {
+        if (\array_key_exists('code_verifier', $postData)) {
             SyntaxValidator::validateCodeVerifier($postData['code_verifier']);
         }
     }
@@ -131,8 +131,8 @@ class RequestValidator
     private static function validateRefreshToken(array $postData)
     {
         foreach (['refresh_token', 'scope'] as $postParameter) {
-            if (!array_key_exists($postParameter, $postData)) {
-                throw new InvalidRequestException(sprintf('missing "%s" parameter', $postParameter));
+            if (!\array_key_exists($postParameter, $postData)) {
+                throw new InvalidRequestException(\sprintf('missing "%s" parameter', $postParameter));
             }
         }
         SyntaxValidator::validateRefreshToken($postData['refresh_token']);

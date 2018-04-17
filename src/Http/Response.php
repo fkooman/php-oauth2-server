@@ -76,9 +76,9 @@ class Response
      */
     public function send()
     {
-        http_response_code($this->statusCode);
+        \http_response_code($this->statusCode);
         foreach ($this->responseHeaders as $k => $v) {
-            header(sprintf('%s: %s', $k, $v));
+            \header(\sprintf('%s: %s', $k, $v));
         }
         echo $this->responseBody;
     }

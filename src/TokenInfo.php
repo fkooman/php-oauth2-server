@@ -108,10 +108,10 @@ class TokenInfo
      */
     public function requireAllScope(array $requiredScopeList)
     {
-        $grantedScopeList = explode(' ', $this->scope);
+        $grantedScopeList = \explode(' ', $this->scope);
         foreach ($requiredScopeList as $requiredScope) {
-            if (!in_array($requiredScope, $grantedScopeList, true)) {
-                throw new InsufficientScopeException(sprintf('scope "%s" not granted', $requiredScope));
+            if (!\in_array($requiredScope, $grantedScopeList, true)) {
+                throw new InsufficientScopeException(\sprintf('scope "%s" not granted', $requiredScope));
             }
         }
     }
@@ -125,16 +125,16 @@ class TokenInfo
      */
     public function requireAnyScope(array $requiredScopeList)
     {
-        $grantedScopeList = explode(' ', $this->scope);
+        $grantedScopeList = \explode(' ', $this->scope);
         $hasAny = false;
         foreach ($requiredScopeList as $requiredScope) {
-            if (in_array($requiredScope, $grantedScopeList, true)) {
+            if (\in_array($requiredScope, $grantedScopeList, true)) {
                 $hasAny = true;
             }
         }
 
         if (!$hasAny) {
-            throw new InsufficientScopeException(sprintf('not any of scopes "%s" granted', implode(' ', $requiredScopeList)));
+            throw new InsufficientScopeException(\sprintf('not any of scopes "%s" granted', \implode(' ', $requiredScopeList)));
         }
     }
 }

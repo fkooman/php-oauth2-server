@@ -45,21 +45,21 @@ class ClientInfo
      */
     public function __construct(array $clientInfo)
     {
-        if (!array_key_exists('redirect_uri_list', $clientInfo)) {
+        if (!\array_key_exists('redirect_uri_list', $clientInfo)) {
             throw new ServerErrorException('"redirect_uri_list" not in client database');
         }
-        if (!is_array($clientInfo['redirect_uri_list'])) {
+        if (!\is_array($clientInfo['redirect_uri_list'])) {
             throw new ServerErrorException('"redirect_uri_list" not an array');
         }
         $this->redirectUriList = $clientInfo['redirect_uri_list'];
 
-        if (array_key_exists('require_approval', $clientInfo)) {
+        if (\array_key_exists('require_approval', $clientInfo)) {
             $this->requireApproval = (bool) $clientInfo['require_approval'];
         }
-        if (array_key_exists('display_name', $clientInfo)) {
+        if (\array_key_exists('display_name', $clientInfo)) {
             $this->displayName = $clientInfo['display_name'];
         }
-        if (array_key_exists('client_secret', $clientInfo)) {
+        if (\array_key_exists('client_secret', $clientInfo)) {
             $this->clientSecret = $clientInfo['client_secret'];
         }
     }
@@ -95,21 +95,21 @@ class ClientInfo
      */
     public function isValidRedirectUri($redirectUri)
     {
-        if (in_array($redirectUri, $this->redirectUriList, true)) {
+        if (\in_array($redirectUri, $this->redirectUriList, true)) {
             return true;
         }
 
         // parsing is NOT great... but don't see how to avoid it here, we need
         // to accept all ports and both IPv4 and IPv6 for loopback entries
         foreach ($this->redirectUriList as $clientRedirectUri) {
-            if (0 === strpos($clientRedirectUri, 'http://127.0.0.1:{PORT}/')) {
+            if (0 === \strpos($clientRedirectUri, 'http://127.0.0.1:{PORT}/')) {
                 // IPv4
                 if (self::portMatch($clientRedirectUri, $redirectUri)) {
                     return true;
                 }
             }
 
-            if (0 === strpos($clientRedirectUri, 'http://[::1]:{PORT}/')) {
+            if (0 === \strpos($clientRedirectUri, 'http://[::1]:{PORT}/')) {
                 // IPv6
                 if (self::portMatch($clientRedirectUri, $redirectUri)) {
                     return true;
@@ -129,14 +129,14 @@ class ClientInfo
     private static function portMatch($clientRedirectUri, $redirectUri)
     {
         // there should be a better way...
-        if (false === $port = parse_url($redirectUri, PHP_URL_PORT)) {
+        if (false === $port = \parse_url($redirectUri, PHP_URL_PORT)) {
             return false;
         }
         // only allow non-root ports
-        if (!is_int($port) || 1024 > $port || 65535 < $port) {
+        if (!\is_int($port) || 1024 > $port || 65535 < $port) {
             return false;
         }
-        $clientRedirectUriWithPort = str_replace('{PORT}', (string) $port, $clientRedirectUri);
+        $clientRedirectUriWithPort = \str_replace('{PORT}', (string) $port, $clientRedirectUri);
 
         return $redirectUri === $clientRedirectUriWithPort;
     }
