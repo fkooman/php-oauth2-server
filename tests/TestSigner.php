@@ -43,7 +43,7 @@ class TestSigner implements SignerInterface
     {
         return Util::stripPadding(
             Base64UrlSafe::encode(
-                \json_encode($listOfClaims)
+                Util::encodeJson($listOfClaims)
             )
         );
     }
@@ -55,9 +55,8 @@ class TestSigner implements SignerInterface
      */
     public function verify($inputTokenStr)
     {
-        $jsonData = \json_decode(
-            Base64UrlSafe::decode($inputTokenStr),
-            true
+        $jsonData = Util::decodeJson(
+            Base64UrlSafe::decode($inputTokenStr)
         );
 
         // simulate an invalid signature
