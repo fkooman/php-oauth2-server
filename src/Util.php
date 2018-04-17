@@ -94,4 +94,17 @@ class Util
             throw new InvalidGrantException($errorMsg);
         }
     }
+
+    /**
+     * Version ^1 of paragonie/constant_time_encoding does not support
+     * Base64UrlSafe::encodeUnpadded, so we implement that here...
+     *
+     * @param string $inputStr
+     *
+     * @return string
+     */
+    public static function stripPadding($inputStr)
+    {
+        return rtrim($inputStr, '=');
+    }
 }

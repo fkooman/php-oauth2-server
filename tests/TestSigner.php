@@ -25,6 +25,7 @@
 namespace fkooman\OAuth\Server\Tests;
 
 use fkooman\OAuth\Server\SignerInterface;
+use fkooman\OAuth\Server\Util;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 
 /**
@@ -40,11 +41,10 @@ class TestSigner implements SignerInterface
      */
     public function sign(array $listOfClaims)
     {
-        return rtrim(
+        return Util::stripPadding(
             Base64UrlSafe::encode(
                 json_encode($listOfClaims)
-            ),
-            '='
+            )
         );
     }
 

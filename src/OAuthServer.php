@@ -542,26 +542,21 @@ class OAuthServer
                 throw new InvalidRequestException('missing "code_verifier" parameter');
             }
 
-            // constant time compare of the code_challenge compared to the
-            // expected value
-            if (false === hash_equals(
+            // compare code_challenge with expected value
+            $strCmp = hash_equals(
                 $codeInfo['code_challenge'],
-                // https://github.com/paragonie/constant_time_encoding/issues/9
-                // it's unknown if rtrim() is cache-timing-safe. This is fixed
-                // in version 2.2 of paragonie/constant_time_encoding, but that
-                // version requires php ^7, so we can't use it yet, we would
-                // use Base64UrlSafe::encodeUnpadded then
-                rtrim(
+                Util::stripPadding(
                     Base64UrlSafe::encode(
                         hash(
                             'sha256',
                             $postData['code_verifier'],
                             true
                         )
-                    ),
-                    '='
+                    )
                 )
-            )) {
+            );
+
+            if (false === $strCmp) {
                 throw new InvalidGrantException('invalid "code_verifier"');
             }
         }

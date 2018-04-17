@@ -69,11 +69,10 @@ class SodiumSigner implements SignerInterface
     public function sign(array $listOfClaims)
     {
         // Base64UrlSafe without padding
-        return rtrim(
+        return Util::stripPadding(
             Base64UrlSafe::encode(
                 sodium_crypto_sign(Util::encodeJson($listOfClaims), $this->secretKey)
-            ),
-            '='
+            )
         );
     }
 
@@ -117,13 +116,12 @@ class SodiumSigner implements SignerInterface
         // in earlier versions we supported standard Base64 encoding as well,
         // now we only generate Base64UrlSafe strings (without padding), but
         // we want to accept the old ones as well!
-        return rtrim(
+        return Util::stripPadding(
             str_replace(
                 ['+', '/'],
                 ['-', '_'],
                 $receivedCodeToken
-            ),
-            '='
+            )
         );
     }
 }
