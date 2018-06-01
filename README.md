@@ -45,7 +45,7 @@ in web server:
 If you have an OAuth client you can point it to 
 `http://localhost:8080/authorize.php`.
 
-You can use [php-oauth2-client](https://github.com/fkooman/php-oauth2-client/) 
+You can use [php-oauth2-client](https://git.tuxed.net/fkooman/php-oauth2-client/)
 as a client to interact with this server, the example there is configured 
 to work with this server.
 
