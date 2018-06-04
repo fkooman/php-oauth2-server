@@ -39,5 +39,9 @@
         "ext-libsodium": "PHP < 7.2 sodium implementation",
         "ext-sodium": "PHP >= 7.2 sodium implementation"
     },
+    "support": {
+        "email": "fkooman@tuxed.net",
+        "source": "https://git.tuxed.net/fkooman/php-oauth2-server"
+    },
     "type": "library"
 }
