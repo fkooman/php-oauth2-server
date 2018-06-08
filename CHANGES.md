@@ -4,6 +4,9 @@
 - use safe `strlen` and `substr` from `paragonie/constant_time_encoding`
 - introduce `Util` class
 - native function invocation (prefix all function calls with a `\`)
+- support PHPUnit 7
+- add `psalm.xml`
+- relax `paragonie/random_compat` version requirement
 
 ## 3.0.0 (2018-03-19)
 - API changes
