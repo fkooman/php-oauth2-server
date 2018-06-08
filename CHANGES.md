@@ -7,6 +7,7 @@
 - support PHPUnit 7
 - add `psalm.xml`
 - relax `paragonie/random_compat` version requirement
+- use `Base64UrlSafe::encodeUnpadded` if it is available
 
 ## 3.0.0 (2018-03-19)
 - API changes
