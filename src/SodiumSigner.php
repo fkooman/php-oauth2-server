@@ -47,8 +47,8 @@ class SodiumSigner implements SignerInterface
         if (SODIUM_CRYPTO_SIGN_KEYPAIRBYTES !== Binary::safeStrlen($keyPair)) {
             throw new ServerErrorException('invalid keypair length');
         }
-        $this->secretKey = sodium_crypto_sign_secretkey($keyPair);
-        $this->publicKeyList['local'] = sodium_crypto_sign_publickey($keyPair);
+        $this->secretKey = \sodium_crypto_sign_secretkey($keyPair);
+        $this->publicKeyList['local'] = \sodium_crypto_sign_publickey($keyPair);
 
         foreach ($publicKeyList as $keyId => $publicKey) {
             if (!\is_string($keyId) || 0 >= Binary::safeStrlen($keyId) || 'local' === $keyId) {
@@ -71,7 +71,7 @@ class SodiumSigner implements SignerInterface
         // Base64UrlSafe without padding
         return Util::stripPadding(
             Base64UrlSafe::encode(
-                sodium_crypto_sign(Util::encodeJson($listOfClaims), $this->secretKey)
+                \sodium_crypto_sign(Util::encodeJson($listOfClaims), $this->secretKey)
             )
         );
     }
@@ -89,7 +89,7 @@ class SodiumSigner implements SignerInterface
             );
 
             foreach ($this->publicKeyList as $keyId => $publicKey) {
-                $jsonString = sodium_crypto_sign_open($decodedTokenStr, $publicKey);
+                $jsonString = \sodium_crypto_sign_open($decodedTokenStr, $publicKey);
                 if (false !== $jsonString) {
                     $listOfClaims = Util::decodeJson($jsonString);
                     $listOfClaims['key_id'] = $keyId;
