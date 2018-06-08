@@ -1,6 +1,6 @@
 # ChangeLog
 
-## 3.0.1 (...)
+## 3.0.1 (2018-06-08)
 - use safe `strlen` and `substr` from `paragonie/constant_time_encoding`
 - introduce `Util` class
 - native function invocation (prefix all function calls with a `\`)
