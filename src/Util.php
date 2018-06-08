@@ -27,6 +27,7 @@ namespace fkooman\OAuth\Server;
 use fkooman\OAuth\Server\Exception\InvalidGrantException;
 use fkooman\OAuth\Server\Exception\InvalidTokenException;
 use fkooman\OAuth\Server\Exception\ServerErrorException;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 
 class Util
 {
@@ -96,15 +97,35 @@ class Util
     }
 
     /**
-     * Version ^1 of paragonie/constant_time_encoding does not support
-     * Base64UrlSafe::encodeUnpadded, so we implement that here...
-     *
-     * @param string $inputStr
+     * @param string $str
      *
      * @return string
      */
-    public static function stripPadding($inputStr)
+    public static function encodeUnpadded($str)
     {
-        return \rtrim($inputStr, '=');
+        // check if Base64UrlSafe::encodeUnpadded exists, only on
+        // paragonie/constant_time_encoding >= 1.0.3, >= 2.2.0
+        if (\method_exists('ParagonIE\ConstantTime\Base64UrlSafe', 'encodeUnpadded')) {
+            return Base64UrlSafe::encodeUnpadded($str);
+        }
+
+        return \rtrim(Base64UrlSafe::encode($str), '=');
+    }
+
+    /**
+     * @param string $str
+     *
+     * @return string
+     */
+    public static function toUrlSafeUnpadded($str)
+    {
+        // in earlier versions we supported standard Base64 encoding as well,
+        // now we only generate Base64UrlSafe strings (without padding), but
+        // we want to accept the old ones as well!
+        return \str_replace(
+            ['+', '/', '='],
+            ['-', '_', ''],
+            $str
+        );
     }
 }

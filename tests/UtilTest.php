@@ -24,46 +24,16 @@
 
 namespace fkooman\OAuth\Server\Tests;
 
-use fkooman\OAuth\Server\SignerInterface;
 use fkooman\OAuth\Server\Util;
-use ParagonIE\ConstantTime\Base64UrlSafe;
+use PHPUnit\Framework\TestCase;
 
-/**
- * Dummy "Signer", does not actually sign anything, just contains the data that
- * would be signed by an actual implementation.
- */
-class TestSigner implements SignerInterface
+class UtilTest extends TestCase
 {
-    /**
-     * @param array $listOfClaims
-     *
-     * @return string
-     */
-    public function sign(array $listOfClaims)
+    public function testToUrlSafeUnpadded()
     {
-        return Util::encodeUnpadded(
-            Util::encodeJson($listOfClaims)
+        $this->assertSame(
+            'YcO5g6-_6HvwOw',
+            Util::toUrlSafeUnpadded('YcO5g6+/6HvwOw==')
         );
-    }
-
-    /**
-     * @param string $inputTokenStr
-     *
-     * @return false|array
-     */
-    public function verify($inputTokenStr)
-    {
-        $jsonData = Util::decodeJson(
-            Base64UrlSafe::decode($inputTokenStr)
-        );
-
-        // simulate an invalid signature
-        if ('invalid_sig' === $jsonData['auth_key']) {
-            return false;
-        }
-
-        $jsonData['key_id'] = 'local';
-
-        return $jsonData;
     }
 }
