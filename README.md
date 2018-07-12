@@ -40,7 +40,9 @@ See the `example/` directory.
 You can start the OAuth server on your (development) machine using PHP's built
 in web server:
 
+```bash
     $ php -S localhost:8080 -t example/
+```
 
 If you have an OAuth client you can point it to 
 `http://localhost:8080/authorize.php`.
@@ -58,13 +60,17 @@ PHP.
 
 On older PHP versions with PECL libsodium version 1.x:
 
+```bash
     $ php -r "file_put_contents('server.key', \Sodium\crypto_sign_keypair());"
     $ php -r "file_put_contents('server_public.key', \Sodium\crypto_sign_publickey(file_get_contents('server.key')));"
+```
 
 On PHP >= 7.2 or PECL libsodium version 2.x:
 
+```bash
     $ php -r "file_put_contents('server.key', sodium_crypto_sign_keypair());"
     $ php -r "file_put_contents('server_public.key', sodium_crypto_sign_publickey(file_get_contents('server.key')));"
+```
 
 The data in `server.key` file can then be used as input to the `SodiumSigner` 
 class, see the example. The `server_public.key` file will contain only the 
@@ -80,6 +86,7 @@ This can be configured by specifying a second parameter to the `SodiumSigner`
 constructor, using a mapping between key identifiers (key ID) and the 
 (binary) public key. For example:
 
+```php
     $sodiumSigner = new SodiumSigner(
         file_get_contents('server_1.key'),  // local key
         [
@@ -87,6 +94,7 @@ constructor, using a mapping between key identifiers (key ID) and the
             'server_3' => file_get_contents('server_3_public.key'), // remote key
         ]
     );
+```
 
 The `TokenInfo::getKeyId` method can be used to verify which public key was 
 used to verify the Bearer token. If the local key was used, this call will 
