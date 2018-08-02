@@ -25,6 +25,8 @@
 $baseDir = \dirname(__DIR__);
 /** @psalm-suppress UnresolvableInclude */
 require_once \sprintf('%s/vendor/autoload.php', $baseDir);
+/** @psalm-suppress UnresolvableInclude */
+require_once \sprintf('%s/client_info.php', __DIR__);
 
 use fkooman\OAuth\Server\BearerValidator;
 use fkooman\OAuth\Server\ClientInfo;
@@ -38,30 +40,12 @@ try {
     $storage = new Storage(new PDO(\sprintf('sqlite:%s/data/db.sqlite', $baseDir)));
     $storage->init();
 
-    // callback to "convert" a client_id into a ClientInfo object, typically
-    // this configuration comes from a configuration file or database...
-    $getClientInfo = function ($clientId) {
-        $oauthClients = [
-            // we only have one client here with client_id "demo_client"...
-            'demo_client' => [
-                'redirect_uri_list' => ['http://localhost:8081/callback.php'],
-                'display_name' => 'Demo Client',
-                'client_secret' => 'demo_secret',
-                //'require_approval' => false,
-            ],
-        ];
-
-        // if the client with this client_id does not exist, we return false...
-        if (!\array_key_exists($clientId, $oauthClients)) {
-            return false;
-        }
-
-        return new ClientInfo($oauthClients[$clientId]);
-    };
-
     $bearerValidator = new BearerValidator(
         $storage,
-        $getClientInfo,
+        // getClientInfo is a callback to "convert" a client_id into a
+        // ClientInfo object, typically this configuration comes from a
+        // configuration file or database, here we use a static file
+        getClientInfo($clientId),
         new SodiumSigner(
             // see README on how to generate a "server.key"
             \file_get_contents('server.key')
