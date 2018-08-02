@@ -128,15 +128,16 @@ class ClientInfo
      */
     private static function portMatch($clientRedirectUri, $redirectUri)
     {
-        // there should be a better way...
-        if (false === $port = \parse_url($redirectUri, PHP_URL_PORT)) {
+        $uriPort = \parse_url($redirectUri, PHP_URL_PORT);
+        if (!\is_int($uriPort)) {
             return false;
         }
+
         // only allow non-root ports
-        if (!\is_int($port) || 1024 > $port || 65535 < $port) {
+        if (1024 > $uriPort || 65535 < $uriPort) {
             return false;
         }
-        $clientRedirectUriWithPort = \str_replace('{PORT}', (string) $port, $clientRedirectUri);
+        $clientRedirectUriWithPort = \str_replace('{PORT}', (string) $uriPort, $clientRedirectUri);
 
         return $redirectUri === $clientRedirectUriWithPort;
     }
