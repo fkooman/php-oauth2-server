@@ -464,6 +464,11 @@ class OAuthServer
         // authorization codes expire after 5 minutes
         $expiresAt = \date_add($this->dateTime, new DateInterval('PT5M'));
 
+        // The PKCE RFC (7636) says: "The server MUST NOT include the
+        // "code_challenge" value in client requests in a form that other
+        // entities can extract." We assume this is only relevant for the
+        // "code_challenge_method" "plain" and not "S256". We only support
+        // "S256" and never "plain".
         return $this->signer->sign(
             [
                 'type' => 'authorization_code',
