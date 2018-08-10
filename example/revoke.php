@@ -22,9 +22,8 @@
  * SOFTWARE.
  */
 
+require_once \dirname(__DIR__).'/vendor/autoload.php';
 $baseDir = \dirname(__DIR__);
-/** @psalm-suppress UnresolvableInclude */
-require_once \sprintf('%s/vendor/autoload.php', $baseDir);
 
 use fkooman\OAuth\Server\Http\Response;
 use fkooman\OAuth\Server\Storage;
