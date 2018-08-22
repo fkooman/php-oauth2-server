@@ -26,10 +26,14 @@ require_once \dirname(__DIR__).'/vendor/autoload.php';
 require_once __DIR__.'/client_info.php';
 $baseDir = \dirname(__DIR__);
 
+use fkooman\Jwt\Keys\PrivateKey;
+use fkooman\Jwt\Keys\PublicKey;
+use fkooman\Jwt\RS256;
 use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\Exception\OAuthException;
 use fkooman\OAuth\Server\Http\JsonResponse;
 use fkooman\OAuth\Server\OAuthServer;
+use fkooman\OAuth\Server\OpenId;
 use fkooman\OAuth\Server\SodiumSigner;
 use fkooman\OAuth\Server\Storage;
 
@@ -54,6 +58,16 @@ try {
     // DEFAULT: 1 hour / 180 days
     $oauthServer->setAccessTokenExpiry(new DateInterval('PT30S'));
     $oauthServer->setRefreshTokenExpiry(new DateInterval('PT5M'));
+
+    $oauthServer->enableOpenId(
+        new OpenId(
+            'example-issuer',
+            new RS256(
+                PublicKey::load('rsa.pub'),
+                PrivateKey::load('rsa.key')
+            )
+        )
+    );
 
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'POST':

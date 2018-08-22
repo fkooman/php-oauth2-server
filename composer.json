@@ -21,12 +21,19 @@
     "description": "Very simple OAuth 2.0 server",
     "license": "MIT",
     "name": "fkooman/oauth2-server",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://git.tuxed.net/fkooman/php-jwt"
+        }
+    ],
     "require": {
         "ext-date": "*",
         "ext-hash": "*",
         "ext-json": "*",
         "ext-pcre": "*",
         "ext-pdo": "*",
+        "fkooman/jwt": "dev-master",
         "paragonie/constant_time_encoding": "^1|^2",
         "paragonie/random_compat": ">=1",
         "php": ">=5.4",

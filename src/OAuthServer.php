@@ -55,6 +55,9 @@ class OAuthServer
     /** @var null|\DateInterval */
     private $refreshTokenExpiry = null;
 
+    /** @var null|OpenId */
+    private $openId = null;
+
     /**
      * @param Storage         $storage
      * @param callable        $getClientInfo
@@ -104,6 +107,16 @@ class OAuthServer
     public function setRefreshTokenExpiry(DateInterval $refreshTokenExpiry)
     {
         $this->refreshTokenExpiry = $refreshTokenExpiry;
+    }
+
+    /**
+     * @param OpenId $openId
+     *
+     * @return void
+     */
+    public function enableOpenId(OpenId $openId)
+    {
+        $this->openId = $openId;
     }
 
     /**
@@ -313,13 +326,20 @@ class OAuthServer
             $codeInfo['auth_key']
         );
 
+        $jsonData = [
+            'access_token' => $accessToken,
+            'refresh_token' => $refreshToken,
+            'token_type' => 'bearer',
+            'expires_in' => $this->toExpiresIn($this->accessTokenExpiry),
+        ];
+
+        // add "ID Token" if OpenID Connect was enabled
+        if (null !== $this->openId) {
+            $jsonData['id_token'] = $this->openId->getIdToken($postData['client_id'], $codeInfo['user_id']);
+        }
+
         return new JsonResponse(
-            [
-                'access_token' => $accessToken,
-                'refresh_token' => $refreshToken,
-                'token_type' => 'bearer',
-                'expires_in' => $this->toExpiresIn($this->accessTokenExpiry),
-            ],
+            $jsonData,
             // The authorization server MUST include the HTTP "Cache-Control"
             // response header field [RFC2616] with a value of "no-store" in any
             // response containing tokens, credentials, or other sensitive
