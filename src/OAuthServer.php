@@ -334,6 +334,7 @@ class OAuthServer
         ];
 
         // add "ID Token" if OpenID Connect was enabled
+        // XXX only if "openid" scope was requested (and allowed?)
         if (null !== $this->openId) {
             $jsonData['id_token'] = $this->openId->getIdToken($postData['client_id'], $codeInfo['user_id']);
         }

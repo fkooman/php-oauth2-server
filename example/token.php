@@ -61,7 +61,7 @@ try {
 
     $oauthServer->enableOpenId(
         new OpenId(
-            'example-issuer',
+            'http://localhost:8080',
             new RS256(
                 PublicKey::load('rsa.pub'),
                 PrivateKey::load('rsa.key')
