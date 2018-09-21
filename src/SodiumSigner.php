@@ -68,8 +68,7 @@ class SodiumSigner implements SignerInterface
      */
     public function sign(array $listOfClaims)
     {
-        // Base64UrlSafe without padding
-        return Util::encodeUnpadded(
+        return Base64UrlSafe::encodeUnpadded(
             \sodium_crypto_sign(Util::encodeJson($listOfClaims), $this->secretKey)
         );
     }

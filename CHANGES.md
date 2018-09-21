@@ -1,5 +1,9 @@
 # ChangeLog
 
+## 3.0.2 (...)
+- explicitly depend on versions of `paragonie/constant_time_encoding` that 
+  support `Base64UrlSafe::encodeUnpadded`, drop hack
+
 ## 3.0.1 (2018-06-08)
 - use safe `strlen` and `substr` from `paragonie/constant_time_encoding`
 - introduce `Util` class

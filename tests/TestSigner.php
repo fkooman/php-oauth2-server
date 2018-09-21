@@ -41,7 +41,7 @@ class TestSigner implements SignerInterface
      */
     public function sign(array $listOfClaims)
     {
-        return Util::encodeUnpadded(
+        return Base64UrlSafe::encodeUnpadded(
             Util::encodeJson($listOfClaims)
         );
     }

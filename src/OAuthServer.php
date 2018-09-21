@@ -31,6 +31,7 @@ use fkooman\OAuth\Server\Exception\InvalidGrantException;
 use fkooman\OAuth\Server\Exception\InvalidRequestException;
 use fkooman\OAuth\Server\Http\JsonResponse;
 use fkooman\OAuth\Server\Http\RedirectResponse;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 
 class OAuthServer
 {
@@ -549,7 +550,7 @@ class OAuthServer
             // compare code_challenge with expected value
             $strCmp = \hash_equals(
                 $codeInfo['code_challenge'],
-                Util::encodeUnpadded(
+                Base64UrlSafe::encodeUnpadded(
                     \hash(
                         'sha256',
                         $postData['code_verifier'],

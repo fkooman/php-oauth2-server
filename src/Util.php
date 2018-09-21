@@ -101,22 +101,6 @@ class Util
      *
      * @return string
      */
-    public static function encodeUnpadded($str)
-    {
-        // check if Base64UrlSafe::encodeUnpadded exists, only on
-        // paragonie/constant_time_encoding >= 1.0.3, >= 2.2.0
-        if (\method_exists('ParagonIE\ConstantTime\Base64UrlSafe', 'encodeUnpadded')) {
-            return Base64UrlSafe::encodeUnpadded($str);
-        }
-
-        return \rtrim(Base64UrlSafe::encode($str), '=');
-    }
-
-    /**
-     * @param string $str
-     *
-     * @return string
-     */
     public static function toUrlSafeUnpadded($str)
     {
         // in earlier versions we supported standard Base64 encoding as well,
