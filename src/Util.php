@@ -26,41 +26,10 @@ namespace fkooman\OAuth\Server;
 
 use fkooman\OAuth\Server\Exception\InvalidGrantException;
 use fkooman\OAuth\Server\Exception\InvalidTokenException;
-use fkooman\OAuth\Server\Exception\ServerErrorException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 
 class Util
 {
-    /**
-     * @param mixed $jsonData
-     *
-     * @return string
-     */
-    public static function encodeJson($jsonData)
-    {
-        $jsonString = \json_encode($jsonData);
-        if (false === $jsonString && JSON_ERROR_NONE !== \json_last_error()) {
-            throw new ServerErrorException('unable to encode JSON');
-        }
-
-        return $jsonString;
-    }
-
-    /**
-     * @param string $jsonString
-     *
-     * @return mixed
-     */
-    public static function decodeJson($jsonString)
-    {
-        $jsonData = \json_decode($jsonString, true);
-        if (null === $jsonData && JSON_ERROR_NONE !== \json_last_error()) {
-            throw new ServerErrorException('unable to decode JSON');
-        }
-
-        return $jsonData;
-    }
-
     /**
      * @param string $redirectUri
      * @param array  $queryParameters

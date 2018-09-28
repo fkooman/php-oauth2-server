@@ -24,8 +24,8 @@
 
 namespace fkooman\OAuth\Server\Tests;
 
+use fkooman\OAuth\Server\Json;
 use fkooman\OAuth\Server\SignerInterface;
-use fkooman\OAuth\Server\Util;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 
 /**
@@ -42,7 +42,7 @@ class TestSigner implements SignerInterface
     public function sign(array $listOfClaims)
     {
         return Base64UrlSafe::encodeUnpadded(
-            Util::encodeJson($listOfClaims)
+            Json::encode($listOfClaims)
         );
     }
 
@@ -53,7 +53,7 @@ class TestSigner implements SignerInterface
      */
     public function verify($inputTokenStr)
     {
-        $jsonData = Util::decodeJson(
+        $jsonData = Json::decode(
             Base64UrlSafe::decode($inputTokenStr)
         );
 

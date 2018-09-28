@@ -69,7 +69,7 @@ class SodiumSigner implements SignerInterface
     public function sign(array $listOfClaims)
     {
         return Base64UrlSafe::encodeUnpadded(
-            \sodium_crypto_sign(Util::encodeJson($listOfClaims), $this->secretKey)
+            \sodium_crypto_sign(Json::encode($listOfClaims), $this->secretKey)
         );
     }
 
@@ -88,7 +88,7 @@ class SodiumSigner implements SignerInterface
             foreach ($this->publicKeyList as $keyId => $publicKey) {
                 $jsonString = \sodium_crypto_sign_open($decodedTokenStr, $publicKey);
                 if (false !== $jsonString) {
-                    $listOfClaims = Util::decodeJson($jsonString);
+                    $listOfClaims = Json::decode($jsonString);
                     $listOfClaims['key_id'] = $keyId;
 
                     return $listOfClaims;
