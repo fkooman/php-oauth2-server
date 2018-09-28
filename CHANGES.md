@@ -1,5 +1,10 @@
 # ChangeLog
 
+## 3.0.2 (2018-09-21)
+- explicitly depend on versions of `paragonie/constant_time_encoding` that 
+  support `Base64UrlSafe::encodeUnpadded`, drop hack
+- simplify matching ports in redirect URI
+
 ## 3.0.1 (2018-06-08)
 - use safe `strlen` and `substr` from `paragonie/constant_time_encoding`
 - introduce `Util` class

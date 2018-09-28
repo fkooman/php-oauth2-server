@@ -26,41 +26,10 @@ namespace fkooman\OAuth\Server;
 
 use fkooman\OAuth\Server\Exception\InvalidGrantException;
 use fkooman\OAuth\Server\Exception\InvalidTokenException;
-use fkooman\OAuth\Server\Exception\ServerErrorException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 
 class Util
 {
-    /**
-     * @param mixed $jsonData
-     *
-     * @return string
-     */
-    public static function encodeJson($jsonData)
-    {
-        $jsonString = \json_encode($jsonData);
-        if (false === $jsonString && JSON_ERROR_NONE !== \json_last_error()) {
-            throw new ServerErrorException('unable to encode JSON');
-        }
-
-        return $jsonString;
-    }
-
-    /**
-     * @param string $jsonString
-     *
-     * @return mixed
-     */
-    public static function decodeJson($jsonString)
-    {
-        $jsonData = \json_decode($jsonString, true);
-        if (null === $jsonData && JSON_ERROR_NONE !== \json_last_error()) {
-            throw new ServerErrorException('unable to decode JSON');
-        }
-
-        return $jsonData;
-    }
-
     /**
      * @param string $redirectUri
      * @param array  $queryParameters
@@ -94,22 +63,6 @@ class Util
 
             throw new InvalidGrantException($errorMsg);
         }
-    }
-
-    /**
-     * @param string $str
-     *
-     * @return string
-     */
-    public static function encodeUnpadded($str)
-    {
-        // check if Base64UrlSafe::encodeUnpadded exists, only on
-        // paragonie/constant_time_encoding >= 1.0.3, >= 2.2.0
-        if (\method_exists('ParagonIE\ConstantTime\Base64UrlSafe', 'encodeUnpadded')) {
-            return Base64UrlSafe::encodeUnpadded($str);
-        }
-
-        return \rtrim(Base64UrlSafe::encode($str), '=');
     }
 
     /**

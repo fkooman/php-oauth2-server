@@ -22,47 +22,54 @@
  * SOFTWARE.
  */
 
-namespace fkooman\OAuth\Server\Tests;
+namespace fkooman\OAuth\Server;
 
-use fkooman\OAuth\Server\Json;
-use fkooman\OAuth\Server\SignerInterface;
-use ParagonIE\ConstantTime\Base64UrlSafe;
+use fkooman\OAuth\Server\Exception\JsonException;
+use TypeError;
 
-/**
- * Dummy "Signer", does not actually sign anything, just contains the data that
- * would be signed by an actual implementation.
- */
-class TestSigner implements SignerInterface
+class Json
 {
     /**
-     * @param array $listOfClaims
+     * @param mixed $jsonData
      *
      * @return string
      */
-    public function sign(array $listOfClaims)
+    public static function encode($jsonData)
     {
-        return Base64UrlSafe::encodeUnpadded(
-            Json::encode($listOfClaims)
-        );
+        $jsonString = \json_encode($jsonData);
+        // 5.5.0 	The return value on failure was changed from null string to FALSE.
+        if (false === $jsonString || 'null' === $jsonString) {
+            throw new JsonException(
+                \sprintf(
+                    'unable to encode JSON, error code "%d"',
+                    \json_last_error()
+                )
+            );
+        }
+
+        return $jsonString;
     }
 
     /**
-     * @param string $inputTokenStr
+     * @param string $jsonString
      *
-     * @return false|array
+     * @return mixed
+     * @psalm-suppress RedundantConditionGivenDocblockType
      */
-    public function verify($inputTokenStr)
+    public static function decode($jsonString)
     {
-        $jsonData = Json::decode(
-            Base64UrlSafe::decode($inputTokenStr)
-        );
-
-        // simulate an invalid signature
-        if ('invalid_sig' === $jsonData['auth_key']) {
-            return false;
+        if (!\is_string($jsonString)) {
+            throw new TypeError('argument 1 must be string');
         }
-
-        $jsonData['key_id'] = 'local';
+        $jsonData = \json_decode($jsonString, true);
+        if (null === $jsonData && JSON_ERROR_NONE !== \json_last_error()) {
+            throw new JsonException(
+                \sprintf(
+                    'unable to decode JSON, error code "%d"',
+                    \json_last_error()
+                )
+            );
+        }
 
         return $jsonData;
     }

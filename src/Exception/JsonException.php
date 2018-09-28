@@ -22,24 +22,10 @@
  * SOFTWARE.
  */
 
-namespace fkooman\OAuth\Server\Http;
+namespace fkooman\OAuth\Server\Exception;
 
-use fkooman\OAuth\Server\Json;
+use Exception;
 
-class JsonResponse extends Response
+class JsonException extends Exception
 {
-    /**
-     * @param mixed $jsonData
-     * @param array $responseHeaders
-     * @param int   $statusCode
-     */
-    public function __construct($jsonData, array $responseHeaders = [], $statusCode = 200)
-    {
-        $responseHeaders['Content-Type'] = 'application/json';
-        parent::__construct(
-            Json::encode($jsonData),
-            $responseHeaders,
-            $statusCode
-        );
-    }
 }
