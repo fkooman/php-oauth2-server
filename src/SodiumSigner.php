@@ -35,30 +35,20 @@ class SodiumSigner implements SignerInterface
     /** @var string */
     private $secretKey;
 
-    /** @var array */
-    private $publicKeyList = [];
+    /** @var string */
+    private $publicKey;
 
     /**
      * @param string $keyPair
      * @param array  $publicKeyList
      */
-    public function __construct($keyPair, array $publicKeyList = [])
+    public function __construct($keyPair)
     {
         if (SODIUM_CRYPTO_SIGN_KEYPAIRBYTES !== Binary::safeStrlen($keyPair)) {
             throw new ServerErrorException('invalid keypair length');
         }
         $this->secretKey = \sodium_crypto_sign_secretkey($keyPair);
-        $this->publicKeyList['local'] = \sodium_crypto_sign_publickey($keyPair);
-
-        foreach ($publicKeyList as $keyId => $publicKey) {
-            if (!\is_string($keyId) || 0 >= Binary::safeStrlen($keyId) || 'local' === $keyId) {
-                throw new ServerErrorException('keyId MUST be non-empty string != "local"');
-            }
-            if (SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES !== Binary::safeStrlen($publicKey)) {
-                throw new ServerErrorException(\sprintf('invalid public key length for key "%s"', $keyId));
-            }
-            $this->publicKeyList[$keyId] = $publicKey;
-        }
+        $this->publicKey = \sodium_crypto_sign_publickey($keyPair);
     }
 
     /**
@@ -85,17 +75,11 @@ class SodiumSigner implements SignerInterface
                 self::toUrlSafeUnpadded($inputTokenStr)
             );
 
-            foreach ($this->publicKeyList as $keyId => $publicKey) {
-                $jsonString = \sodium_crypto_sign_open($decodedTokenStr, $publicKey);
-                if (false !== $jsonString) {
-                    $listOfClaims = Json::decode($jsonString);
-                    $listOfClaims['key_id'] = $keyId;
-
-                    return $listOfClaims;
-                }
+            if (false === $jsonString = \sodium_crypto_sign_open($decodedTokenStr, $this->publicKey)) {
+                return false;
             }
 
-            return false;
+            return Json::decode($jsonString);
         } catch (RangeException $e) {
             // this indicates the provided Base64 encoded token is malformed,
             // this is an "user" error!

@@ -40,23 +40,18 @@ class TokenInfo
     /** @var string */
     private $scope;
 
-    /** @var string */
-    private $keyId;
-
     /**
      * @param string $authKey
      * @param string $userId
      * @param string $clientId
      * @param string $scope
-     * @param string $keyId
      */
-    public function __construct($authKey, $userId, $clientId, $scope, $keyId)
+    public function __construct($authKey, $userId, $clientId, $scope)
     {
         $this->authKey = $authKey;
         $this->userId = $userId;
         $this->clientId = $clientId;
         $this->scope = $scope;
-        $this->keyId = $keyId;
     }
 
     /**
@@ -89,14 +84,6 @@ class TokenInfo
     public function getScope()
     {
         return $this->scope;
-    }
-
-    /**
-     * @return string
-     */
-    public function getKeyId()
-    {
-        return $this->keyId;
     }
 
     /**

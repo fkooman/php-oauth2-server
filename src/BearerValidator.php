@@ -89,20 +89,17 @@ class BearerValidator
             $listOfClaims['auth_key'],
             $listOfClaims['user_id'],
             $listOfClaims['client_id'],
-            $listOfClaims['scope'],
-            $listOfClaims['key_id']
+            $listOfClaims['scope']
         );
 
-        if ('local' === $tokenInfo->getKeyId()) {
-            // as it is signed by us, the client MUST still be there
-            if (false === \call_user_func($this->getClientInfo, $tokenInfo->getClientId())) {
-                throw new InvalidTokenException(\sprintf('client "%s" no longer registered', $tokenInfo->getClientId()));
-            }
+        // as it is signed by us, the client MUST still be there
+        if (false === \call_user_func($this->getClientInfo, $tokenInfo->getClientId())) {
+            throw new InvalidTokenException(\sprintf('client "%s" no longer registered', $tokenInfo->getClientId()));
+        }
 
-            // it MUST exist in the DB as well, otherwise it was revoked...
-            if (!$this->storage->hasAuthorization($tokenInfo->getAuthKey())) {
-                throw new InvalidTokenException(\sprintf('authorization for client "%s" no longer exists', $tokenInfo->getClientId()));
-            }
+        // it MUST exist in the DB as well, otherwise it was revoked...
+        if (!$this->storage->hasAuthorization($tokenInfo->getAuthKey())) {
+            throw new InvalidTokenException(\sprintf('authorization for client "%s" no longer exists', $tokenInfo->getClientId()));
         }
 
         return $tokenInfo;
