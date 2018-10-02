@@ -82,7 +82,7 @@ class SodiumSigner implements SignerInterface
     {
         try {
             $decodedTokenStr = Base64UrlSafe::decode(
-                Util::toUrlSafeUnpadded($inputTokenStr)
+                self::toUrlSafeUnpadded($inputTokenStr)
             );
 
             foreach ($this->publicKeyList as $keyId => $publicKey) {
@@ -101,5 +101,22 @@ class SodiumSigner implements SignerInterface
             // this is an "user" error!
             throw new InvalidRequestException('unable to decode Base64');
         }
+    }
+
+    /**
+     * @param string $str
+     *
+     * @return string
+     */
+    private static function toUrlSafeUnpadded($str)
+    {
+        // in earlier versions we supported standard Base64 encoding as well,
+        // now we only generate Base64UrlSafe strings (without padding), but
+        // we want to accept the old ones as well!
+        return \str_replace(
+            ['+', '/', '='],
+            ['-', '_', ''],
+            $str
+        );
     }
 }

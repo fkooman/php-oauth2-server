@@ -167,7 +167,7 @@ class OAuthServer
         if ('no' === $postData['approve']) {
             // user did not approve, tell OAuth client
             return new RedirectResponse(
-                Util::prepareRedirectUri(
+                self::prepareRedirectUri(
                     $getData['redirect_uri'],
                     [
                         'error' => 'access_denied',
@@ -198,7 +198,7 @@ class OAuthServer
         );
 
         return new RedirectResponse(
-            Util::prepareRedirectUri(
+            self::prepareRedirectUri(
                 $getData['redirect_uri'],
                 [
                     'code' => $authorizationCode,
@@ -587,5 +587,21 @@ class OAuthServer
     private function toExpiresIn(DateInterval $dateInterval)
     {
         return \date_add(clone $this->dateTime, $dateInterval)->getTimestamp() - $this->dateTime->getTimestamp();
+    }
+
+    /**
+     * @param string $redirectUri
+     * @param array  $queryParameters
+     *
+     * @return string
+     */
+    private static function prepareRedirectUri($redirectUri, array $queryParameters)
+    {
+        return \sprintf(
+            '%s%s%s',
+            $redirectUri,
+            false === \strpos($redirectUri, '?') ? '?' : '&',
+            \http_build_query($queryParameters)
+        );
     }
 }

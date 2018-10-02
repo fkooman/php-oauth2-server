@@ -26,26 +26,9 @@ namespace fkooman\OAuth\Server;
 
 use fkooman\OAuth\Server\Exception\InvalidGrantException;
 use fkooman\OAuth\Server\Exception\InvalidTokenException;
-use ParagonIE\ConstantTime\Base64UrlSafe;
 
 class Util
 {
-    /**
-     * @param string $redirectUri
-     * @param array  $queryParameters
-     *
-     * @return string
-     */
-    public static function prepareRedirectUri($redirectUri, array $queryParameters)
-    {
-        return \sprintf(
-            '%s%s%s',
-            $redirectUri,
-            false === \strpos($redirectUri, '?') ? '?' : '&',
-            \http_build_query($queryParameters)
-        );
-    }
-
     /**
      * @param string $requiredType
      * @param string $providedType
@@ -63,22 +46,5 @@ class Util
 
             throw new InvalidGrantException($errorMsg);
         }
-    }
-
-    /**
-     * @param string $str
-     *
-     * @return string
-     */
-    public static function toUrlSafeUnpadded($str)
-    {
-        // in earlier versions we supported standard Base64 encoding as well,
-        // now we only generate Base64UrlSafe strings (without padding), but
-        // we want to accept the old ones as well!
-        return \str_replace(
-            ['+', '/', '='],
-            ['-', '_', ''],
-            $str
-        );
     }
 }
