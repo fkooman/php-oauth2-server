@@ -24,7 +24,7 @@
 
 namespace fkooman\OAuth\Server;
 
-use fkooman\OAuth\Server\Exception\ServerErrorException;
+use LengthException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\ConstantTime\Binary;
 use TypeError;
@@ -44,7 +44,7 @@ class SodiumSigner implements SignerInterface
             throw new TypeError('argument 1 must be string');
         }
         if (SODIUM_CRYPTO_SIGN_KEYPAIRBYTES !== Binary::safeStrlen($keyPair)) {
-            throw new ServerErrorException('invalid keypair length');
+            throw new LengthException('invalid keypair length');
         }
         $this->keyPair = $keyPair;
     }
