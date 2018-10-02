@@ -35,14 +35,14 @@ use ParagonIE\ConstantTime\Base64UrlSafe;
 class TestSigner implements SignerInterface
 {
     /**
-     * @param array $listOfClaims
+     * @param array $tokenData
      *
      * @return string
      */
-    public function sign(array $listOfClaims)
+    public function sign(array $tokenData)
     {
         return Base64UrlSafe::encodeUnpadded(
-            Json::encode($listOfClaims)
+            Json::encode($tokenData)
         );
     }
 

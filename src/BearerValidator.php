@@ -74,22 +74,22 @@ class BearerValidator
     {
         SyntaxValidator::validateBearerToken($authorizationHeader);
         $providedToken = Binary::safeSubstr($authorizationHeader, 7);
-        $listOfClaims = $this->verifier->verify($providedToken);
-        if (false === $listOfClaims) {
+        $tokenData = $this->verifier->verify($providedToken);
+        if (false === $tokenData) {
             throw new InvalidTokenException('"access_token" has invalid signature');
         }
-        Util::requireType('access_token', $listOfClaims['type']);
+        Util::requireType('access_token', $tokenData['type']);
 
         // check access_token expiry
-        if ($this->dateTime >= new DateTime($listOfClaims['expires_at'])) {
+        if ($this->dateTime >= new DateTime($tokenData['expires_at'])) {
             throw new InvalidTokenException('"access_token" expired');
         }
 
         $tokenInfo = new TokenInfo(
-            $listOfClaims['auth_key'],
-            $listOfClaims['user_id'],
-            $listOfClaims['client_id'],
-            $listOfClaims['scope']
+            $tokenData['auth_key'],
+            $tokenData['user_id'],
+            $tokenData['client_id'],
+            $tokenData['scope']
         );
 
         // as it is signed by us, the client MUST still be there

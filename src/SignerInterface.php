@@ -27,11 +27,11 @@ namespace fkooman\OAuth\Server;
 interface SignerInterface
 {
     /**
-     * @param array $listOfClaims
+     * @param array $tokenData
      *
      * @return string
      */
-    public function sign(array $listOfClaims);
+    public function sign(array $tokenData);
 
     /**
      * @param string $inputTokenStr

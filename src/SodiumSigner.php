@@ -52,14 +52,14 @@ class SodiumSigner implements SignerInterface
     }
 
     /**
-     * @param array $listOfClaims
+     * @param array $tokenData
      *
      * @return string
      */
-    public function sign(array $listOfClaims)
+    public function sign(array $tokenData)
     {
         return Base64UrlSafe::encodeUnpadded(
-            \sodium_crypto_sign(Json::encode($listOfClaims), $this->secretKey)
+            \sodium_crypto_sign(Json::encode($tokenData), $this->secretKey)
         );
     }
 
@@ -72,6 +72,9 @@ class SodiumSigner implements SignerInterface
     {
         try {
             $decodedTokenStr = Base64UrlSafe::decode(
+                // in earlier versions we supported standard Base64 encoding as
+                // well, now we only generate Base64UrlSafe strings (without
+                // padding), but we still want to accept the old ones as well!
                 self::toUrlSafeUnpadded($inputTokenStr)
             );
 
@@ -88,19 +91,16 @@ class SodiumSigner implements SignerInterface
     }
 
     /**
-     * @param string $str
+     * @param string $inputStr
      *
      * @return string
      */
-    private static function toUrlSafeUnpadded($str)
+    private static function toUrlSafeUnpadded($inputStr)
     {
-        // in earlier versions we supported standard Base64 encoding as well,
-        // now we only generate Base64UrlSafe strings (without padding), but
-        // we want to accept the old ones as well!
         return \str_replace(
             ['+', '/', '='],
             ['-', '_', ''],
-            $str
+            $inputStr
         );
     }
 }
