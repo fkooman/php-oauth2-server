@@ -24,31 +24,29 @@
 
 namespace fkooman\OAuth\Server;
 
-use fkooman\OAuth\Server\Exception\InvalidRequestException;
 use fkooman\OAuth\Server\Exception\ServerErrorException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\ConstantTime\Binary;
-use RangeException;
+use TypeError;
 
 class SodiumSigner implements SignerInterface
 {
     /** @var string */
-    private $secretKey;
-
-    /** @var string */
-    private $publicKey;
+    private $keyPair;
 
     /**
      * @param string $keyPair
-     * @param array  $publicKeyList
+     * @psalm-suppress RedundantConditionGivenDocblockType
      */
     public function __construct($keyPair)
     {
+        if (!\is_string($keyPair)) {
+            throw new TypeError('argument 1 must be string');
+        }
         if (SODIUM_CRYPTO_SIGN_KEYPAIRBYTES !== Binary::safeStrlen($keyPair)) {
             throw new ServerErrorException('invalid keypair length');
         }
-        $this->secretKey = \sodium_crypto_sign_secretkey($keyPair);
-        $this->publicKey = \sodium_crypto_sign_publickey($keyPair);
+        $this->keyPair = $keyPair;
     }
 
     /**
@@ -59,35 +57,37 @@ class SodiumSigner implements SignerInterface
     public function sign(array $tokenData)
     {
         return Base64UrlSafe::encodeUnpadded(
-            \sodium_crypto_sign(Json::encode($tokenData), $this->secretKey)
+            \sodium_crypto_sign(
+                Json::encode($tokenData),
+                \sodium_crypto_sign_secretkey($this->keyPair)
+            )
         );
     }
 
     /**
-     * @param string $inputTokenStr
+     * @param string $inputStr
      *
      * @return false|array
+     * @psalm-suppress RedundantConditionGivenDocblockType
      */
-    public function verify($inputTokenStr)
+    public function verify($inputStr)
     {
-        try {
-            $decodedTokenStr = Base64UrlSafe::decode(
-                // in earlier versions we supported standard Base64 encoding as
-                // well, now we only generate Base64UrlSafe strings (without
-                // padding), but we still want to accept the old ones as well!
-                self::toUrlSafeUnpadded($inputTokenStr)
-            );
-
-            if (false === $jsonString = \sodium_crypto_sign_open($decodedTokenStr, $this->publicKey)) {
-                return false;
-            }
-
-            return Json::decode($jsonString);
-        } catch (RangeException $e) {
-            // this indicates the provided Base64 encoded token is malformed,
-            // this is an "user" error!
-            throw new InvalidRequestException('unable to decode Base64');
+        if (!\is_string($inputStr)) {
+            throw new TypeError('argument 1 must be string');
         }
+        $decodedStr = Base64UrlSafe::decode(
+            // in earlier versions we supported standard Base64 encoding as
+            // well, now we only generate Base64UrlSafe strings (without
+            // padding), but we still want to accept the old ones as well!
+            self::toUnpaddedUrlSafe($inputStr)
+        );
+
+        $publicKey = \sodium_crypto_sign_publickey($this->keyPair);
+        if (false === $verifiedString = \sodium_crypto_sign_open($decodedStr, $publicKey)) {
+            return false;
+        }
+
+        return Json::decode($verifiedString);
     }
 
     /**
@@ -95,12 +95,15 @@ class SodiumSigner implements SignerInterface
      *
      * @return string
      */
-    private static function toUrlSafeUnpadded($inputStr)
+    private static function toUnpaddedUrlSafe($inputStr)
     {
-        return \str_replace(
-            ['+', '/', '='],
-            ['-', '_', ''],
-            $inputStr
+        return \rtrim(
+            \str_replace(
+                ['+', '/'],
+                ['-', '_'],
+                $inputStr
+            ),
+            '='
         );
     }
 }
