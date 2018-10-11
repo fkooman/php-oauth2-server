@@ -24,40 +24,36 @@
 
 namespace fkooman\OAuth\Server\Tests;
 
-use fkooman\OAuth\Server\SodiumSigner;
+use fkooman\OAuth\Server\HmacSigner;
+use fkooman\OAuth\Server\SecretKey;
 use PHPUnit\Framework\TestCase;
 
-class SodiumSignerTest extends TestCase
+class HmacSignerTest extends TestCase
 {
     public function testSign()
     {
-        $sodiumSigner = new SodiumSigner(\file_get_contents(\sprintf('%s/data/server.key', __DIR__)));
-        $this->assertSame(
-            's2J7rZp6UK9xiXSa9fZ6CjDbotGnx7YrAtD84w5WyMU_-RnkVlw6FxCsPSrgP7njSXgL-Wsa6O8HvEW3aSYaAXsiZm9vIjoiYmFyIn0',
-            $sodiumSigner->sign(['foo' => 'bar'])
-        );
+        $hmacSigner = new HmacSigner(SecretKey::fromEncodedString('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
+        $this->assertSame('eyJmb28iOiJiYXIifQ.h65W_W0vrXZOe_jcPjrJH11qevaGE69aAmGPbUn2iUA', $hmacSigner->sign(['foo' => 'bar']));
     }
 
     public function testVerify()
     {
-        $sodiumSigner = new SodiumSigner(\file_get_contents(\sprintf('%s/data/server.key', __DIR__)));
+        $hmacSigner = new HmacSigner(SecretKey::fromEncodedString('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
         $this->assertSame(
-            [
-                'foo' => 'bar',
-            ],
-            $sodiumSigner->verify(
-                's2J7rZp6UK9xiXSa9fZ6CjDbotGnx7YrAtD84w5WyMU_-RnkVlw6FxCsPSrgP7njSXgL-Wsa6O8HvEW3aSYaAXsiZm9vIjoiYmFyIn0'
-            )
+            ['foo' => 'bar'],
+            $hmacSigner->verify('eyJmb28iOiJiYXIifQ.h65W_W0vrXZOe_jcPjrJH11qevaGE69aAmGPbUn2iUA')
         );
     }
 
-    public function testSignVerifyWrongKey()
+    public function testNoDot()
     {
-        $sodiumSigner = new SodiumSigner(\file_get_contents(\sprintf('%s/data/server_2.key', __DIR__)));
-        $this->assertFalse(
-            $sodiumSigner->verify(
-                's2J7rZp6UK9xiXSa9fZ6CjDbotGnx7YrAtD84w5WyMU_-RnkVlw6FxCsPSrgP7njSXgL-Wsa6O8HvEW3aSYaAXsiZm9vIjoiYmFyIn0'
-            )
-        );
+        $hmacSigner = new HmacSigner(SecretKey::fromEncodedString('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
+        $this->assertFalse($hmacSigner->verify('NO_DOT'));
+    }
+
+    public function testVerifyWrongKey()
+    {
+        $hmacSigner = new HmacSigner(SecretKey::fromEncodedString('5Zo4eJa3Nni5RPn1bz0uAZao41RqAnWJqD9dYrjVqiU'));
+        $this->assertFalse($hmacSigner->verify('eyJmb28iOiJiYXIifQ.h65W_W0vrXZOe_jcPjrJH11qevaGE69aAmGPbUn2iUA'));
     }
 }

@@ -7,4 +7,7 @@
       <directory name="vendor"/>
     </ignoreFiles>
   </projectFiles>
+<issueHandlers>
+  <RedundantConditionGivenDocblockType errorLevel="suppress" />
+</issueHandlers>
 </psalm>

@@ -28,9 +28,10 @@ $baseDir = \dirname(__DIR__);
 
 use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\Exception\OAuthException;
+use fkooman\OAuth\Server\HmacSigner;
 use fkooman\OAuth\Server\Http\JsonResponse;
 use fkooman\OAuth\Server\OAuthServer;
-use fkooman\OAuth\Server\SodiumSigner;
+use fkooman\OAuth\Server\SecretKey;
 use fkooman\OAuth\Server\Storage;
 
 try {
@@ -44,9 +45,8 @@ try {
         // ClientInfo object, typically this configuration comes from a
         // configuration file or database, here we use a static file
         'getClientInfo',
-        new SodiumSigner(
-            // see README on how to generate a "server.key"
-            \file_get_contents('server.key')
+        new HmacSigner(
+            SecretKey::fromEncodedString(\file_get_contents('server.key'))
         )
     );
 

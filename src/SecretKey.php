@@ -24,52 +24,68 @@
 
 namespace fkooman\OAuth\Server;
 
-use fkooman\OAuth\Server\Exception\JsonException;
+use LengthException;
+use ParagonIE\ConstantTime\Base64UrlSafe;
+use ParagonIE\ConstantTime\Binary;
 use TypeError;
 
-class Json
+class SecretKey
 {
-    /**
-     * @param mixed $jsonData
-     *
-     * @return string
-     */
-    public static function encode($jsonData)
-    {
-        $jsonString = \json_encode($jsonData);
-        // 5.5.0 	The return value on failure was changed from null string to FALSE.
-        if (false === $jsonString || 'null' === $jsonString) {
-            throw new JsonException(
-                \sprintf(
-                    'unable to encode JSON, error code "%d"',
-                    \json_last_error()
-                )
-            );
-        }
+    // strlen(hash('sha256', '', true))
+    const KEY_LENGTH_BYTES = 32;
 
-        return $jsonString;
+    /** @var string */
+    private $secretKey;
+
+    /**
+     * @param string $secretKey
+     */
+    public function __construct($secretKey)
+    {
+        if (!\is_string($secretKey)) {
+            throw new TypeError('argument 1 must be string');
+        }
+        if (self::KEY_LENGTH_BYTES !== Binary::safeStrlen($secretKey)) {
+            throw new LengthException('invalid key length');
+        }
+        $this->secretKey = $secretKey;
     }
 
     /**
-     * @param string $jsonString
-     *
-     * @return mixed
+     * @return self
      */
-    public static function decode($jsonString)
+    public static function generate()
     {
-        if (!\is_string($jsonString)) {
+        return new self(\random_bytes(self::KEY_LENGTH_BYTES));
+    }
+
+    /**
+     * @return string
+     */
+    public function encode()
+    {
+        return Base64UrlSafe::encodeUnpadded($this->secretKey);
+    }
+
+    /**
+     * @param string $encodedKey
+     *
+     * @return self
+     */
+    public static function fromEncodedString($encodedKey)
+    {
+        if (!\is_string($encodedKey)) {
             throw new TypeError('argument 1 must be string');
         }
-        $jsonData = \json_decode($jsonString, true);
-        if (null === $jsonData && JSON_ERROR_NONE !== \json_last_error()) {
-            throw new JsonException(
-                \sprintf(
-                    'unable to decode JSON, error code "%d"',
-                    \json_last_error()
-                )
-            );
-        }
 
-        return $jsonData;
+        return new self(Base64UrlSafe::decode($encodedKey));
+    }
+
+    /**
+     * @return string
+     */
+    public function raw()
+    {
+        return $this->secretKey;
     }
 }
