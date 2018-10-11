@@ -27,8 +27,9 @@ sent.
 
 # Requirements
 
-On modern versions of PHP it only requires `paragonie/constant_time_encoding`. 
-On older versions it needs a variety of "polyfills", see `composer.json`.
+On modern versions of PHP, i.e. >= 7, the library only requires 
+`paragonie/constant_time_encoding`. On older versions it uses an assortment of 
+"polyfills", see `composer.json`.
 
 # Using
 
