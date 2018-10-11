@@ -1,9 +1,10 @@
 # ChangeLog
 
 ## 4.0.0 (...)
-- remove multiple public key support, this is a very specific use case that 
-  does not belong in the OAuth server
-- remove "key_id" which was not really a key ID from the software
+- remove `SodiumSigner`
+- introduce simple `HmacSigner`
+- drop multi key support
+- remove Key ID support
 
 ## 3.0.2 (2018-09-21)
 - explicitly depend on versions of `paragonie/constant_time_encoding` that 
