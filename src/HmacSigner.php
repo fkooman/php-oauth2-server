@@ -53,13 +53,13 @@ class HmacSigner implements SignerInterface
     }
 
     /**
-     * @param array $tokenData
+     * @param string $inputStr
      *
      * @return string
      */
-    public function sign(array $tokenData)
+    public function sign($inputStr)
     {
-        $tokenPayload = Base64UrlSafe::encodeUnpadded(Json::encode($tokenData));
+        $tokenPayload = Base64UrlSafe::encodeUnpadded($inputStr);
         $tokenSignature = Base64UrlSafe::encodeUnpadded($this->__sign($tokenPayload));
 
         return $tokenPayload.'.'.$tokenSignature;
@@ -68,7 +68,7 @@ class HmacSigner implements SignerInterface
     /**
      * @param string $tokenStr
      *
-     * @return false|array
+     * @return false|string
      */
     public function verify($tokenStr)
     {
@@ -86,6 +86,6 @@ class HmacSigner implements SignerInterface
             return false;
         }
 
-        return Json::decode(Base64UrlSafe::decode($tokenParts[0]));
+        return Base64UrlSafe::decode($tokenParts[0]);
     }
 }

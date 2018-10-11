@@ -24,27 +24,38 @@
 
 namespace fkooman\OAuth\Server;
 
-use fkooman\OAuth\Server\Exception\InvalidGrantException;
+use DateTime;
 use fkooman\OAuth\Server\Exception\InvalidTokenException;
+use InvalidArgumentException;
 
-class Util
+class AccessTokenInfo extends CodeTokenInfo
 {
-    /**
-     * @param string $requiredType
-     * @param string $providedType
-     *
-     * @return void
-     */
-    public static function requireType($requiredType, $providedType)
-    {
-        // make sure we have the required type
-        if ($requiredType !== $providedType) {
-            $errorMsg = \sprintf('expected "%s", got "%s"', $requiredType, $providedType);
-            if ('access_token' === $requiredType) {
-                throw new InvalidTokenException($errorMsg);
-            }
+    /** @var \DateTime */
+    private $expiresAt;
 
-            throw new InvalidGrantException($errorMsg);
+    /**
+     * @param array $codeTokenInfo
+     */
+    public function __construct(array $codeTokenInfo)
+    {
+        parent::__construct($codeTokenInfo);
+
+        if ('access_token' !== $this->getCodeTokenType()) {
+            throw new InvalidTokenException(\sprintf('expected "access_token", got "%s"', $this->getCodeTokenType()));
         }
+
+        if (!\is_string($codeTokenInfo['expires_at'])) {
+            throw new InvalidArgumentException('must be string');
+        }
+        // enforce a certain datetime format?! XXX
+        $this->expiresAt = new DateTime($codeTokenInfo['expires_at']);
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getExpiresAt()
+    {
+        return $this->expiresAt;
     }
 }

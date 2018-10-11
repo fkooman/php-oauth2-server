@@ -68,40 +68,34 @@ class BearerValidator
     /**
      * @param string $authorizationHeader
      *
-     * @return TokenInfo
+     * @return AccessTokenInfo
      */
     public function validate($authorizationHeader)
     {
         SyntaxValidator::validateBearerToken($authorizationHeader);
         $providedToken = Binary::safeSubstr($authorizationHeader, 7);
-        $tokenData = $this->verifier->verify($providedToken);
-        if (false === $tokenData) {
+        $codeTokenInfo = $this->verifier->verify($providedToken);
+        if (false === $codeTokenInfo) {
             throw new InvalidTokenException('"access_token" has invalid signature');
         }
-        Util::requireType('access_token', $tokenData['type']);
+
+        $accessTokenInfo = new AccessTokenInfo(Json::decode($codeTokenInfo));
 
         // check access_token expiry
-        if ($this->dateTime >= new DateTime($tokenData['expires_at'])) {
+        if ($this->dateTime >= $accessTokenInfo->getExpiresAt()) {
             throw new InvalidTokenException('"access_token" expired');
         }
 
-        $tokenInfo = new TokenInfo(
-            $tokenData['auth_key'],
-            $tokenData['user_id'],
-            $tokenData['client_id'],
-            $tokenData['scope']
-        );
-
         // as it is signed by us, the client MUST still be there
-        if (false === $this->clientDb->get($tokenInfo->getClientId())) {
-            throw new InvalidTokenException(\sprintf('client "%s" no longer registered', $tokenInfo->getClientId()));
+        if (false === $this->clientDb->get($accessTokenInfo->getClientId())) {
+            throw new InvalidTokenException(\sprintf('client "%s" no longer registered', $accessTokenInfo->getClientId()));
         }
 
         // it MUST exist in the DB as well, otherwise it was revoked...
-        if (!$this->storage->hasAuthorization($tokenInfo->getAuthKey())) {
-            throw new InvalidTokenException(\sprintf('authorization for client "%s" no longer exists', $tokenInfo->getClientId()));
+        if (!$this->storage->hasAuthorization($accessTokenInfo->getAuthKey())) {
+            throw new InvalidTokenException(\sprintf('authorization for client "%s" no longer exists', $accessTokenInfo->getClientId()));
         }
 
-        return $tokenInfo;
+        return $accessTokenInfo;
     }
 }

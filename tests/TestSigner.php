@@ -35,26 +35,25 @@ use ParagonIE\ConstantTime\Base64UrlSafe;
 class TestSigner implements SignerInterface
 {
     /**
-     * @param array $tokenData
+     * @param string $inputStr
      *
      * @return string
      */
-    public function sign(array $tokenData)
+    public function sign($inputStr)
     {
-        return Base64UrlSafe::encodeUnpadded(
-            Json::encode($tokenData)
-        );
+        return Base64UrlSafe::encodeUnpadded($inputStr);
     }
 
     /**
      * @param string $inputTokenStr
      *
-     * @return false|array
+     * @return false|string
      */
     public function verify($inputTokenStr)
     {
+        $decodedString = Base64UrlSafe::decode($inputTokenStr);
         $jsonData = Json::decode(
-            Base64UrlSafe::decode($inputTokenStr)
+            $decodedString
         );
 
         // simulate an invalid signature
@@ -62,6 +61,6 @@ class TestSigner implements SignerInterface
             return false;
         }
 
-        return $jsonData;
+        return $decodedString;
     }
 }

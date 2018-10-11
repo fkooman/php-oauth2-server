@@ -33,14 +33,14 @@ class HmacSignerTest extends TestCase
     public function testSign()
     {
         $hmacSigner = new HmacSigner(SecretKey::fromEncodedString('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
-        $this->assertSame('eyJmb28iOiJiYXIifQ.h65W_W0vrXZOe_jcPjrJH11qevaGE69aAmGPbUn2iUA', $hmacSigner->sign(['foo' => 'bar']));
+        $this->assertSame('eyJmb28iOiJiYXIifQ.h65W_W0vrXZOe_jcPjrJH11qevaGE69aAmGPbUn2iUA', $hmacSigner->sign('{"foo":"bar"}'));
     }
 
     public function testVerify()
     {
         $hmacSigner = new HmacSigner(SecretKey::fromEncodedString('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
         $this->assertSame(
-            ['foo' => 'bar'],
+            '{"foo":"bar"}',
             $hmacSigner->verify('eyJmb28iOiJiYXIifQ.h65W_W0vrXZOe_jcPjrJH11qevaGE69aAmGPbUn2iUA')
         );
     }

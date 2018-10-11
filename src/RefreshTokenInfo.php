@@ -24,19 +24,40 @@
 
 namespace fkooman\OAuth\Server;
 
-interface SignerInterface
+use DateTime;
+use fkooman\OAuth\Server\Exception\InvalidGrantException;
+use InvalidArgumentException;
+
+class RefreshTokenInfo extends CodeTokenInfo
 {
-    /**
-     * @param string $inputStr
-     *
-     * @return string
-     */
-    public function sign($inputStr);
+    /** @var null|\DateTime */
+    private $expiresAt;
 
     /**
-     * @param string $inputTokenStr
-     *
-     * @return false|string
+     * @param array $codeTokenInfo
      */
-    public function verify($inputTokenStr);
+    public function __construct(array $codeTokenInfo)
+    {
+        parent::__construct($codeTokenInfo);
+
+        if ('refresh_token' !== $this->getCodeTokenType()) {
+            throw new InvalidGrantException(\sprintf('expected "refresh_token", got "%s"', $this->getCodeTokenType()));
+        }
+
+        if (\array_key_exists('expires_at', $codeTokenInfo)) {
+            if (!\is_string($codeTokenInfo['expires_at'])) {
+                throw new InvalidArgumentException('must be string');
+            }
+            // enforce a certain datetime format?! XXX
+            $this->expiresAt = new DateTime($codeTokenInfo['expires_at']);
+        }
+    }
+
+    /**
+     * @return null|\DateTime
+     */
+    public function getExpiresAt()
+    {
+        return $this->expiresAt;
+    }
 }
