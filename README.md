@@ -27,7 +27,8 @@ sent.
 
 # Requirements
 
-See `composer.json`.
+On modern versions of PHP it only requires `paragonie/constant_time_encoding`. 
+On older versions it needs a variety of "polyfills", see `composer.json`.
 
 # Using
 
