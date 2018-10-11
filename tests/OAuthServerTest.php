@@ -26,7 +26,7 @@ namespace fkooman\OAuth\Server\Tests;
 
 use DateInterval;
 use DateTime;
-use fkooman\OAuth\Server\ClientInfo;
+use fkooman\OAuth\Server\ArrayClientDb;
 use fkooman\OAuth\Server\Exception\InvalidClientException;
 use fkooman\OAuth\Server\Exception\InvalidGrantException;
 use fkooman\OAuth\Server\Exception\InvalidRequestException;
@@ -45,45 +45,38 @@ class OAuthServerTest extends TestCase
 
     public function setUp()
     {
-        $oauthClients = [
-            'code-client' => [
-                'redirect_uri_list' => ['http://example.org/code-cb'],
-                'response_type' => 'code',
-                'display_name' => 'Code Client',
-                'require_approval' => false,
-            ],
-            'code-client-query-redirect' => [
-                'response_type' => 'code',
-                'redirect_uri_list' => ['http://example.org/code-cb?keep=this'],
-                'display_name' => 'Code Client',
-            ],
-            'code-client-secret' => [
-                'response_type' => 'code',
-                'redirect_uri_list' => ['http://example.org/code-cb'],
-                'display_name' => 'Code Client',
-                'client_secret' => '123456',
-            ],
-            'loopback' => [
-                'response_type' => 'code',
-                'redirect_uri_list' => ['http://127.0.0.1:{PORT}/cb'],
-                'display_name' => 'Loopback Client',
-            ],
-        ];
-
-        $getClientInfo = function ($clientId) use ($oauthClients) {
-            if (!\array_key_exists($clientId, $oauthClients)) {
-                return false;
-            }
-
-            return new ClientInfo($oauthClients[$clientId]);
-        };
+        $clientDb = new ArrayClientDb(
+            [
+                'code-client' => [
+                    'redirect_uri_list' => ['http://example.org/code-cb'],
+                    'response_type' => 'code',
+                    'display_name' => 'Code Client',
+                    'require_approval' => false,
+                ],
+                'code-client-query-redirect' => [
+                    'response_type' => 'code',
+                    'redirect_uri_list' => ['http://example.org/code-cb?keep=this'],
+                    'display_name' => 'Code Client',
+                ],
+                'code-client-secret' => [
+                    'response_type' => 'code',
+                    'redirect_uri_list' => ['http://example.org/code-cb'],
+                    'display_name' => 'Code Client',
+                    'client_secret' => '123456',
+                ],
+                'loopback' => [
+                    'response_type' => 'code',
+                    'redirect_uri_list' => ['http://127.0.0.1:{PORT}/cb'],
+                    'display_name' => 'Loopback Client',
+                ],
+            ]
+        );
 
         $this->storage = new Storage(new PDO('sqlite::memory:'));
         $this->storage->init();
-
         $this->server = new OAuthServer(
             $this->storage,
-            $getClientInfo,
+            $clientDb,
             new TestSigner()
         );
         $this->server->setDateTime(new DateTime('2016-01-01'));

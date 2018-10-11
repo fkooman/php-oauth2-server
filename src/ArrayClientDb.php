@@ -22,11 +22,32 @@
  * SOFTWARE.
  */
 
-return [
-    'demo_client' => [
-        'redirect_uri_list' => ['http://localhost:8081/callback.php'],
-        'display_name' => 'Demo Client',
-        'client_secret' => 'demo_secret',
-        //'require_approval' => false,
-    ],
-];
+namespace fkooman\OAuth\Server;
+
+class ArrayClientDb implements ClientDbInterface
+{
+    /** @var array<string,array> */
+    private $clientDb;
+
+    /**
+     * @param array<string,array> $clientDb
+     */
+    public function __construct(array $clientDb)
+    {
+        $this->clientDb = $clientDb;
+    }
+
+    /**
+     * @param string $clientId
+     *
+     * @return false|ClientInfo
+     */
+    public function get($clientId)
+    {
+        if (!\array_key_exists($clientId, $this->clientDb)) {
+            return false;
+        }
+
+        return new ClientInfo($this->clientDb[$clientId]);
+    }
+}

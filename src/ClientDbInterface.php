@@ -22,11 +22,14 @@
  * SOFTWARE.
  */
 
-return [
-    'demo_client' => [
-        'redirect_uri_list' => ['http://localhost:8081/callback.php'],
-        'display_name' => 'Demo Client',
-        'client_secret' => 'demo_secret',
-        //'require_approval' => false,
-    ],
-];
+namespace fkooman\OAuth\Server;
+
+interface ClientDbInterface
+{
+    /**
+     * @param string $clientId
+     *
+     * @return false|ClientInfo
+     */
+    public function get($clientId);
+}

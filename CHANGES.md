@@ -5,6 +5,8 @@
 - introduce simple `HmacSigner`
 - drop multi key support
 - remove Key ID support
+- introduce `ClientDbInterface` and `ArrayClientDb` instead of crummy 
+  `callable`
 
 ## 3.0.2 (2018-09-21)
 - explicitly depend on versions of `paragonie/constant_time_encoding` that 

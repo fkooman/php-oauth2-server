@@ -38,8 +38,8 @@ class OAuthServer
     /** @var Storage */
     private $storage;
 
-    /** @var callable */
-    private $getClientInfo;
+    /** @var ClientDbInterface */
+    private $clientDb;
 
     /** @var SignerInterface */
     private $signer;
@@ -57,14 +57,14 @@ class OAuthServer
     private $refreshTokenExpiry = null;
 
     /**
-     * @param Storage         $storage
-     * @param callable        $getClientInfo
-     * @param SignerInterface $signer
+     * @param Storage           $storage
+     * @param ClientDbInterface $clientDb
+     * @param SignerInterface   $signer
      */
-    public function __construct(Storage $storage, callable $getClientInfo, SignerInterface $signer)
+    public function __construct(Storage $storage, ClientDbInterface $clientDb, SignerInterface $signer)
     {
         $this->storage = $storage;
-        $this->getClientInfo = $getClientInfo;
+        $this->clientDb = $clientDb;
         $this->signer = $signer;
         $this->random = new Random();
         $this->dateTime = new DateTime();
@@ -572,7 +572,7 @@ class OAuthServer
      */
     private function getClient($clientId)
     {
-        if (false === $clientInfo = \call_user_func($this->getClientInfo, $clientId)) {
+        if (false === $clientInfo = $this->clientDb->get($clientId)) {
             throw new InvalidClientException('client does not exist with this "client_id"');
         }
 

@@ -25,8 +25,8 @@
 namespace fkooman\OAuth\Server\Tests;
 
 use DateTime;
+use fkooman\OAuth\Server\ArrayClientDb;
 use fkooman\OAuth\Server\BearerValidator;
-use fkooman\OAuth\Server\ClientInfo;
 use fkooman\OAuth\Server\Exception\InvalidTokenException;
 use fkooman\OAuth\Server\Storage;
 use PDO;
@@ -34,9 +34,6 @@ use PHPUnit\Framework\TestCase;
 
 class BearerValidatorTest extends TestCase
 {
-    /** @var array */
-    private $oauthClients;
-
     /** @var \fkooman\OAuth\Server\BearerValidator */
     private $validator;
 
@@ -45,26 +42,19 @@ class BearerValidatorTest extends TestCase
 
     public function setUp()
     {
-        $this->oauthClients = [
-            'code-client' => [
-                'redirect_uri_list' => ['http://example.org/code-cb'],
-                'display_name' => 'Code Client',
-            ],
-        ];
-
-        $getClientInfo = function ($clientId) {
-            if (!\array_key_exists($clientId, $this->oauthClients)) {
-                return false;
-            }
-
-            return new ClientInfo($this->oauthClients[$clientId]);
-        };
-
+        $clientDb = new ArrayClientDb(
+            [
+                'code-client' => [
+                    'redirect_uri_list' => ['http://example.org/code-cb'],
+                    'display_name' => 'Code Client',
+                ],
+            ]
+        );
         $this->storage = new Storage(new PDO('sqlite::memory:'));
         $this->storage->init();
         $this->validator = new BearerValidator(
             $this->storage,
-            $getClientInfo,
+            $clientDb,
             new TestSigner()
         );
         $this->validator->setDateTime(new DateTime('2016-01-01'));
@@ -93,7 +83,12 @@ class BearerValidatorTest extends TestCase
     public function testDeletedClient()
     {
         try {
-            $this->oauthClients = [];
+            $this->validator = new BearerValidator(
+                $this->storage,
+                new ArrayClientDb([]),
+                new TestSigner()
+            );
+            $this->validator->setDateTime(new DateTime('2016-01-01'));
             $this->validator->validate('Bearer eyJ0eXBlIjoiYWNjZXNzX3Rva2VuIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDE6MDA6MDAifQ');
             $this->fail();
         } catch (InvalidTokenException $e) {

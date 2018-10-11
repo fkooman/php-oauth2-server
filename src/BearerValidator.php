@@ -33,8 +33,8 @@ class BearerValidator
     /** @var Storage */
     private $storage;
 
-    /** @var callable */
-    private $getClientInfo;
+    /** @var ClientDbInterface */
+    private $clientDb;
 
     /** @var SignerInterface */
     private $verifier;
@@ -43,14 +43,14 @@ class BearerValidator
     private $dateTime;
 
     /**
-     * @param Storage         $storage
-     * @param callable        $getClientInfo
-     * @param SignerInterface $verifier
+     * @param Storage           $storage
+     * @param ClientDbInterface $clientDb
+     * @param SignerInterface   $verifier
      */
-    public function __construct(Storage $storage, callable $getClientInfo, SignerInterface $verifier)
+    public function __construct(Storage $storage, ClientDbInterface $clientDb, SignerInterface $verifier)
     {
         $this->storage = $storage;
-        $this->getClientInfo = $getClientInfo;
+        $this->clientDb = $clientDb;
         $this->verifier = $verifier;
         $this->dateTime = new DateTime();
     }
@@ -93,7 +93,7 @@ class BearerValidator
         );
 
         // as it is signed by us, the client MUST still be there
-        if (false === \call_user_func($this->getClientInfo, $tokenInfo->getClientId())) {
+        if (false === $this->clientDb->get($tokenInfo->getClientId())) {
             throw new InvalidTokenException(\sprintf('client "%s" no longer registered', $tokenInfo->getClientId()));
         }
 

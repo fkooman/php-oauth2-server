@@ -23,10 +23,9 @@
  */
 
 require_once \dirname(__DIR__).'/vendor/autoload.php';
-require_once __DIR__.'/client_info.php';
 $baseDir = \dirname(__DIR__);
 
-use fkooman\OAuth\Server\ClientInfo;
+use fkooman\OAuth\Server\ArrayClientDb;
 use fkooman\OAuth\Server\Exception\OAuthException;
 use fkooman\OAuth\Server\HmacSigner;
 use fkooman\OAuth\Server\Http\JsonResponse;
@@ -41,10 +40,7 @@ try {
 
     $oauthServer = new OAuthServer(
         $storage,
-        // getClientInfo is a callback to "convert" a client_id into a
-        // ClientInfo object, typically this configuration comes from a
-        // configuration file or database, here we use a static file
-        'getClientInfo',
+        new ArrayClientDb(include __DIR__.'/client_info.php'),
         new HmacSigner(
             SecretKey::fromEncodedString(\file_get_contents('server.key'))
         )
