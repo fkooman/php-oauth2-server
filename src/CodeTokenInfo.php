@@ -24,7 +24,6 @@
 
 namespace fkooman\OAuth\Server;
 
-use fkooman\OAuth\Server\Exception\InsufficientScopeException;
 use InvalidArgumentException;
 
 class CodeTokenInfo
@@ -41,7 +40,7 @@ class CodeTokenInfo
     /** @var string */
     private $clientId;
 
-    /** @var string */
+    /** @var Scope */
     private $scope;
 
     /**
@@ -61,7 +60,7 @@ class CodeTokenInfo
         $this->authKey = $codeTokenInfo['auth_key'];
         $this->userId = $codeTokenInfo['user_id'];
         $this->clientId = $codeTokenInfo['client_id'];
-        $this->scope = $codeTokenInfo['scope'];
+        $this->scope = new Scope($codeTokenInfo['scope']);
     }
 
     /**
@@ -97,50 +96,10 @@ class CodeTokenInfo
     }
 
     /**
-     * @return string
+     * @return Scope
      */
     public function getScope()
     {
-        // XXX introduce Scope object
         return $this->scope;
-    }
-
-    /**
-     * @param array $requiredScopeList
-     *
-     * @throws \fkooman\OAuth\Server\Exception\InsufficientScopeException
-     *
-     * @return void
-     */
-    public function requireAllScope(array $requiredScopeList)
-    {
-        $grantedScopeList = \explode(' ', $this->scope);
-        foreach ($requiredScopeList as $requiredScope) {
-            if (!\in_array($requiredScope, $grantedScopeList, true)) {
-                throw new InsufficientScopeException(\sprintf('scope "%s" not granted', $requiredScope));
-            }
-        }
-    }
-
-    /**
-     * @param array $requiredScopeList
-     *
-     * @throws \fkooman\OAuth\Server\Exception\InsufficientScopeException
-     *
-     * @return void
-     */
-    public function requireAnyScope(array $requiredScopeList)
-    {
-        $grantedScopeList = \explode(' ', $this->scope);
-        $hasAny = false;
-        foreach ($requiredScopeList as $requiredScope) {
-            if (\in_array($requiredScope, $grantedScopeList, true)) {
-                $hasAny = true;
-            }
-        }
-
-        if (!$hasAny) {
-            throw new InsufficientScopeException(\sprintf('not any of scopes "%s" granted', \implode(' ', $requiredScopeList)));
-        }
     }
 }

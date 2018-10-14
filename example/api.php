@@ -52,20 +52,20 @@ try {
             // get the "Authorization" header from the HTTP request
             $authorizationHeader = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : null;
 
-            // obtain tokenInfo from the "Authorization", this contains the
-            // user_id the authorization is bound to, as well as some other
+            // obtain accessTokenInfo from the "Authorization", this contains
+            // the user_id the authorization is bound to, as well as some other
             // information, e.g. approved "scope"
-            $tokenInfo = $bearerValidator->validate($authorizationHeader);
+            $accessTokenInfo = $bearerValidator->validate($authorizationHeader);
 
             // require both the "foo" and "bar" scope
-            $tokenInfo->requireAllScope(['foo', 'bar']);
+            $accessTokenInfo->getScope()->requireAllScope(['foo', 'bar']);
             // require any of "foo" or "bar" scope
-            //$tokenInfo->requireAnyScope(['foo', 'bar']);
+            //$accessTokenInfo->requireAnyScope(['foo', 'bar']);
 
             // use "helper" JsonResponse here, typically your HTTP framework
             // will provide this...
             $jsonResponse = new JsonResponse(
-                ['user_id' => $tokenInfo->getUserId()]
+                ['user_id' => $accessTokenInfo->getUserId()]
             );
             $jsonResponse->send();
             break;

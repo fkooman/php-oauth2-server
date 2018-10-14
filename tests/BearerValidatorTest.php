@@ -66,7 +66,7 @@ class BearerValidatorTest extends TestCase
         $tokenInfo = $this->validator->validate('Bearer eyJ0eXBlIjoiYWNjZXNzX3Rva2VuIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDE6MDA6MDAifQ');
         $this->assertSame('random_1', $tokenInfo->getAuthKey());
         $this->assertSame('foo', $tokenInfo->getUserId());
-        $this->assertSame('config', $tokenInfo->getScope());
+        $this->assertSame('config', (string) $tokenInfo->getScope());
     }
 
     public function testInvalidSignature()

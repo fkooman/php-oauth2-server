@@ -360,7 +360,7 @@ class OAuthServer
 
         // parameters in POST body need to match the parameters stored with
         // the refresh token
-        if ($postData['scope'] !== $refreshTokenInfo->getScope()) {
+        if ($postData['scope'] !== (string) $refreshTokenInfo->getScope()) {
             throw new InvalidRequestException('unexpected "scope"');
         }
 
@@ -372,7 +372,7 @@ class OAuthServer
         $accessToken = $this->getAccessToken(
             $refreshTokenInfo->getUserId(),
             $refreshTokenInfo->getClientId(),
-            $postData['scope'],
+            $refreshTokenInfo->getScope(),
             $refreshTokenInfo->getAuthKey()
         );
 
@@ -397,12 +397,12 @@ class OAuthServer
     /**
      * @param string $userId
      * @param string $clientId
-     * @param string $scope
+     * @param Scope  $scope
      * @param string $authKey
      *
      * @return string
      */
-    private function getAccessToken($userId, $clientId, $scope, $authKey)
+    private function getAccessToken($userId, $clientId, Scope $scope, $authKey)
     {
         // for prevention of replays of authorization codes and the revocation
         // of access tokens when an authorization code is replayed, we use the
@@ -416,7 +416,7 @@ class OAuthServer
                     'auth_key' => $authKey, // to bind it to the authorization
                     'user_id' => $userId,
                     'client_id' => $clientId,
-                    'scope' => $scope,
+                    'scope' => (string) $scope,
                     'expires_at' => $expiresAt->format(DateTime::ATOM),
                 ]
             )
@@ -426,19 +426,19 @@ class OAuthServer
     /**
      * @param string $userId
      * @param string $clientId
-     * @param string $scope
+     * @param Scope  $scope
      * @param string $authKey
      *
      * @return string
      */
-    private function getRefreshToken($userId, $clientId, $scope, $authKey)
+    private function getRefreshToken($userId, $clientId, Scope $scope, $authKey)
     {
         $refreshTokenInfo = [
             'type' => 'refresh_token',
             'auth_key' => $authKey, // to bind it to the authorization
             'user_id' => $userId,
             'client_id' => $clientId,
-            'scope' => $scope,
+            'scope' => (string) $scope,
         ];
 
         if (null !== $this->refreshTokenExpiry) {

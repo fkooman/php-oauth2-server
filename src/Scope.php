@@ -26,62 +26,24 @@ namespace fkooman\OAuth\Server;
 
 use fkooman\OAuth\Server\Exception\InsufficientScopeException;
 
-class TokenInfo
+class Scope
 {
-    /** @var string */
-    private $authKey;
-
-    /** @var string */
-    private $userId;
-
-    /** @var string */
-    private $clientId;
-
     /** @var string */
     private $scope;
 
     /**
-     * @param string $authKey
-     * @param string $userId
-     * @param string $clientId
      * @param string $scope
      */
-    public function __construct($authKey, $userId, $clientId, $scope)
+    public function __construct($scope)
     {
-        $this->authKey = $authKey;
-        $this->userId = $userId;
-        $this->clientId = $clientId;
+        // XXX validate input!
         $this->scope = $scope;
     }
 
     /**
      * @return string
      */
-    public function getAuthKey()
-    {
-        return $this->authKey;
-    }
-
-    /**
-     * @return string
-     */
-    public function getUserId()
-    {
-        return $this->userId;
-    }
-
-    /**
-     * @return string
-     */
-    public function getClientId()
-    {
-        return $this->clientId;
-    }
-
-    /**
-     * @return string
-     */
-    public function getScope()
+    public function __toString()
     {
         return $this->scope;
     }
