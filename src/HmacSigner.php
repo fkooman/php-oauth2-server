@@ -29,7 +29,7 @@ use TypeError;
 
 class HmacSigner implements SignerInterface
 {
-    const HMAC_ALGORITHM = 'sha256';
+    const HMAC_ALGO = 'sha256';
 
     /** @var SecretKey */
     private $secretKey;
@@ -49,7 +49,7 @@ class HmacSigner implements SignerInterface
      */
     private function __sign($payloadStr)
     {
-        return \hash_hmac(self::HMAC_ALGORITHM, $payloadStr, $this->secretKey->raw(), true);
+        return \hash_hmac(self::HMAC_ALGO, $payloadStr, $this->secretKey->raw(), true);
     }
 
     /**
