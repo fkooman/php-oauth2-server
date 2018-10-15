@@ -33,15 +33,18 @@ class HmacSignerTest extends TestCase
     public function testSign()
     {
         $hmacSigner = new HmacSigner(SecretKey::fromEncodedString('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
-        $this->assertSame('eyJmb28iOiJiYXIifQ.h65W_W0vrXZOe_jcPjrJH11qevaGE69aAmGPbUn2iUA', $hmacSigner->sign('{"foo":"bar"}'));
+        $this->assertSame('eyJmb28iOiJiYXIifQ.4_GEnxULgdFMyuy_k3nVzmXGRIJ6ZUJuJ-4FW9ePoKA.-3KsIqFXaXERSSfBWsBVyMEw6cA_5zctEgO3whMPgFc', $hmacSigner->sign(['foo' => 'bar']));
     }
 
     public function testVerify()
     {
         $hmacSigner = new HmacSigner(SecretKey::fromEncodedString('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
         $this->assertSame(
-            '{"foo":"bar"}',
-            $hmacSigner->verify('eyJmb28iOiJiYXIifQ.h65W_W0vrXZOe_jcPjrJH11qevaGE69aAmGPbUn2iUA')
+            [
+                'foo' => 'bar',
+                'key_id' => '4_GEnxULgdFMyuy_k3nVzmXGRIJ6ZUJuJ-4FW9ePoKA',
+            ],
+            $hmacSigner->verify('eyJmb28iOiJiYXIifQ.4_GEnxULgdFMyuy_k3nVzmXGRIJ6ZUJuJ-4FW9ePoKA.-3KsIqFXaXERSSfBWsBVyMEw6cA_5zctEgO3whMPgFc')
         );
     }
 
@@ -54,6 +57,6 @@ class HmacSignerTest extends TestCase
     public function testVerifyWrongKey()
     {
         $hmacSigner = new HmacSigner(SecretKey::fromEncodedString('5Zo4eJa3Nni5RPn1bz0uAZao41RqAnWJqD9dYrjVqiU'));
-        $this->assertFalse($hmacSigner->verify('eyJmb28iOiJiYXIifQ.h65W_W0vrXZOe_jcPjrJH11qevaGE69aAmGPbUn2iUA'));
+        $this->assertFalse($hmacSigner->verify('eyJmb28iOiJiYXIifQ.4_GEnxULgdFMyuy_k3nVzmXGRIJ6ZUJuJ-4FW9ePoKA.-3KsIqFXaXERSSfBWsBVyMEw6cA_5zctEgO3whMPgFc'));
     }
 }

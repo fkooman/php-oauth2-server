@@ -43,6 +43,9 @@ class CodeTokenInfo
     /** @var Scope */
     private $scope;
 
+    /** @var null|string */
+    private $keyId = null;
+
     /**
      * @param array $codeTokenInfo
      */
@@ -61,6 +64,13 @@ class CodeTokenInfo
         $this->userId = $codeTokenInfo['user_id'];
         $this->clientId = $codeTokenInfo['client_id'];
         $this->scope = new Scope($codeTokenInfo['scope']);
+
+        if (\array_key_exists('key_id', $codeTokenInfo)) {
+            if (!\is_string($codeTokenInfo['key_id'])) {
+                throw new InvalidArgumentException('must be string');
+            }
+            $this->keyId = $codeTokenInfo['key_id'];
+        }
     }
 
     /**
@@ -101,5 +111,13 @@ class CodeTokenInfo
     public function getScope()
     {
         return $this->scope;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getKeyId()
+    {
+        return $this->keyId;
     }
 }

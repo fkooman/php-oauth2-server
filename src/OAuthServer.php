@@ -271,7 +271,7 @@ class OAuthServer
         if (false === $codeTokenInfo) {
             throw new InvalidGrantException('"authorization_code" has invalid signature');
         }
-        $authorizationCodeInfo = new AuthorizationCodeInfo(Json::decode($codeTokenInfo));
+        $authorizationCodeInfo = new AuthorizationCodeInfo($codeTokenInfo);
 
         // check authorization_code expiry
         if ($this->dateTime >= $authorizationCodeInfo->getExpiresAt()) {
@@ -346,7 +346,7 @@ class OAuthServer
         if (false === $codeTokenInfo) {
             throw new InvalidGrantException('"refresh_token" has invalid signature');
         }
-        $refreshTokenInfo = new RefreshTokenInfo(Json::decode($codeTokenInfo));
+        $refreshTokenInfo = new RefreshTokenInfo($codeTokenInfo);
         // check refresh_token expiry, refresh token expiry is OPTIONAL,
         // disable by default...
         if (null !== $refreshTokenInfo->getExpiresAt()) {
@@ -410,16 +410,14 @@ class OAuthServer
         $expiresAt = \date_add(clone $this->dateTime, $this->accessTokenExpiry);
 
         return $this->signer->sign(
-            Json::encode(
-                [
-                    'type' => 'access_token',
-                    'auth_key' => $authKey, // to bind it to the authorization
-                    'user_id' => $userId,
-                    'client_id' => $clientId,
-                    'scope' => (string) $scope,
-                    'expires_at' => $expiresAt->format(DateTime::ATOM),
-                ]
-            )
+            [
+                'type' => 'access_token',
+                'auth_key' => $authKey, // to bind it to the authorization
+                'user_id' => $userId,
+                'client_id' => $clientId,
+                'scope' => (string) $scope,
+                'expires_at' => $expiresAt->format(DateTime::ATOM),
+            ]
         );
     }
 
@@ -446,9 +444,7 @@ class OAuthServer
             $refreshTokenInfo['expires_at'] = $expiresAt->format(DateTime::ATOM);
         }
 
-        return $this->signer->sign(
-            Json::encode($refreshTokenInfo)
-        );
+        return $this->signer->sign($refreshTokenInfo);
     }
 
     /**
@@ -472,18 +468,16 @@ class OAuthServer
         // "code_challenge_method" "plain" and not "S256". We only support
         // "S256" and never "plain".
         return $this->signer->sign(
-            Json::encode(
-                [
-                    'type' => 'authorization_code',
-                    'auth_key' => $authKey,
-                    'user_id' => $userId,
-                    'client_id' => $clientId,
-                    'scope' => $scope,
-                    'redirect_uri' => $redirectUri,
-                    'code_challenge' => $codeChallenge,
-                    'expires_at' => $expiresAt->format(DateTime::ATOM),
-                ]
-            )
+            [
+                'type' => 'authorization_code',
+                'auth_key' => $authKey,
+                'user_id' => $userId,
+                'client_id' => $clientId,
+                'scope' => $scope,
+                'redirect_uri' => $redirectUri,
+                'code_challenge' => $codeChallenge,
+                'expires_at' => $expiresAt->format(DateTime::ATOM),
+            ]
         );
     }
 

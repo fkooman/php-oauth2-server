@@ -31,7 +31,7 @@ use InvalidArgumentException;
 class RefreshTokenInfo extends CodeTokenInfo
 {
     /** @var null|\DateTime */
-    private $expiresAt;
+    private $expiresAt = null;
 
     /**
      * @param array $codeTokenInfo

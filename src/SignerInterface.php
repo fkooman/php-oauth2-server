@@ -27,16 +27,16 @@ namespace fkooman\OAuth\Server;
 interface SignerInterface
 {
     /**
-     * @param string $inputStr
+     * @param array $codeTokenInfo
      *
      * @return string
      */
-    public function sign($inputStr);
+    public function sign(array $codeTokenInfo);
 
     /**
-     * @param string $inputTokenStr
+     * @param string $codeTokenString
      *
-     * @return false|string
+     * @return false|array
      */
-    public function verify($inputTokenStr);
+    public function verify($codeTokenString);
 }

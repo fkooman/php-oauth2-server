@@ -53,39 +53,43 @@ class HmacSigner implements SignerInterface
     }
 
     /**
-     * @param string $inputStr
+     * @param array $codeTokenInfo
      *
      * @return string
      */
-    public function sign($inputStr)
+    public function sign(array $codeTokenInfo)
     {
-        $tokenPayload = Base64UrlSafe::encodeUnpadded($inputStr);
-        $tokenSignature = Base64UrlSafe::encodeUnpadded($this->__sign($tokenPayload));
+        $tokenPayload = Base64UrlSafe::encodeUnpadded(Json::encode($codeTokenInfo));
+        $keyId = $this->secretKey->getKeyId();
+        $tokenSignature = Base64UrlSafe::encodeUnpadded($this->__sign($tokenPayload.$keyId));
 
-        return $tokenPayload.'.'.$tokenSignature;
+        return $tokenPayload.'.'.$keyId.'.'.$tokenSignature;
     }
 
     /**
-     * @param string $tokenStr
+     * @param string $codeTokenString
      *
-     * @return false|string
+     * @return false|array
      */
-    public function verify($tokenStr)
+    public function verify($codeTokenString)
     {
-        if (!\is_string($tokenStr)) {
+        if (!\is_string($codeTokenString)) {
             throw new TypeError('argument 1 must be string');
         }
-        $tokenParts = \explode('.', $tokenStr);
-        if (2 !== \count($tokenParts)) {
+        $codeTokenParts = \explode('.', $codeTokenString);
+        if (3 !== \count($codeTokenParts)) {
             // invalid token, it MUST contain a "."
             return false;
         }
 
-        $tokenSignature = Base64UrlSafe::encodeUnpadded($this->__sign($tokenParts[0]));
-        if (false === \hash_equals($tokenSignature, $tokenParts[1])) {
+        $tokenSignature = Base64UrlSafe::encodeUnpadded($this->__sign($codeTokenParts[0].$codeTokenParts[1]));
+        if (false === \hash_equals($tokenSignature, $codeTokenParts[2])) {
             return false;
         }
 
-        return Base64UrlSafe::decode($tokenParts[0]);
+        $codeTokenInfo = Json::decode(Base64UrlSafe::decode($codeTokenParts[0]));
+        $codeTokenInfo['key_id'] = $codeTokenParts[1];
+
+        return $codeTokenInfo;
     }
 }

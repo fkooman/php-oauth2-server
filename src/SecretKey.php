@@ -31,6 +31,8 @@ use TypeError;
 
 class SecretKey
 {
+    const HASH_ALGO = 'sha256';
+
     // strlen(hash('sha256', '', true))
     const KEY_LENGTH_BYTES = 32;
 
@@ -57,6 +59,20 @@ class SecretKey
     public static function generate()
     {
         return new self(\random_bytes(self::KEY_LENGTH_BYTES));
+    }
+
+    /**
+     * @return string
+     */
+    public function getKeyId()
+    {
+        return Base64UrlSafe::encodeUnpadded(
+            \hash(
+                self::HASH_ALGO,
+                $this->raw(),
+                true
+            )
+        );
     }
 
     /**

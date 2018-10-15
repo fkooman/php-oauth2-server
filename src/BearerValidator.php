@@ -79,7 +79,7 @@ class BearerValidator
             throw new InvalidTokenException('"access_token" has invalid signature');
         }
 
-        $accessTokenInfo = new AccessTokenInfo(Json::decode($codeTokenInfo));
+        $accessTokenInfo = new AccessTokenInfo($codeTokenInfo);
 
         // check access_token expiry
         if ($this->dateTime >= $accessTokenInfo->getExpiresAt()) {
