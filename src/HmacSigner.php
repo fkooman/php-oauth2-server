@@ -60,10 +60,9 @@ class HmacSigner implements SignerInterface
     public function sign(array $codeTokenInfo)
     {
         $tokenPayload = Base64UrlSafe::encodeUnpadded(Json::encode($codeTokenInfo));
-        $keyId = $this->secretKey->getKeyId();
-        $tokenSignature = Base64UrlSafe::encodeUnpadded($this->__sign($tokenPayload.$keyId));
+        $tokenSignature = Base64UrlSafe::encodeUnpadded($this->__sign($tokenPayload));
 
-        return $tokenPayload.'.'.$keyId.'.'.$tokenSignature;
+        return $tokenPayload.'.'.$tokenSignature;
     }
 
     /**
@@ -77,19 +76,16 @@ class HmacSigner implements SignerInterface
             throw new TypeError('argument 1 must be string');
         }
         $codeTokenParts = \explode('.', $codeTokenString);
-        if (3 !== \count($codeTokenParts)) {
+        if (2 !== \count($codeTokenParts)) {
             // invalid token, it MUST contain a "."
             return false;
         }
 
-        $tokenSignature = Base64UrlSafe::encodeUnpadded($this->__sign($codeTokenParts[0].$codeTokenParts[1]));
-        if (false === \hash_equals($tokenSignature, $codeTokenParts[2])) {
+        $tokenSignature = Base64UrlSafe::encodeUnpadded($this->__sign($codeTokenParts[0]));
+        if (false === \hash_equals($tokenSignature, $codeTokenParts[1])) {
             return false;
         }
 
-        $codeTokenInfo = Json::decode(Base64UrlSafe::decode($codeTokenParts[0]));
-        $codeTokenInfo['key_id'] = $codeTokenParts[1];
-
-        return $codeTokenInfo;
+        return Json::decode(Base64UrlSafe::decode($codeTokenParts[0]));
     }
 }
