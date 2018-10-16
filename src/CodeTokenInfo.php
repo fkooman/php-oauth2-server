@@ -56,7 +56,7 @@ class CodeTokenInfo
                 throw new InvalidArgumentException('key missing');
             }
             if (!\is_string($codeTokenInfo[$k])) {
-                throw new InvalidArgumentException('must be string');
+                throw new InvalidArgumentException(\sprintf('"%s" must be string', $k));
             }
         }
         $this->codeTokenType = $codeTokenInfo['type'];

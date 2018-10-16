@@ -51,19 +51,19 @@ class AuthorizationCodeInfo extends CodeTokenInfo
         }
 
         if (!\is_string($codeTokenInfo['expires_at'])) {
-            throw new InvalidArgumentException('must be string');
+            throw new InvalidArgumentException(\sprintf('"expires_at" must be string'));
         }
         // enforce a certain datetime format?! XXX
         $this->expiresAt = new DateTime($codeTokenInfo['expires_at']);
 
         if (!\is_string($codeTokenInfo['redirect_uri'])) {
-            throw new InvalidArgumentException('must be string');
+            throw new InvalidArgumentException('"redirect_uri" must be string');
         }
         $this->redirectUri = $codeTokenInfo['redirect_uri'];
 
         // XXX code challenge is also null when not public client?
-        if (!\is_string($codeTokenInfo['code_challenge'])) {
-            throw new InvalidArgumentException('must be string');
+        if (null !== $codeTokenInfo['code_challenge'] && !\is_string($codeTokenInfo['code_challenge'])) {
+            throw new InvalidArgumentException('"code_challenge" must be null|string');
         }
         $this->codeChallenge = $codeTokenInfo['code_challenge'];
     }

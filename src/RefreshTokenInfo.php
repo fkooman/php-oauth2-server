@@ -46,7 +46,7 @@ class RefreshTokenInfo extends CodeTokenInfo
 
         if (\array_key_exists('expires_at', $codeTokenInfo)) {
             if (!\is_string($codeTokenInfo['expires_at'])) {
-                throw new InvalidArgumentException('must be string');
+                throw new InvalidArgumentException('"expires_at" must be string');
             }
             // enforce a certain datetime format?! XXX
             $this->expiresAt = new DateTime($codeTokenInfo['expires_at']);
