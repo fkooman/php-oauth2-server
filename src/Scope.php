@@ -36,7 +36,7 @@ class Scope
      */
     public function __construct($scope)
     {
-        // XXX validate input!
+        SyntaxValidator::validateScope($scope);
         $this->scope = $scope;
     }
 
