@@ -2,11 +2,8 @@
 
 ## 4.0.0 (...)
 - remove `SodiumSigner`
-- introduce simple `HmacSigner`
-- drop multi key support
-- remove Key ID support
-- introduce `ClientDbInterface` and `ArrayClientDb` instead of crummy 
-  `callable`
+- introduce simple secret key `HmacSigner`
+- introduce `ClientDbInterface` and `ArrayClientDb` instead of a `callable` 
 
 ## 3.0.2 (2018-09-21)
 - explicitly depend on versions of `paragonie/constant_time_encoding` that 
