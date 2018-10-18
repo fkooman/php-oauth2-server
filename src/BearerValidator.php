@@ -74,29 +74,37 @@ class BearerValidator
     {
         SyntaxValidator::validateBearerToken($authorizationHeader);
         $providedToken = Binary::safeSubstr($authorizationHeader, 7);
-        $codeTokenInfo = $this->verifier->verify($providedToken);
-        if (false === $codeTokenInfo) {
+        $accessTokenInfo = $this->verifier->verify($providedToken);
+        if (false === $accessTokenInfo) {
             throw new InvalidTokenException('"access_token" has invalid signature');
         }
 
-        $accessTokenInfo = new AccessTokenInfo($codeTokenInfo);
+        // make sure we got an access_token
+        if ('access_token' !== $accessTokenInfo['type']) {
+            throw new InvalidTokenException(\sprintf('expected "access_token", got "%s"', $accessTokenInfo['type']));
+        }
 
         // check access_token expiry
-        if ($this->dateTime >= $accessTokenInfo->getExpiresAt()) {
+        if ($this->dateTime >= new DateTime($accessTokenInfo['expires_at'])) {
             throw new InvalidTokenException('"access_token" expired');
         }
 
         // the client MUST still be there
-        if (false === $this->clientDb->get($accessTokenInfo->getClientId())) {
-            throw new InvalidTokenException(\sprintf('client "%s" no longer registered', $accessTokenInfo->getClientId()));
+        if (false === $this->clientDb->get($accessTokenInfo['client_id'])) {
+            throw new InvalidTokenException(\sprintf('client "%s" no longer registered', $accessTokenInfo['client_id']));
         }
 
         // the authorization MUST exist in the DB as well, otherwise it was
         // revoked...
-        if (!$this->storage->hasAuthorization($accessTokenInfo->getAuthKey())) {
-            throw new InvalidTokenException(\sprintf('authorization for client "%s" no longer exists', $accessTokenInfo->getClientId()));
+        if (!$this->storage->hasAuthorization($accessTokenInfo['auth_key'])) {
+            throw new InvalidTokenException(\sprintf('authorization for client "%s" no longer exists', $accessTokenInfo['client_id']));
         }
 
-        return $accessTokenInfo;
+        return new AccessTokenInfo(
+            $accessTokenInfo['user_id'],
+            $accessTokenInfo['client_id'],
+            $accessTokenInfo['scope'],
+            null // we do not care about key ID
+        );
     }
 }

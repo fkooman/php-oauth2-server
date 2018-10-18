@@ -24,38 +24,105 @@
 
 namespace fkooman\OAuth\Server;
 
-use DateTime;
-use fkooman\OAuth\Server\Exception\InvalidTokenException;
-use InvalidArgumentException;
+use fkooman\OAuth\Server\Exception\InsufficientScopeException;
 
-class AccessTokenInfo extends CodeTokenInfo
+class AccessTokenInfo
 {
-    /** @var \DateTime */
-    private $expiresAt;
+    /** @var string */
+    private $userId;
+
+    /** @var string */
+    private $clientId;
+
+    /** @var string */
+    private $scope;
+
+    /** @var null|string */
+    private $keyId;
 
     /**
-     * @param array $codeTokenInfo
+     * @param string      $authKey
+     * @param string      $userId
+     * @param string      $clientId
+     * @param string      $scope
+     * @param null|string $keyId
      */
-    public function __construct(array $codeTokenInfo)
+    public function __construct($userId, $clientId, $scope, $keyId)
     {
-        parent::__construct($codeTokenInfo);
-
-        if ('access_token' !== $this->getCodeTokenType()) {
-            throw new InvalidTokenException(\sprintf('expected "access_token", got "%s"', $this->getCodeTokenType()));
-        }
-
-        if (!\is_string($codeTokenInfo['expires_at'])) {
-            throw new InvalidArgumentException('must be string');
-        }
-        // enforce a certain datetime format?! XXX
-        $this->expiresAt = new DateTime($codeTokenInfo['expires_at']);
+        $this->userId = $userId;
+        $this->clientId = $clientId;
+        $this->scope = $scope;
+        $this->keyId = $keyId;
     }
 
     /**
-     * @return \DateTime
+     * @return string
      */
-    public function getExpiresAt()
+    public function getUserId()
     {
-        return $this->expiresAt;
+        return $this->userId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getClientId()
+    {
+        return $this->clientId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getScope()
+    {
+        return $this->scope;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getKeyId()
+    {
+        return $this->keyId;
+    }
+
+    /**
+     * @param array $requiredScopeList
+     *
+     * @throws \fkooman\OAuth\Server\Exception\InsufficientScopeException
+     *
+     * @return void
+     */
+    public function requireAllScope(array $requiredScopeList)
+    {
+        $grantedScopeList = \explode(' ', $this->scope);
+        foreach ($requiredScopeList as $requiredScope) {
+            if (!\in_array($requiredScope, $grantedScopeList, true)) {
+                throw new InsufficientScopeException(\sprintf('scope "%s" not granted', $requiredScope));
+            }
+        }
+    }
+
+    /**
+     * @param array $requiredScopeList
+     *
+     * @throws \fkooman\OAuth\Server\Exception\InsufficientScopeException
+     *
+     * @return void
+     */
+    public function requireAnyScope(array $requiredScopeList)
+    {
+        $grantedScopeList = \explode(' ', $this->scope);
+        $hasAny = false;
+        foreach ($requiredScopeList as $requiredScope) {
+            if (\in_array($requiredScope, $grantedScopeList, true)) {
+                $hasAny = true;
+            }
+        }
+
+        if (!$hasAny) {
+            throw new InsufficientScopeException(\sprintf('not any of scopes "%s" granted', \implode(' ', $requiredScopeList)));
+        }
     }
 }

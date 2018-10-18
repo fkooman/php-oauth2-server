@@ -267,14 +267,18 @@ class OAuthServer
         $this->verifyClientCredentials($postData['client_id'], $clientInfo, $authUser, $authPass);
 
         // verify the authorization code signature
-        $codeTokenInfo = $this->signer->verify($postData['code']);
-        if (false === $codeTokenInfo) {
+        $authorizationCodeInfo = $this->signer->verify($postData['code']);
+        if (false === $authorizationCodeInfo) {
             throw new InvalidGrantException('"authorization_code" has invalid signature');
         }
-        $authorizationCodeInfo = new AuthorizationCodeInfo($codeTokenInfo);
+
+        // make sure we got an authorization_code
+        if ('authorization_code' !== $authorizationCodeInfo['type']) {
+            throw new InvalidGrantException(\sprintf('expected "authorization_code", got "%s"', $authorizationCodeInfo['type']));
+        }
 
         // check authorization_code expiry
-        if ($this->dateTime >= $authorizationCodeInfo->getExpiresAt()) {
+        if ($this->dateTime >= new DateTime($authorizationCodeInfo['expires_at'])) {
             throw new InvalidGrantException('"authorization_code" expired');
         }
 
@@ -286,31 +290,31 @@ class OAuthServer
         $this->verifyCodeVerifier($clientInfo, $authorizationCodeInfo, $postData);
 
         // 1. check if the authorization is still there
-        if (false === $this->storage->hasAuthorization($authorizationCodeInfo->getAuthKey())) {
+        if (false === $this->storage->hasAuthorization($authorizationCodeInfo['auth_key'])) {
             throw new InvalidGrantException('"authorization_code" is no longer authorized');
         }
 
         // 2. make sure the authKey was not used before
-        if (false === $this->storage->logAuthKey($authorizationCodeInfo->getAuthKey())) {
+        if (false === $this->storage->logAuthKey($authorizationCodeInfo['auth_key'])) {
             // authKey was used before, delete authorization according to spec
             // so refresh_tokens and access_tokens can no longer be used
-            $this->storage->deleteAuthKey($authorizationCodeInfo->getAuthKey());
+            $this->storage->deleteAuthKey($authorizationCodeInfo['auth_key']);
 
             throw new InvalidGrantException('"authorization_code" reuse');
         }
 
         $accessToken = $this->getAccessToken(
-            $authorizationCodeInfo->getUserId(),
+            $authorizationCodeInfo['user_id'],
             $postData['client_id'],
-            $authorizationCodeInfo->getScope(),
-            $authorizationCodeInfo->getAuthKey()
+            $authorizationCodeInfo['scope'],
+            $authorizationCodeInfo['auth_key']
         );
 
         $refreshToken = $this->getRefreshToken(
-            $authorizationCodeInfo->getUserId(),
+            $authorizationCodeInfo['user_id'],
             $postData['client_id'],
-            $authorizationCodeInfo->getScope(),
-            $authorizationCodeInfo->getAuthKey()
+            $authorizationCodeInfo['scope'],
+            $authorizationCodeInfo['auth_key']
         );
 
         return new JsonResponse(
@@ -342,38 +346,43 @@ class OAuthServer
     private function postTokenRefreshToken(array $postData, $authUser, $authPass)
     {
         // verify the refresh code signature
-        $codeTokenInfo = $this->signer->verify($postData['refresh_token']);
-        if (false === $codeTokenInfo) {
+        $refreshTokenInfo = $this->signer->verify($postData['refresh_token']);
+        if (false === $refreshTokenInfo) {
             throw new InvalidGrantException('"refresh_token" has invalid signature');
         }
-        $refreshTokenInfo = new RefreshTokenInfo($codeTokenInfo);
+
+        // make sure we got a refresh_token
+        if ('refresh_token' !== $refreshTokenInfo['type']) {
+            throw new InvalidGrantException(\sprintf('expected "refresh_token", got "%s"', $refreshTokenInfo['type']));
+        }
+
         // check refresh_token expiry, refresh token expiry is OPTIONAL,
         // disable by default...
-        if (null !== $refreshTokenInfo->getExpiresAt()) {
-            if ($this->dateTime >= $refreshTokenInfo->getExpiresAt()) {
+        if (\array_key_exists('expires_at', $refreshTokenInfo)) {
+            if ($this->dateTime >= new DateTime($refreshTokenInfo['expires_at'])) {
                 throw new InvalidGrantException('"refresh_token" expired');
             }
         }
 
-        $clientInfo = $this->getClient($refreshTokenInfo->getClientId());
-        $this->verifyClientCredentials($refreshTokenInfo->getClientId(), $clientInfo, $authUser, $authPass);
+        $clientInfo = $this->getClient($refreshTokenInfo['client_id']);
+        $this->verifyClientCredentials($refreshTokenInfo['client_id'], $clientInfo, $authUser, $authPass);
 
         // parameters in POST body need to match the parameters stored with
         // the refresh token
-        if ($postData['scope'] !== (string) $refreshTokenInfo->getScope()) {
+        if ($postData['scope'] !== $refreshTokenInfo['scope']) {
             throw new InvalidRequestException('unexpected "scope"');
         }
 
         // make sure the authorization still exists
-        if (!$this->storage->hasAuthorization($refreshTokenInfo->getAuthKey())) {
+        if (!$this->storage->hasAuthorization($refreshTokenInfo['auth_key'])) {
             throw new InvalidGrantException('"refresh_token" is no longer authorized');
         }
 
         $accessToken = $this->getAccessToken(
-            $refreshTokenInfo->getUserId(),
-            $refreshTokenInfo->getClientId(),
-            $refreshTokenInfo->getScope(),
-            $refreshTokenInfo->getAuthKey()
+            $refreshTokenInfo['user_id'],
+            $refreshTokenInfo['client_id'],
+            $refreshTokenInfo['scope'],
+            $refreshTokenInfo['auth_key']
         );
 
         return new JsonResponse(
@@ -397,12 +406,12 @@ class OAuthServer
     /**
      * @param string $userId
      * @param string $clientId
-     * @param Scope  $scope
+     * @param string $scope
      * @param string $authKey
      *
      * @return string
      */
-    private function getAccessToken($userId, $clientId, Scope $scope, $authKey)
+    private function getAccessToken($userId, $clientId, $scope, $authKey)
     {
         // for prevention of replays of authorization codes and the revocation
         // of access tokens when an authorization code is replayed, we use the
@@ -415,7 +424,7 @@ class OAuthServer
                 'auth_key' => $authKey, // to bind it to the authorization
                 'user_id' => $userId,
                 'client_id' => $clientId,
-                'scope' => (string) $scope,
+                'scope' => $scope,
                 'expires_at' => $expiresAt->format(DateTime::ATOM),
             ]
         );
@@ -424,19 +433,19 @@ class OAuthServer
     /**
      * @param string $userId
      * @param string $clientId
-     * @param Scope  $scope
+     * @param string $scope
      * @param string $authKey
      *
      * @return string
      */
-    private function getRefreshToken($userId, $clientId, Scope $scope, $authKey)
+    private function getRefreshToken($userId, $clientId, $scope, $authKey)
     {
         $refreshTokenInfo = [
             'type' => 'refresh_token',
             'auth_key' => $authKey, // to bind it to the authorization
             'user_id' => $userId,
             'client_id' => $clientId,
-            'scope' => (string) $scope,
+            'scope' => $scope,
         ];
 
         if (null !== $this->refreshTokenExpiry) {
@@ -482,18 +491,18 @@ class OAuthServer
     }
 
     /**
-     * @param array                 $postData
-     * @param AuthorizationCodeInfo $authorizationCodeInfo
+     * @param array $postData
+     * @param array $authorizationCodeInfo
      *
      * @return void
      */
-    private function verifyAuthorizationCodeInfo(array $postData, AuthorizationCodeInfo $authorizationCodeInfo)
+    private function verifyAuthorizationCodeInfo(array $postData, array $authorizationCodeInfo)
     {
-        if ($postData['client_id'] !== $authorizationCodeInfo->getClientId()) {
+        if ($postData['client_id'] !== $authorizationCodeInfo['client_id']) {
             throw new InvalidRequestException('unexpected "client_id"');
         }
 
-        if ($postData['redirect_uri'] !== $authorizationCodeInfo->getRedirectUri()) {
+        if ($postData['redirect_uri'] !== $authorizationCodeInfo['redirect_uri']) {
             throw new InvalidRequestException('unexpected "redirect_uri"');
         }
     }
@@ -528,15 +537,15 @@ class OAuthServer
     }
 
     /**
-     * @param ClientInfo            $clientInfo
-     * @param AuthorizationCodeInfo $authorizationCodeInfo
-     * @param array                 $postData
+     * @param ClientInfo $clientInfo
+     * @param array      $authorizationCodeInfo
+     * @param array      $postData
      *
      * @see https://tools.ietf.org/html/rfc7636#appendix-A
      *
      * @return void
      */
-    private function verifyCodeVerifier(ClientInfo $clientInfo, AuthorizationCodeInfo $authorizationCodeInfo, array $postData)
+    private function verifyCodeVerifier(ClientInfo $clientInfo, array $authorizationCodeInfo, array $postData)
     {
         // only for public clients
         if (null === $clientInfo->getSecret()) {
@@ -544,7 +553,7 @@ class OAuthServer
                 throw new InvalidRequestException('missing "code_verifier" parameter');
             }
 
-            if (null === $codeChallenge = $authorizationCodeInfo->getCodeChallenge()) {
+            if (null === $codeChallenge = $authorizationCodeInfo['code_challenge']) {
                 // code_verifier not part of the codetoken?!
                 // this is actually a malformed token! XXX
                 throw new InvalidGrantException('invalid "code_verifier"');
