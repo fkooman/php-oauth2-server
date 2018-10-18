@@ -86,12 +86,13 @@ class BearerValidator
             throw new InvalidTokenException('"access_token" expired');
         }
 
-        // as it is signed by us, the client MUST still be there
+        // the client MUST still be there
         if (false === $this->clientDb->get($accessTokenInfo->getClientId())) {
             throw new InvalidTokenException(\sprintf('client "%s" no longer registered', $accessTokenInfo->getClientId()));
         }
 
-        // it MUST exist in the DB as well, otherwise it was revoked...
+        // the authorization MUST exist in the DB as well, otherwise it was
+        // revoked...
         if (!$this->storage->hasAuthorization($accessTokenInfo->getAuthKey())) {
             throw new InvalidTokenException(\sprintf('authorization for client "%s" no longer exists', $accessTokenInfo->getClientId()));
         }
