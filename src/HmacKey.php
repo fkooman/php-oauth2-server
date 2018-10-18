@@ -29,10 +29,8 @@ use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\ConstantTime\Binary;
 use TypeError;
 
-class SecretKey
+class HmacKey
 {
-    const HASH_ALGO = 'sha256';
-
     // strlen(hash('sha256', '', true))
     const KEY_LENGTH_BYTES = 32;
 
@@ -44,9 +42,6 @@ class SecretKey
      */
     public function __construct($secretKey)
     {
-        if (!\is_string($secretKey)) {
-            throw new TypeError('argument 1 must be string');
-        }
         if (self::KEY_LENGTH_BYTES !== Binary::safeStrlen($secretKey)) {
             throw new LengthException('invalid key length');
         }
@@ -59,20 +54,6 @@ class SecretKey
     public static function generate()
     {
         return new self(\random_bytes(self::KEY_LENGTH_BYTES));
-    }
-
-    /**
-     * @return string
-     */
-    public function getKeyId()
-    {
-        return Base64UrlSafe::encodeUnpadded(
-            \hash(
-                self::HASH_ALGO,
-                $this->raw(),
-                true
-            )
-        );
     }
 
     /**

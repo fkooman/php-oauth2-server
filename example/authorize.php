@@ -27,10 +27,10 @@ $baseDir = \dirname(__DIR__);
 
 use fkooman\OAuth\Server\ArrayClientDb;
 use fkooman\OAuth\Server\Exception\OAuthException;
+use fkooman\OAuth\Server\HmacKey;
 use fkooman\OAuth\Server\HmacSigner;
 use fkooman\OAuth\Server\Http\Response;
 use fkooman\OAuth\Server\OAuthServer;
-use fkooman\OAuth\Server\SecretKey;
 use fkooman\OAuth\Server\Storage;
 
 try {
@@ -42,7 +42,7 @@ try {
         $storage,
         new ArrayClientDb(include __DIR__.'/client_info.php'),
         new HmacSigner(
-            SecretKey::fromEncodedString(\file_get_contents('server.key'))
+            HmacKey::fromEncodedString(\file_get_contents('server.key'))
         )
     );
 

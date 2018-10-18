@@ -25,19 +25,18 @@
 namespace fkooman\OAuth\Server;
 
 use ParagonIE\ConstantTime\Base64UrlSafe;
-use TypeError;
 
 class HmacSigner implements SignerInterface
 {
     const HMAC_ALGO = 'sha256';
 
-    /** @var SecretKey */
+    /** @var HmacKey */
     private $secretKey;
 
     /**
-     * @param SecretKey $secretKey
+     * @param HmacKey $secretKey
      */
-    public function __construct(SecretKey $secretKey)
+    public function __construct(HmacKey $secretKey)
     {
         $this->secretKey = $secretKey;
     }
@@ -72,9 +71,6 @@ class HmacSigner implements SignerInterface
      */
     public function verify($codeTokenString)
     {
-        if (!\is_string($codeTokenString)) {
-            throw new TypeError('argument 1 must be string');
-        }
         $codeTokenParts = \explode('.', $codeTokenString);
         if (2 !== \count($codeTokenParts)) {
             // invalid token, it MUST contain a "."

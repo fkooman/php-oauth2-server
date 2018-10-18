@@ -553,9 +553,10 @@ class OAuthServer
                 throw new InvalidRequestException('missing "code_verifier" parameter');
             }
 
+            // XXX can it actually be null?! or array_key_exists?
             if (null === $codeChallenge = $authorizationCodeInfo['code_challenge']) {
-                // code_verifier not part of the codetoken?!
-                // this is actually a malformed token! XXX
+                // code_verifier was not part of the authorization_code?!
+                // XXX what to do here?!
                 throw new InvalidGrantException('invalid "code_verifier"');
             }
 

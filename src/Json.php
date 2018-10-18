@@ -25,7 +25,6 @@
 namespace fkooman\OAuth\Server;
 
 use fkooman\OAuth\Server\Exception\JsonException;
-use TypeError;
 
 class Json
 {
@@ -57,9 +56,6 @@ class Json
      */
     public static function decode($jsonString)
     {
-        if (!\is_string($jsonString)) {
-            throw new TypeError('argument 1 must be string');
-        }
         $jsonData = \json_decode($jsonString, true);
         if (null === $jsonData && JSON_ERROR_NONE !== \json_last_error()) {
             throw new JsonException(

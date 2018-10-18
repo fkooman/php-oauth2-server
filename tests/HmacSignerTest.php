@@ -24,21 +24,21 @@
 
 namespace fkooman\OAuth\Server\Tests;
 
+use fkooman\OAuth\Server\HmacKey;
 use fkooman\OAuth\Server\HmacSigner;
-use fkooman\OAuth\Server\SecretKey;
 use PHPUnit\Framework\TestCase;
 
 class HmacSignerTest extends TestCase
 {
     public function testSign()
     {
-        $hmacSigner = new HmacSigner(SecretKey::fromEncodedString('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
+        $hmacSigner = new HmacSigner(HmacKey::fromEncodedString('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
         $this->assertSame('eyJmb28iOiJiYXIifQ.h65W_W0vrXZOe_jcPjrJH11qevaGE69aAmGPbUn2iUA', $hmacSigner->sign(['foo' => 'bar']));
     }
 
     public function testVerify()
     {
-        $hmacSigner = new HmacSigner(SecretKey::fromEncodedString('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
+        $hmacSigner = new HmacSigner(HmacKey::fromEncodedString('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
         $this->assertSame(
             [
                 'foo' => 'bar',
@@ -49,13 +49,13 @@ class HmacSignerTest extends TestCase
 
     public function testNoDot()
     {
-        $hmacSigner = new HmacSigner(SecretKey::fromEncodedString('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
+        $hmacSigner = new HmacSigner(HmacKey::fromEncodedString('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
         $this->assertFalse($hmacSigner->verify('NO_DOT'));
     }
 
     public function testVerifyWrongKey()
     {
-        $hmacSigner = new HmacSigner(SecretKey::fromEncodedString('5Zo4eJa3Nni5RPn1bz0uAZao41RqAnWJqD9dYrjVqiU'));
+        $hmacSigner = new HmacSigner(HmacKey::fromEncodedString('5Zo4eJa3Nni5RPn1bz0uAZao41RqAnWJqD9dYrjVqiU'));
         $this->assertFalse($hmacSigner->verify('eyJmb28iOiJiYXIifQ.h65W_W0vrXZOe_jcPjrJH11qevaGE69aAmGPbUn2iUA'));
     }
 }
