@@ -41,13 +41,12 @@ class AccessTokenInfo
     private $keyId;
 
     /**
-     * @param string      $authKey
      * @param string      $userId
      * @param string      $clientId
      * @param string      $scope
      * @param null|string $keyId
      */
-    public function __construct($userId, $clientId, $scope, $keyId)
+    public function __construct($userId, $clientId, $scope, $keyId = null)
     {
         $this->userId = $userId;
         $this->clientId = $clientId;
