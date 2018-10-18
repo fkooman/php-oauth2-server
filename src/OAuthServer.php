@@ -322,7 +322,7 @@ class OAuthServer
                 'access_token' => $accessToken,
                 'refresh_token' => $refreshToken,
                 'token_type' => 'bearer',
-                'expires_in' => $this->toExpiresIn($this->accessTokenExpiry),
+                'expires_in' => self::dateIntervalToSeconds($this->accessTokenExpiry),
             ],
             // The authorization server MUST include the HTTP "Cache-Control"
             // response header field [RFC2616] with a value of "no-store" in any
@@ -389,7 +389,7 @@ class OAuthServer
             [
                 'access_token' => $accessToken,
                 'token_type' => 'bearer',
-                'expires_in' => $this->toExpiresIn($this->accessTokenExpiry),
+                'expires_in' => self::dateIntervalToSeconds($this->accessTokenExpiry),
             ],
             // The authorization server MUST include the HTTP "Cache-Control"
             // response header field [RFC2616] with a value of "no-store" in any
@@ -593,13 +593,15 @@ class OAuthServer
     }
 
     /**
-     * @param DateInterval $dateInterval
+     * @param \DateInterval $dateInterval
      *
      * @return int
      */
-    private function toExpiresIn(DateInterval $dateInterval)
+    private static function dateIntervalToSeconds(DateInterval $dateInterval)
     {
-        return \date_add(clone $this->dateTime, $dateInterval)->getTimestamp() - $this->dateTime->getTimestamp();
+        $dateTime = new DateTime();
+
+        return \date_add(clone $dateTime, $dateInterval)->getTimestamp() - $dateTime->getTimestamp();
     }
 
     /**
