@@ -27,7 +27,6 @@ namespace fkooman\OAuth\Server;
 use LengthException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\ConstantTime\Binary;
-use TypeError;
 
 class HmacKey
 {
@@ -71,10 +70,6 @@ class HmacKey
      */
     public static function fromEncodedString($encodedKey)
     {
-        if (!\is_string($encodedKey)) {
-            throw new TypeError('argument 1 must be string');
-        }
-
         return new self(Base64UrlSafe::decode($encodedKey));
     }
 
