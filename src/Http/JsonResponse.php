@@ -29,9 +29,9 @@ use fkooman\OAuth\Server\Json;
 class JsonResponse extends Response
 {
     /**
-     * @param mixed $jsonData
-     * @param array $responseHeaders
-     * @param int   $statusCode
+     * @param mixed                $jsonData
+     * @param array<string,string> $responseHeaders
+     * @param int                  $statusCode
      */
     public function __construct($jsonData, array $responseHeaders = [], $statusCode = 200)
     {

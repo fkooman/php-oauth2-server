@@ -26,9 +26,6 @@ namespace fkooman\OAuth\Server\Exception;
 
 use Exception;
 
-/**
- * This exception is used for "internet server error" style errors.
- */
 class ServerErrorException extends OAuthException
 {
     /**

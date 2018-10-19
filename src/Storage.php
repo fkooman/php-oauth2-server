@@ -32,6 +32,9 @@ class Storage
     /** @var \PDO */
     private $db;
 
+    /**
+     * @param \PDO $db
+     */
     public function __construct(PDO $db)
     {
         $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

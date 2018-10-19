@@ -47,6 +47,8 @@ class BearerValidatorTest extends TestCase
                 'code-client' => [
                     'redirect_uri_list' => ['http://example.org/code-cb'],
                     'display_name' => 'Code Client',
+                    'client_secret' => null,
+                    'require_approval' => true,
                 ],
             ]
         );

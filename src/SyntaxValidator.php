@@ -72,7 +72,7 @@ class SyntaxValidator
         // grant-name = 1*name-char
         // name-char  = "-" / "." / "_" / DIGIT / ALPHA
 
-        // we have an explicit whitelist here
+        // we have an explicit whitelist here instead of matching regexp
         if ('authorization_code' !== $grantType && 'refresh_token' !== $grantType) {
             throw new InvalidRequestException('invalid "grant_type"');
         }
@@ -128,6 +128,7 @@ class SyntaxValidator
      */
     public static function validateCodeChallengeMethod($codeChallengeMethod)
     {
+        // we only support "S256"
         if ('S256' !== $codeChallengeMethod) {
             throw new InvalidRequestException('invalid "code_challenge_method"');
         }
@@ -170,6 +171,7 @@ class SyntaxValidator
      */
     public static function validateApprove($approve)
     {
+        // we only accept "yes" or "no"
         if (!\in_array($approve, ['yes', 'no'], true)) {
             throw new InvalidRequestException('invalid "approve"');
         }

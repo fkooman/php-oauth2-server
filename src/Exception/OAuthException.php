@@ -32,13 +32,14 @@ class OAuthException extends Exception
     /** @var string */
     private $description;
 
-    /** @var array */
+    /** @var array<string,string> */
     private $responseHeaders = [];
 
     /**
-     * @param string $message
-     * @param string $description
-     * @param int    $code
+     * @param string               $message
+     * @param string               $description
+     * @param array<string,string> $responseHeaders
+     * @param int                  $code
      */
     public function __construct($message, $description, array $responseHeaders = [], $code = 0, Exception $previous = null)
     {

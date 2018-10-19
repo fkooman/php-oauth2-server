@@ -26,7 +26,7 @@ namespace fkooman\OAuth\Server;
 
 class ArrayClientDb implements ClientDbInterface
 {
-    /** @var array<string,array> */
+    /** @var array<string,array<string,mixed>> */
     private $clientDb;
 
     /**
@@ -48,6 +48,12 @@ class ArrayClientDb implements ClientDbInterface
             return false;
         }
 
-        return new ClientInfo($this->clientDb[$clientId]);
+        return new ClientInfo(
+            $clientId,
+            $this->clientDb[$clientId]['redirect_uri_list'],
+            $this->clientDb[$clientId]['client_secret'],
+            $this->clientDb[$clientId]['display_name'],
+            $this->clientDb[$clientId]['require_approval']
+        );
     }
 }

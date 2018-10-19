@@ -29,6 +29,8 @@ use fkooman\OAuth\Server\Exception\InvalidRequestException;
 class RequestValidator
 {
     /**
+     * @param array<string,string> $getData
+     *
      * @return void
      */
     public static function validateAuthorizeQueryParameters(array $getData)
@@ -56,6 +58,8 @@ class RequestValidator
     }
 
     /**
+     * @param array<string,string> $postData
+     *
      * @return void
      */
     public static function validateAuthorizePostParameters(array $postData)
@@ -68,6 +72,8 @@ class RequestValidator
     }
 
     /**
+     * @param array<string,string> $postData
+     *
      * @return void
      */
     public static function validateTokenPostParameters(array $postData)
@@ -91,6 +97,8 @@ class RequestValidator
     }
 
     /**
+     * @param array<string,string> $getData
+     *
      * @return void
      */
     public static function validatePkceParameters(array $getData)
@@ -104,6 +112,8 @@ class RequestValidator
     }
 
     /**
+     * @param array<string,string> $postData
+     *
      * @return void
      */
     private static function validateAuthorizationCode(array $postData)
@@ -114,7 +124,6 @@ class RequestValidator
             }
         }
 
-        // check syntax
         // NOTE: no need to validate the redirect_uri, as we do strict matching
         SyntaxValidator::validateCode($postData['code']);
         SyntaxValidator::validateClientId($postData['client_id']);
@@ -126,6 +135,8 @@ class RequestValidator
     }
 
     /**
+     * @param array<string,string> $postData
+     *
      * @return void
      */
     private static function validateRefreshToken(array $postData)

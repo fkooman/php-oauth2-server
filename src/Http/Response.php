@@ -29,16 +29,16 @@ class Response
     /** @var int */
     private $statusCode;
 
-    /** @var array */
+    /** @var array<string,string> */
     private $responseHeaders;
 
     /** @var string */
     private $responseBody;
 
     /**
-     * @param string $responseBody
-     * @param array  $responseHeaders
-     * @param int    $statusCode
+     * @param string               $responseBody
+     * @param array<string,string> $responseHeaders
+     * @param int                  $statusCode
      */
     public function __construct($responseBody, array $responseHeaders = [], $statusCode = 200)
     {
@@ -56,7 +56,7 @@ class Response
     }
 
     /**
-     * @return array
+     * @return array<string,string>
      */
     public function getHeaders()
     {

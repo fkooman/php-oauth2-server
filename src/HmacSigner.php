@@ -52,7 +52,7 @@ class HmacSigner implements SignerInterface
     }
 
     /**
-     * @param array $codeTokenInfo
+     * @param array<string,mixed> $codeTokenInfo
      *
      * @return string
      */
@@ -67,7 +67,7 @@ class HmacSigner implements SignerInterface
     /**
      * @param string $codeTokenString
      *
-     * @return false|array
+     * @return false|array<string,mixed>
      */
     public function verify($codeTokenString)
     {

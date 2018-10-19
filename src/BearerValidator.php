@@ -74,8 +74,7 @@ class BearerValidator
     {
         SyntaxValidator::validateBearerToken($authorizationHeader);
         $providedToken = Binary::safeSubstr($authorizationHeader, 7);
-        $accessTokenInfo = $this->verifier->verify($providedToken);
-        if (false === $accessTokenInfo) {
+        if (false === $accessTokenInfo = $this->verifier->verify($providedToken)) {
             throw new InvalidTokenException('"access_token" has invalid signature');
         }
 

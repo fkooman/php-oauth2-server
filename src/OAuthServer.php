@@ -68,10 +68,12 @@ class OAuthServer
         $this->signer = $signer;
         $this->random = new Random();
         $this->dateTime = new DateTime();
-        $this->accessTokenExpiry = new DateInterval('PT1H');    // 1 hour
+        $this->accessTokenExpiry = new DateInterval('PT1H'); // 1 hour
     }
 
     /**
+     * @param RandomInterface $random
+     *
      * @return void
      */
     public function setRandom(RandomInterface $random)
@@ -80,6 +82,8 @@ class OAuthServer
     }
 
     /**
+     * @param \DateTime $dateTime
+     *
      * @return void
      */
     public function setDateTime(DateTime $dateTime)
@@ -88,7 +92,7 @@ class OAuthServer
     }
 
     /**
-     * @param DateInterval $accessTokenExpiry
+     * @param \DateInterval $accessTokenExpiry
      *
      * @return void
      */
@@ -98,7 +102,7 @@ class OAuthServer
     }
 
     /**
-     * @param DateInterval $refreshTokenExpiry
+     * @param \DateInterval $refreshTokenExpiry
      *
      * @return void
      */
@@ -111,9 +115,9 @@ class OAuthServer
      * Validates the authorization request from the client and returns verified
      * data to show an authorization dialog.
      *
-     * @param array $getData
+     * @param array<string,string> $getData
      *
-     * @return array
+     * @return array<string,null|string>
      */
     public function getAuthorize(array $getData)
     {
@@ -132,8 +136,8 @@ class OAuthServer
      * authorize response in case the client does NOT require approval by the
      * user (resource owner).
      *
-     * @param array  $getData
-     * @param string $userId
+     * @param array<string,string> $getData
+     * @param string               $userId
      *
      * @return Http\Response|false
      */
@@ -153,9 +157,9 @@ class OAuthServer
      * This is typically the "form submit" on the "authorize dialog" shown in
      * the browser that the user then accepts or rejects.
      *
-     * @param array  $getData
-     * @param array  $postData
-     * @param string $userId
+     * @param array<string,string> $getData
+     * @param array<string,string> $postData
+     * @param string               $userId
      *
      * @return \fkooman\OAuth\Server\Http\RedirectResponse
      */
@@ -211,9 +215,9 @@ class OAuthServer
     /**
      * Handles POST request to the "/token" endpoint of the OAuth server.
      *
-     * @param array       $postData
-     * @param string|null $authUser BasicAuth user in case of secret client, null if public client
-     * @param string|null $authPass BasicAuth pass in case of secret client, null if public client
+     * @param array<string,string> $postData
+     * @param null|string          $authUser BasicAuth user in case of secret client, null if public client
+     * @param null|string          $authPass BasicAuth pass in case of secret client, null if public client
      *
      * @return JsonResponse
      */
@@ -233,7 +237,7 @@ class OAuthServer
     /**
      * Validate the request to the "/authorize" endpoint.
      *
-     * @param array $getData
+     * @param array<string,string> $getData
      *
      * @return ClientInfo
      */
@@ -255,9 +259,9 @@ class OAuthServer
     }
 
     /**
-     * @param array       $postData
-     * @param string|null $authUser BasicAuth user in case of secret client, null if public client
-     * @param string|null $authPass BasicAuth pass in case of secret client, null if public client
+     * @param array<string,string> $postData
+     * @param null|string          $authUser BasicAuth user in case of secret client, null if public client
+     * @param null|string          $authPass BasicAuth pass in case of secret client, null if public client
      *
      * @return JsonResponse
      */
@@ -267,8 +271,7 @@ class OAuthServer
         $this->verifyClientCredentials($postData['client_id'], $clientInfo, $authUser, $authPass);
 
         // verify the authorization code signature
-        $authorizationCodeInfo = $this->signer->verify($postData['code']);
-        if (false === $authorizationCodeInfo) {
+        if (false === $authorizationCodeInfo = $this->signer->verify($postData['code'])) {
             throw new InvalidGrantException('"authorization_code" has invalid signature');
         }
 
@@ -337,17 +340,16 @@ class OAuthServer
     }
 
     /**
-     * @param array       $postData
-     * @param string|null $authUser BasicAuth user in case of secret client, null if public client
-     * @param string|null $authPass BasicAuth pass in case of secret client, null if public client
+     * @param array<string,string> $postData
+     * @param null|string          $authUser BasicAuth user in case of secret client, null if public client
+     * @param null|string          $authPass BasicAuth pass in case of secret client, null if public client
      *
      * @return JsonResponse
      */
     private function postTokenRefreshToken(array $postData, $authUser, $authPass)
     {
         // verify the refresh code signature
-        $refreshTokenInfo = $this->signer->verify($postData['refresh_token']);
-        if (false === $refreshTokenInfo) {
+        if (false === $refreshTokenInfo = $this->signer->verify($postData['refresh_token'])) {
             throw new InvalidGrantException('"refresh_token" has invalid signature');
         }
 
@@ -462,7 +464,7 @@ class OAuthServer
      * @param string      $scope
      * @param string      $redirectUri
      * @param string      $authKey
-     * @param string|null $codeChallenge required for "public" clients
+     * @param null|string $codeChallenge required for "public" clients
      *
      * @return string
      */
@@ -491,8 +493,8 @@ class OAuthServer
     }
 
     /**
-     * @param array $postData
-     * @param array $authorizationCodeInfo
+     * @param array<string,string> $postData
+     * @param array<string,mixed>  $authorizationCodeInfo
      *
      * @return void
      */
@@ -510,8 +512,8 @@ class OAuthServer
     /**
      * @param string      $clientId
      * @param ClientInfo  $clientInfo
-     * @param string|null $authUser
-     * @param string|null $authPass
+     * @param null|string $authUser
+     * @param null|string $authPass
      *
      * @return void
      */
@@ -537,9 +539,9 @@ class OAuthServer
     }
 
     /**
-     * @param ClientInfo $clientInfo
-     * @param array      $authorizationCodeInfo
-     * @param array      $postData
+     * @param ClientInfo           $clientInfo
+     * @param array<string,mixed>  $authorizationCodeInfo
+     * @param array<string,string> $postData
      *
      * @see https://tools.ietf.org/html/rfc7636#appendix-A
      *
@@ -606,8 +608,8 @@ class OAuthServer
     }
 
     /**
-     * @param string $redirectUri
-     * @param array  $queryParameters
+     * @param string               $redirectUri
+     * @param array<string,string> $queryParameters
      *
      * @return string
      */

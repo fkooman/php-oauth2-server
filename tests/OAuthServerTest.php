@@ -49,25 +49,27 @@ class OAuthServerTest extends TestCase
             [
                 'code-client' => [
                     'redirect_uri_list' => ['http://example.org/code-cb'],
-                    'response_type' => 'code',
                     'display_name' => 'Code Client',
                     'require_approval' => false,
+                    'client_secret' => null,
                 ],
                 'code-client-query-redirect' => [
-                    'response_type' => 'code',
                     'redirect_uri_list' => ['http://example.org/code-cb?keep=this'],
                     'display_name' => 'Code Client',
+                    'client_secret' => null,
+                    'require_approval' => true,
                 ],
                 'code-client-secret' => [
-                    'response_type' => 'code',
                     'redirect_uri_list' => ['http://example.org/code-cb'],
                     'display_name' => 'Code Client',
                     'client_secret' => '123456',
+                    'require_approval' => true,
                 ],
                 'loopback' => [
-                    'response_type' => 'code',
                     'redirect_uri_list' => ['http://127.0.0.1:{PORT}/cb'],
                     'display_name' => 'Loopback Client',
+                    'client_secret' => null,
+                    'require_approval' => true,
                 ],
             ]
         );

@@ -87,7 +87,7 @@ class AccessTokenInfo
     }
 
     /**
-     * @param array $requiredScopeList
+     * @param array<string> $requiredScopeList
      *
      * @throws \fkooman\OAuth\Server\Exception\InsufficientScopeException
      *
@@ -104,7 +104,7 @@ class AccessTokenInfo
     }
 
     /**
-     * @param array $requiredScopeList
+     * @param array<string> $requiredScopeList
      *
      * @throws \fkooman\OAuth\Server\Exception\InsufficientScopeException
      *

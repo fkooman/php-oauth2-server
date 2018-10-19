@@ -27,7 +27,7 @@ namespace fkooman\OAuth\Server;
 interface SignerInterface
 {
     /**
-     * @param array $codeTokenInfo
+     * @param array<string,mixed> $codeTokenInfo
      *
      * @return string
      */
@@ -36,7 +36,7 @@ interface SignerInterface
     /**
      * @param string $codeTokenString
      *
-     * @return false|array
+     * @return false|array<string,mixed>
      */
     public function verify($codeTokenString);
 }

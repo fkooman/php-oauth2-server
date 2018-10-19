@@ -24,60 +24,61 @@
 
 namespace fkooman\OAuth\Server;
 
-use fkooman\OAuth\Server\Exception\ServerErrorException;
-
 class ClientInfo
 {
-    /** @var string|null */
-    private $displayName = null;
+    /** @var string */
+    private $clientId;
 
-    /** @var array */
+    /** @var array<string> */
     private $redirectUriList;
 
-    /** @var string|null */
-    private $clientSecret = null;
+    /** @var null|string */
+    private $clientSecret;
+
+    /** @var null|string */
+    private $displayName;
 
     /** @var bool */
-    private $requireApproval = true;
+    private $requireApproval;
 
     /**
-     * @param array $clientInfo
+     * @param string        $clientId
+     * @param array<string> $redirectUriList
+     * @param null|string   $clientSecret
+     * @param null|string   $displayName
+     * @param bool          $requireApproval
      */
-    public function __construct(array $clientInfo)
+    public function __construct($clientId, array $redirectUriList, $clientSecret, $displayName, $requireApproval)
     {
-        if (!\array_key_exists('redirect_uri_list', $clientInfo)) {
-            throw new ServerErrorException('"redirect_uri_list" not in client database');
-        }
-        if (!\is_array($clientInfo['redirect_uri_list'])) {
-            throw new ServerErrorException('"redirect_uri_list" not an array');
-        }
-        $this->redirectUriList = $clientInfo['redirect_uri_list'];
-
-        if (\array_key_exists('require_approval', $clientInfo)) {
-            $this->requireApproval = (bool) $clientInfo['require_approval'];
-        }
-        if (\array_key_exists('display_name', $clientInfo)) {
-            $this->displayName = $clientInfo['display_name'];
-        }
-        if (\array_key_exists('client_secret', $clientInfo)) {
-            $this->clientSecret = $clientInfo['client_secret'];
-        }
+        $this->clientId = $clientId;
+        $this->redirectUriList = $redirectUriList;
+        $this->clientSecret = $clientSecret;
+        $this->displayName = $displayName;
+        $this->requireApproval = $requireApproval;
     }
 
     /**
-     * @return string|null
+     * @return string
      */
-    public function getDisplayName()
+    public function getClientId()
     {
-        return $this->displayName;
+        return $this->clientId;
     }
 
     /**
-     * @return string|null
+     * @return null|string
      */
     public function getSecret()
     {
         return $this->clientSecret;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getDisplayName()
+    {
+        return $this->displayName;
     }
 
     /**
