@@ -2,8 +2,8 @@
 
 ## 4.0.0 (...)
 - remove `SodiumSigner`
-- introduce simple secret key `HmacSigner`
-- introduce `ClientDbInterface` and `ArrayClientDb` instead of a `callable` 
+- introduce simple signer using HMAC, `HmacSigner`
+- introduce `ClientDbInterface` and `ArrayClientDb` instead of a `callable`
 
 ## 3.0.2 (2018-09-21)
 - explicitly depend on versions of `paragonie/constant_time_encoding` that 
