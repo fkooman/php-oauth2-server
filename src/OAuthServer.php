@@ -553,11 +553,12 @@ class OAuthServer
                 throw new InvalidRequestException('missing "code_verifier" parameter');
             }
 
-            // XXX can it actually be null?! or array_key_exists?
             if (null === $codeChallenge = $authorizationCodeInfo['code_challenge']) {
-                // code_verifier was not part of the authorization_code?!
-                // XXX what to do here?!
-                throw new InvalidGrantException('invalid "code_verifier"');
+                // the code_challenge was not part of the authorization_code,
+                // this is not supposed to happen, as public clients MUST have
+                // a code_challenge query parameter in the authorization
+                // request before the request is accepted...
+                throw new InvalidGrantException('no registered "code_challenge" for this request');
             }
 
             // compare code_challenge with expected value
