@@ -4,6 +4,7 @@
 - remove `SodiumSigner`
 - introduce simple signer using HMAC, `HmacSigner`
 - introduce `ClientDbInterface` and `ArrayClientDb` instead of a `callable`
+- introduce `Scope` object in `AcessTokenInfo` instead of `string` scope value
 
 ## 3.0.2 (2018-09-21)
 - explicitly depend on versions of `paragonie/constant_time_encoding` that 

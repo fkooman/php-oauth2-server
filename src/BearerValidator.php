@@ -102,7 +102,7 @@ class BearerValidator
         return new AccessTokenInfo(
             $accessTokenInfo['user_id'],
             $accessTokenInfo['client_id'],
-            $accessTokenInfo['scope']
+            new Scope($accessTokenInfo['scope'])
         );
     }
 }

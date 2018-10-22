@@ -58,7 +58,7 @@ try {
             $accessTokenInfo = $bearerValidator->validate($authorizationHeader);
 
             // require both the "foo" and "bar" scope
-            $accessTokenInfo->requireAllScope(['foo', 'bar']);
+            $accessTokenInfo->getScope()->requireAll(['foo', 'bar']);
             // require any of "foo" or "bar" scope
             //$accessTokenInfo->requireAnyScope(['foo', 'bar']);
 

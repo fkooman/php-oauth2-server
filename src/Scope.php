@@ -24,63 +24,65 @@
 
 namespace fkooman\OAuth\Server;
 
-class AccessTokenInfo
+use fkooman\OAuth\Server\Exception\InsufficientScopeException;
+
+class Scope
 {
     /** @var string */
-    private $userId;
-
-    /** @var string */
-    private $clientId;
-
-    /** @var Scope */
     private $scope;
 
-    /** @var null|string */
-    private $keyId;
-
     /**
-     * @param string      $userId
-     * @param string      $clientId
-     * @param Scope       $scope
-     * @param null|string $keyId
+     * @param string $scope
      */
-    public function __construct($userId, $clientId, Scope $scope, $keyId = null)
+    public function __construct($scope)
     {
-        $this->userId = $userId;
-        $this->clientId = $clientId;
         $this->scope = $scope;
-        $this->keyId = $keyId;
     }
 
     /**
      * @return string
      */
-    public function getUserId()
-    {
-        return $this->userId;
-    }
-
-    /**
-     * @return string
-     */
-    public function getClientId()
-    {
-        return $this->clientId;
-    }
-
-    /**
-     * @return Scope
-     */
-    public function getScope()
+    public function __toString()
     {
         return $this->scope;
     }
 
     /**
-     * @return null|string
+     * @param array<string> $requiredList
+     *
+     * @throws \fkooman\OAuth\Server\Exception\InsufficientScopeException
+     *
+     * @return void
      */
-    public function getKeyId()
+    public function requireAll(array $requiredList)
     {
-        return $this->keyId;
+        $grantedList = \explode(' ', $this->scope);
+        foreach ($requiredList as $requiredScope) {
+            if (!\in_array($requiredScope, $grantedList, true)) {
+                throw new InsufficientScopeException(\sprintf('scope "%s" not granted', $requiredScope));
+            }
+        }
+    }
+
+    /**
+     * @param array<string> $requiredList
+     *
+     * @throws \fkooman\OAuth\Server\Exception\InsufficientScopeException
+     *
+     * @return void
+     */
+    public function requireAny(array $requiredList)
+    {
+        $grantedList = \explode(' ', $this->scope);
+        $hasAny = false;
+        foreach ($requiredList as $requiredScope) {
+            if (\in_array($requiredScope, $grantedList, true)) {
+                $hasAny = true;
+            }
+        }
+
+        if (!$hasAny) {
+            throw new InsufficientScopeException(\sprintf('not any of scopes "%s" granted', \implode(' ', $requiredList)));
+        }
     }
 }
