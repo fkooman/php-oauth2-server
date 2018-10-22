@@ -84,7 +84,7 @@ class ClientInfo
     /**
      * @return bool
      */
-    public function getRequireApproval()
+    public function isApprovalRequired()
     {
         return $this->requireApproval;
     }

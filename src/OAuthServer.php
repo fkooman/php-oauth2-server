@@ -144,7 +144,7 @@ class OAuthServer
     public function getAuthorizeResponse(array $getData, $userId)
     {
         $clientInfo = $this->validateAuthorizeRequest($getData);
-        if ($clientInfo->getRequireApproval()) {
+        if ($clientInfo->isApprovalRequired()) {
             return false;
         }
 
