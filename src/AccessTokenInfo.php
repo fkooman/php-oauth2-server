@@ -35,21 +35,16 @@ class AccessTokenInfo
     /** @var Scope */
     private $scope;
 
-    /** @var null|string */
-    private $keyId;
-
     /**
-     * @param string      $userId
-     * @param string      $clientId
-     * @param Scope       $scope
-     * @param null|string $keyId
+     * @param string $userId
+     * @param string $clientId
+     * @param Scope  $scope
      */
-    public function __construct($userId, $clientId, Scope $scope, $keyId = null)
+    public function __construct($userId, $clientId, Scope $scope)
     {
         $this->userId = $userId;
         $this->clientId = $clientId;
         $this->scope = $scope;
-        $this->keyId = $keyId;
     }
 
     /**
@@ -74,13 +69,5 @@ class AccessTokenInfo
     public function getScope()
     {
         return $this->scope;
-    }
-
-    /**
-     * @return null|string
-     */
-    public function getKeyId()
-    {
-        return $this->keyId;
     }
 }

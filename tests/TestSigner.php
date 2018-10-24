@@ -57,8 +57,6 @@ class TestSigner implements SignerInterface
             return false;
         }
 
-        $jsonData['key_id'] = 'KeyID';
-
         return $jsonData;
     }
 }
