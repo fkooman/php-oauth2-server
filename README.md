@@ -33,10 +33,29 @@ On modern versions of PHP, i.e. >= 7, the library only requires
 
 # Using
 
-See the `example/` directory.
+A simple, but complete example is included in the `example/` directory. The 
+`authorize.php` script is the "authorize endpoint", the `token.php` script is
+the "token endpoint" and the `api.php` script is the "protected resource" 
+endpoint.
 
-You can start the OAuth server on your (development) machine using PHP's built
-in web server:
+A demo key is included as `example/server.key`. For your own application you
+MUST generate your own 32 bytes random key. This key is used to sign the
+OAuth authorization codes, access tokens and refresh tokens instead of storing
+them in the database.
+
+In order to generate your own (Base64UrlSafe) encoded secret, you can use this 
+snippet:
+
+```php
+<?php
+require_once 'vendor/autoload.php';
+echo \ParagonIE\ConstantTime\Base64UrlSafe::encodeUnpadded(\random_bytes(32)).PHP_EOL;
+```
+
+Store this in a configuration file, or as a file on the disk.
+
+You can start the demo OAuth server on your (development) machine using PHP's 
+built in web server:
 
 ```bash
 $ php -S localhost:8080 -t example/
@@ -45,17 +64,10 @@ $ php -S localhost:8080 -t example/
 If you have an OAuth client you can point it to 
 `http://localhost:8080/authorize.php`.
 
-You can use [php-oauth2-client](https://git.tuxed.net/fkooman/php-oauth2-client/)
-as a client to interact with this server, the example there is configured 
-to work with this server.
-
-# Generating a Key
-
-```php
-<?php
-require_once 'vendor/autoload.php';
-echo \ParagonIE\ConstantTime\Base64UrlSafe::encodeUnpadded(\random_bytes(32)).PHP_EOL;
-```
+You can use 
+[php-oauth2-client](https://git.tuxed.net/fkooman/php-oauth2-client/) as a 
+client to interact with this server, the example there is configured to work 
+with this server.
 
 # Contact
 
