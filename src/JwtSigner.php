@@ -28,8 +28,12 @@ use LengthException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\ConstantTime\Binary;
 
-class HmacKey
+class JwtSigner implements SignerInterface
 {
+    const JWT_ALGO = 'HS256';
+
+    const HMAC_ALGO = 'sha256';
+
     // strlen(hash('sha256', '', true))
     const KEY_LENGTH_BYTES = 32;
 
@@ -48,36 +52,54 @@ class HmacKey
     }
 
     /**
-     * @return self
-     */
-    public static function generate()
-    {
-        return new self(\random_bytes(self::KEY_LENGTH_BYTES));
-    }
-
-    /**
-     * @return string
-     */
-    public function encode()
-    {
-        return Base64UrlSafe::encodeUnpadded($this->secretKey);
-    }
-
-    /**
-     * @param string $encodedKey
+     * @param string $payloadStr
      *
-     * @return self
+     * @return string
      */
-    public static function fromEncodedString($encodedKey)
+    private function __sign($payloadStr)
     {
-        return new self(Base64UrlSafe::decode($encodedKey));
+        return \hash_hmac(self::HMAC_ALGO, $payloadStr, $this->secretKey, true);
     }
 
     /**
+     * @param array<string,mixed> $codeTokenInfo
+     *
      * @return string
      */
-    public function raw()
+    public function sign(array $codeTokenInfo)
     {
-        return $this->secretKey;
+        $jwtHeader = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'alg' => self::JWT_ALGO,
+                    'typ' => 'JWT',
+                ]
+            )
+        );
+        $jwtPayload = Base64UrlSafe::encodeUnpadded(Json::encode($codeTokenInfo));
+        $jwtSignature = Base64UrlSafe::encodeUnpadded($this->__sign($jwtHeader.'.'.$jwtPayload));
+
+        return $jwtHeader.'.'.$jwtPayload.'.'.$jwtSignature;
+    }
+
+    /**
+     * @param string $codeTokenString
+     *
+     * @return false|array<string,mixed>
+     */
+    public function verify($codeTokenString)
+    {
+        $jwtParts = \explode('.', $codeTokenString);
+        if (3 !== \count($jwtParts)) {
+            // invalid token, it MUST contain two dots
+            return false;
+        }
+
+        $jwtSignature = Base64UrlSafe::encodeUnpadded($this->__sign($jwtParts[0].'.'.$jwtParts[1]));
+        if (false === \hash_equals($jwtSignature, $jwtParts[2])) {
+            return false;
+        }
+
+        return Json::decode(Base64UrlSafe::decode($jwtParts[1]));
     }
 }

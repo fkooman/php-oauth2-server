@@ -27,11 +27,11 @@ $baseDir = \dirname(__DIR__);
 
 use fkooman\OAuth\Server\ArrayClientDb;
 use fkooman\OAuth\Server\Exception\OAuthException;
-use fkooman\OAuth\Server\HmacKey;
-use fkooman\OAuth\Server\HmacSigner;
 use fkooman\OAuth\Server\Http\JsonResponse;
+use fkooman\OAuth\Server\JwtSigner;
 use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\Storage;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 
 try {
     // persistent storage for access_token authorizations
@@ -41,9 +41,7 @@ try {
     $oauthServer = new OAuthServer(
         $storage,
         new ArrayClientDb(include __DIR__.'/client_info.php'),
-        new HmacSigner(
-            HmacKey::fromEncodedString(\file_get_contents('server.key'))
-        )
+        new JwtSigner(Base64UrlSafe::decode(\file_get_contents('server.key')))
     );
 
     // expire access_token after 30 seconds, and refresh_token after 5 minutes

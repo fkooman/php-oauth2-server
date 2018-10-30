@@ -2,7 +2,7 @@
 
 ## 4.0.0 (...)
 - remove `SodiumSigner`
-- introduce simple signer using HMAC, `HmacSigner`
+- introduce simple secret key JWT signer using HMAC (HS256), `JwtSigner`
 - introduce `ClientDbInterface` and `ArrayClientDb` instead of a `callable`
 - introduce `Scope` object in `AcessTokenInfo` instead of `string` scope value
 

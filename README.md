@@ -54,7 +54,7 @@ to work with this server.
 ```php
 <?php
 require_once 'vendor/autoload.php';
-echo \fkooman\OAuth\Server\HmacKey::generate()->encode().PHP_EOL;
+echo \ParagonIE\ConstantTime\Base64UrlSafe::encodeUnpadded(\random_bytes(32)).PHP_EOL;
 ```
 
 # Contact

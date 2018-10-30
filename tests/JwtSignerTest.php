@@ -24,38 +24,38 @@
 
 namespace fkooman\OAuth\Server\Tests;
 
-use fkooman\OAuth\Server\HmacKey;
-use fkooman\OAuth\Server\HmacSigner;
+use fkooman\OAuth\Server\JwtSigner;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 use PHPUnit\Framework\TestCase;
 
-class HmacSignerTest extends TestCase
+class JwtSignerTest extends TestCase
 {
     public function testSign()
     {
-        $hmacSigner = new HmacSigner(HmacKey::fromEncodedString('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
-        $this->assertSame('eyJmb28iOiJiYXIifQ.h65W_W0vrXZOe_jcPjrJH11qevaGE69aAmGPbUn2iUA', $hmacSigner->sign(['foo' => 'bar']));
+        $jwtSigner = new JwtSigner(Base64UrlSafe::decode('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
+        $this->assertSame('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIifQ.p0tzemsBv_XCxD8laFsr1iXdq0U-mGnYPmto_ogVXj8', $jwtSigner->sign(['foo' => 'bar']));
     }
 
     public function testVerify()
     {
-        $hmacSigner = new HmacSigner(HmacKey::fromEncodedString('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
+        $jwtSigner = new JwtSigner(Base64UrlSafe::decode('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
         $this->assertSame(
             [
                 'foo' => 'bar',
             ],
-            $hmacSigner->verify('eyJmb28iOiJiYXIifQ.h65W_W0vrXZOe_jcPjrJH11qevaGE69aAmGPbUn2iUA')
+            $jwtSigner->verify('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIifQ.p0tzemsBv_XCxD8laFsr1iXdq0U-mGnYPmto_ogVXj8')
         );
     }
 
     public function testNoDot()
     {
-        $hmacSigner = new HmacSigner(HmacKey::fromEncodedString('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
-        $this->assertFalse($hmacSigner->verify('NO_DOT'));
+        $jwtSigner = new JwtSigner(Base64UrlSafe::decode('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
+        $this->assertFalse($jwtSigner->verify('NO_DOT'));
     }
 
     public function testVerifyWrongKey()
     {
-        $hmacSigner = new HmacSigner(HmacKey::fromEncodedString('5Zo4eJa3Nni5RPn1bz0uAZao41RqAnWJqD9dYrjVqiU'));
-        $this->assertFalse($hmacSigner->verify('eyJmb28iOiJiYXIifQ.h65W_W0vrXZOe_jcPjrJH11qevaGE69aAmGPbUn2iUA'));
+        $jwtSigner = new JwtSigner(Base64UrlSafe::decode('5Zo4eJa3Nni5RPn1bz0uAZao41RqAnWJqD9dYrjVqiU'));
+        $this->assertFalse($jwtSigner->verify('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIifQ.p0tzemsBv_XCxD8laFsr1iXdq0U-mGnYPmto_ogVXj8'));
     }
 }
