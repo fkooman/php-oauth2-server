@@ -30,13 +30,6 @@ use ParagonIE\ConstantTime\Binary;
 
 class JwtSigner implements SignerInterface
 {
-    const JWT_ALGO = 'HS256';
-
-    const HMAC_ALGO = 'sha256';
-
-    // strlen(hash('sha256', '', true))
-    const KEY_LENGTH_BYTES = 32;
-
     /** @var string */
     private $secretKey;
 
@@ -45,7 +38,8 @@ class JwtSigner implements SignerInterface
      */
     public function __construct($secretKey)
     {
-        if (self::KEY_LENGTH_BYTES !== Binary::safeStrlen($secretKey)) {
+        // php -r 'echo strlen(hash("sha256", "", true));'
+        if (32 !== Binary::safeStrlen($secretKey)) {
             throw new LengthException('invalid key length');
         }
         $this->secretKey = $secretKey;
@@ -58,7 +52,7 @@ class JwtSigner implements SignerInterface
      */
     private function __sign($payloadStr)
     {
-        return \hash_hmac(self::HMAC_ALGO, $payloadStr, $this->secretKey, true);
+        return \hash_hmac('sha256', $payloadStr, $this->secretKey, true);
     }
 
     /**
@@ -71,7 +65,7 @@ class JwtSigner implements SignerInterface
         $jwtHeader = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
-                    'alg' => self::JWT_ALGO,
+                    'alg' => 'HS256',
                     'typ' => 'JWT',
                 ]
             )
