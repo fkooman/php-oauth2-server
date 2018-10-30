@@ -1,10 +1,10 @@
 # ChangeLog
 
 ## 4.0.0 (...)
-- remove `SodiumSigner`
-- introduce simple secret key JWT signer using HMAC (HS256), `JwtSigner`
+- introduce `LocalSigner` which uses the HS256 JWT algorithm
 - introduce `ClientDbInterface` and `ArrayClientDb` instead of a `callable`
 - introduce `Scope` object in `AcessTokenInfo` instead of `string` scope value
+- remove `SodiumSigner`
 
 ## 3.0.2 (2018-09-21)
 - explicitly depend on versions of `paragonie/constant_time_encoding` that 

@@ -28,7 +28,7 @@ use LengthException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\ConstantTime\Binary;
 
-class JwtSigner implements SignerInterface
+class LocalSigner implements SignerInterface
 {
     /** @var string */
     private $secretKey;

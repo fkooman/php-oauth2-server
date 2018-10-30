@@ -24,38 +24,38 @@
 
 namespace fkooman\OAuth\Server\Tests;
 
-use fkooman\OAuth\Server\JwtSigner;
+use fkooman\OAuth\Server\LocalSigner;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use PHPUnit\Framework\TestCase;
 
-class JwtSignerTest extends TestCase
+class LocalSignerTest extends TestCase
 {
     public function testSign()
     {
-        $jwtSigner = new JwtSigner(Base64UrlSafe::decode('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
-        $this->assertSame('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIifQ.p0tzemsBv_XCxD8laFsr1iXdq0U-mGnYPmto_ogVXj8', $jwtSigner->sign(['foo' => 'bar']));
+        $localSigner = new LocalSigner(Base64UrlSafe::decode('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
+        $this->assertSame('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIifQ.p0tzemsBv_XCxD8laFsr1iXdq0U-mGnYPmto_ogVXj8', $localSigner->sign(['foo' => 'bar']));
     }
 
     public function testVerify()
     {
-        $jwtSigner = new JwtSigner(Base64UrlSafe::decode('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
+        $localSigner = new LocalSigner(Base64UrlSafe::decode('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
         $this->assertSame(
             [
                 'foo' => 'bar',
             ],
-            $jwtSigner->verify('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIifQ.p0tzemsBv_XCxD8laFsr1iXdq0U-mGnYPmto_ogVXj8')
+            $localSigner->verify('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIifQ.p0tzemsBv_XCxD8laFsr1iXdq0U-mGnYPmto_ogVXj8')
         );
     }
 
     public function testNoDot()
     {
-        $jwtSigner = new JwtSigner(Base64UrlSafe::decode('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
-        $this->assertFalse($jwtSigner->verify('NO_DOT'));
+        $localSigner = new LocalSigner(Base64UrlSafe::decode('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
+        $this->assertFalse($localSigner->verify('NO_DOT'));
     }
 
     public function testVerifyWrongKey()
     {
-        $jwtSigner = new JwtSigner(Base64UrlSafe::decode('5Zo4eJa3Nni5RPn1bz0uAZao41RqAnWJqD9dYrjVqiU'));
-        $this->assertFalse($jwtSigner->verify('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIifQ.p0tzemsBv_XCxD8laFsr1iXdq0U-mGnYPmto_ogVXj8'));
+        $localSigner = new LocalSigner(Base64UrlSafe::decode('5Zo4eJa3Nni5RPn1bz0uAZao41RqAnWJqD9dYrjVqiU'));
+        $this->assertFalse($localSigner->verify('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIifQ.p0tzemsBv_XCxD8laFsr1iXdq0U-mGnYPmto_ogVXj8'));
     }
 }
