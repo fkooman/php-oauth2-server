@@ -28,6 +28,9 @@ use LengthException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use ParagonIE\ConstantTime\Binary;
 
+/**
+ * JWT Signer, using HS256 algorithm.
+ */
 class LocalSigner implements SignerInterface
 {
     /** @var string */
