@@ -30,6 +30,10 @@ use ParagonIE\ConstantTime\Binary;
 
 /**
  * JWT Signer, using HS256 algorithm.
+ *
+ * We do NOT care about full compatibility with the (JWT) specification. As we
+ * are the only issuer and consumer, we implement a very narrow subset of the
+ * specification.
  */
 class LocalSigner implements SignerInterface
 {
