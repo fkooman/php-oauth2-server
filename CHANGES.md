@@ -5,6 +5,8 @@
 - introduce `ClientDbInterface` and `ArrayClientDb` instead of a `callable`
 - introduce `Scope` object in `AcessTokenInfo` instead of `string` scope value
 - remove `SodiumSigner`
+- drops compatibility with issues tokens, ALL tokens from `SodiumSigner` will
+  become invalid!
 
 ## 3.0.2 (2018-09-21)
 - explicitly depend on versions of `paragonie/constant_time_encoding` that 
