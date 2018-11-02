@@ -7,6 +7,8 @@
 - remove `SodiumSigner`
 - drops compatibility with issues tokens, ALL tokens from `SodiumSigner` will
   become invalid!
+- add `authz_time` to the tokens to record the time of the authorization by the 
+  user
 
 ## 3.0.2 (2018-09-21)
 - explicitly depend on versions of `paragonie/constant_time_encoding` that 

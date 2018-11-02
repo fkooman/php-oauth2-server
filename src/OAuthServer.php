@@ -310,14 +310,16 @@ class OAuthServer
             $authorizationCodeInfo['user_id'],
             $postData['client_id'],
             $authorizationCodeInfo['scope'],
-            $authorizationCodeInfo['auth_key']
+            $authorizationCodeInfo['auth_key'],
+            $authorizationCodeInfo['authz_time']
         );
 
         $refreshToken = $this->getRefreshToken(
             $authorizationCodeInfo['user_id'],
             $postData['client_id'],
             $authorizationCodeInfo['scope'],
-            $authorizationCodeInfo['auth_key']
+            $authorizationCodeInfo['auth_key'],
+            $authorizationCodeInfo['authz_time']
         );
 
         return new JsonResponse(
@@ -384,7 +386,8 @@ class OAuthServer
             $refreshTokenInfo['user_id'],
             $refreshTokenInfo['client_id'],
             $refreshTokenInfo['scope'],
-            $refreshTokenInfo['auth_key']
+            $refreshTokenInfo['auth_key'],
+            $refreshTokenInfo['authz_time']
         );
 
         return new JsonResponse(
@@ -410,10 +413,11 @@ class OAuthServer
      * @param string $clientId
      * @param string $scope
      * @param string $authKey
+     * @param string $authzTime
      *
      * @return string
      */
-    private function getAccessToken($userId, $clientId, $scope, $authKey)
+    private function getAccessToken($userId, $clientId, $scope, $authKey, $authzTime)
     {
         // for prevention of replays of authorization codes and the revocation
         // of access tokens when an authorization code is replayed, we use the
@@ -427,6 +431,7 @@ class OAuthServer
                 'user_id' => $userId,
                 'client_id' => $clientId,
                 'scope' => $scope,
+                'authz_time' => $authzTime,
                 'expires_at' => $expiresAt->format(DateTime::ATOM),
             ]
         );
@@ -437,10 +442,11 @@ class OAuthServer
      * @param string $clientId
      * @param string $scope
      * @param string $authKey
+     * @param string $authzTime
      *
      * @return string
      */
-    private function getRefreshToken($userId, $clientId, $scope, $authKey)
+    private function getRefreshToken($userId, $clientId, $scope, $authKey, $authzTime)
     {
         $refreshTokenInfo = [
             'type' => 'refresh_token',
@@ -448,6 +454,7 @@ class OAuthServer
             'user_id' => $userId,
             'client_id' => $clientId,
             'scope' => $scope,
+            'authz_time' => $authzTime,
         ];
 
         if (null !== $this->refreshTokenExpiry) {
@@ -471,7 +478,7 @@ class OAuthServer
     private function getAuthorizationCode($userId, $clientId, $scope, $redirectUri, $authKey, $codeChallenge)
     {
         // authorization codes expire after 5 minutes
-        $expiresAt = \date_add($this->dateTime, new DateInterval('PT5M'));
+        $expiresAt = \date_add(clone $this->dateTime, new DateInterval('PT5M'));
 
         // The PKCE RFC (7636) says: "The server MUST NOT include the
         // "code_challenge" value in client requests in a form that other
@@ -487,6 +494,7 @@ class OAuthServer
                 'scope' => $scope,
                 'redirect_uri' => $redirectUri,
                 'code_challenge' => $codeChallenge,
+                'authz_time' => $this->dateTime->format(DateTime::ATOM),
                 'expires_at' => $expiresAt->format(DateTime::ATOM),
             ]
         );

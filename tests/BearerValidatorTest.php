@@ -28,7 +28,9 @@ use DateTime;
 use fkooman\OAuth\Server\ArrayClientDb;
 use fkooman\OAuth\Server\BearerValidator;
 use fkooman\OAuth\Server\Exception\InvalidTokenException;
+use fkooman\OAuth\Server\Json;
 use fkooman\OAuth\Server\Storage;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 use PDO;
 use PHPUnit\Framework\TestCase;
 
@@ -65,7 +67,21 @@ class BearerValidatorTest extends TestCase
     public function testValidToken()
     {
         $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
-        $accessTokenInfo = $this->validator->validate('Bearer eyJ0eXBlIjoiYWNjZXNzX3Rva2VuIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDE6MDA6MDAifQ');
+
+        $providedAccessToken = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'type' => 'access_token',
+                    'auth_key' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client',
+                    'scope' => 'config',
+                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'expires_at' => '2016-01-01T01:00:00+00:00',
+                ]
+            )
+        );
+        $accessTokenInfo = $this->validator->validate(\sprintf('Bearer %s', $providedAccessToken));
         $this->assertSame('foo', $accessTokenInfo->getUserId());
         $this->assertSame('config', (string) $accessTokenInfo->getScope());
     }
@@ -73,8 +89,22 @@ class BearerValidatorTest extends TestCase
     public function testInvalidSignature()
     {
         try {
+            $providedAccessToken = Base64UrlSafe::encodeUnpadded(
+                Json::encode(
+                    [
+                        'type' => 'access_token',
+                        'auth_key' => 'invalid_sig',
+                        'user_id' => 'foo',
+                        'client_id' => 'code-client',
+                        'scope' => 'config',
+                        'authz_time' => '2016-01-01T00:00:00+00:00',
+                        'expires_at' => '2016-01-01T01:00:00+00:00',
+                    ]
+                )
+            );
+
             $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
-            $this->validator->validate('Bearer eyJ0eXBlIjoiYWNjZXNzX3Rva2VuIiwiYXV0aF9rZXkiOiJpbnZhbGlkX3NpZyIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDE6MDA6MDAifQ');
+            $this->validator->validate(\sprintf('Bearer %s', $providedAccessToken));
             $this->fail();
         } catch (InvalidTokenException $e) {
             $this->assertSame('"access_token" has invalid signature', $e->getDescription());
@@ -90,7 +120,22 @@ class BearerValidatorTest extends TestCase
                 new TestSigner()
             );
             $this->validator->setDateTime(new DateTime('2016-01-01'));
-            $this->validator->validate('Bearer eyJ0eXBlIjoiYWNjZXNzX3Rva2VuIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDE6MDA6MDAifQ');
+
+            $providedAccessToken = Base64UrlSafe::encodeUnpadded(
+                Json::encode(
+                    [
+                        'type' => 'access_token',
+                        'auth_key' => 'random_1',
+                        'user_id' => 'foo',
+                        'client_id' => 'code-client',
+                        'scope' => 'config',
+                        'authz_time' => '2016-01-01T00:00:00+00:00',
+                        'expires_at' => '2016-01-01T01:00:00+00:00',
+                    ]
+                )
+            );
+
+            $this->validator->validate(\sprintf('Bearer %s', $providedAccessToken));
             $this->fail();
         } catch (InvalidTokenException $e) {
             $this->assertSame('client "code-client" no longer registered', $e->getDescription());
@@ -109,8 +154,22 @@ class BearerValidatorTest extends TestCase
 
     public function testExpiredToken()
     {
+        $providedAccessToken = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'type' => 'access_token',
+                    'auth_key' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client',
+                    'scope' => 'config',
+                    'authz_time' => '2015-01-01T00:00:00+00:00',
+                    'expires_at' => '2015-01-01T01:00:00+00:00',
+                ]
+            )
+        );
+
         try {
-            $this->validator->validate('Bearer eyJ0eXBlIjoiYWNjZXNzX3Rva2VuIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTUtMDEtMDEgMDE6MDA6MDAifQo');
+            $this->validator->validate(\sprintf('Bearer %s', $providedAccessToken));
             $this->fail();
         } catch (InvalidTokenException $e) {
             $this->assertSame('"access_token" expired', $e->getDescription());
@@ -130,7 +189,23 @@ class BearerValidatorTest extends TestCase
     public function testCodeAsAccessToken()
     {
         try {
-            $this->validator->validate('Bearer eyJ0eXBlIjoiYXV0aG9yaXphdGlvbl9jb2RlIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwicmVkaXJlY3RfdXJpIjoiaHR0cDpcL1wvZXhhbXBsZS5vcmdcL2NvZGUtY2IiLCJjb2RlX2NoYWxsZW5nZSI6IkU5TWVsaG9hMk93dkZyRU1USmd1Q0hhb2VLMXQ4VVJXYnVHSlNzdHctY00iLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMDowNTowMCJ9');
+            $providedAccessToken = Base64UrlSafe::encodeUnpadded(
+                Json::encode(
+                    [
+                        'type' => 'authorization_code',
+                        'auth_key' => 'random_1',
+                        'user_id' => 'foo',
+                        'client_id' => 'code-client',
+                        'scope' => 'config',
+                        'redirect_uri' => 'http://example.org/code-cb',
+                        'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+                        'authz_time' => '2016-01-01T00:00:00+00:00',
+                        'expires_at' => '2016-01-01T00:05:00+00:00',
+                    ]
+                )
+            );
+
+            $this->validator->validate(\sprintf('Bearer %s', $providedAccessToken));
             $this->fail();
         } catch (InvalidTokenException $e) {
             $this->assertSame('expected "access_token", got "authorization_code"', $e->getDescription());

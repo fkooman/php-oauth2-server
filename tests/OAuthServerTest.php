@@ -30,8 +30,10 @@ use fkooman\OAuth\Server\ArrayClientDb;
 use fkooman\OAuth\Server\Exception\InvalidClientException;
 use fkooman\OAuth\Server\Exception\InvalidGrantException;
 use fkooman\OAuth\Server\Exception\InvalidRequestException;
+use fkooman\OAuth\Server\Json;
 use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\Storage;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 use PDO;
 use PHPUnit\Framework\TestCase;
 
@@ -123,10 +125,27 @@ class OAuthServerTest extends TestCase
             ],
             'foo'
         );
+
+        $expectedCode = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'type' => 'authorization_code',
+                    'auth_key' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client',
+                    'scope' => 'config',
+                    'redirect_uri' => 'http://example.org/code-cb',
+                    'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'expires_at' => '2016-01-01T00:05:00+00:00',
+                ]
+            )
+        );
+
         $this->assertInstanceOf('\fkooman\OAuth\Server\Http\Response', $authorizeResponse);
         $this->assertSame(
             [
-                'Location' => 'http://example.org/code-cb?code=eyJ0eXBlIjoiYXV0aG9yaXphdGlvbl9jb2RlIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwicmVkaXJlY3RfdXJpIjoiaHR0cDpcL1wvZXhhbXBsZS5vcmdcL2NvZGUtY2IiLCJjb2RlX2NoYWxsZW5nZSI6IkU5TWVsaG9hMk93dkZyRU1USmd1Q0hhb2VLMXQ4VVJXYnVHSlNzdHctY00iLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMVQwMDowNTowMCswMDowMCJ9&state=12345',
+                'Location' => \sprintf('http://example.org/code-cb?code=%s&state=12345', $expectedCode),
                 'Content-Type' => 'text/html; charset=utf-8',
             ],
             $authorizeResponse->getHeaders()
@@ -151,9 +170,26 @@ class OAuthServerTest extends TestCase
             'foo'
         );
         $this->assertSame(302, $authorizeResponse->getStatusCode());
+
+        $expectedCode = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'type' => 'authorization_code',
+                    'auth_key' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client',
+                    'scope' => 'foo',
+                    'redirect_uri' => 'http://example.org/code-cb',
+                    'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'expires_at' => '2016-01-01T00:05:00+00:00',
+                ]
+            )
+        );
+
         $this->assertSame(
             [
-                'Location' => 'http://example.org/code-cb?code=eyJ0eXBlIjoiYXV0aG9yaXphdGlvbl9jb2RlIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiZm9vIiwicmVkaXJlY3RfdXJpIjoiaHR0cDpcL1wvZXhhbXBsZS5vcmdcL2NvZGUtY2IiLCJjb2RlX2NoYWxsZW5nZSI6IkU5TWVsaG9hMk93dkZyRU1USmd1Q0hhb2VLMXQ4VVJXYnVHSlNzdHctY00iLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMVQwMDowNTowMCswMDowMCJ9&state=12345',
+                'Location' => \sprintf('http://example.org/code-cb?code=%s&state=12345', $expectedCode),
                 'Content-Type' => 'text/html; charset=utf-8',
             ],
             $authorizeResponse->getHeaders()
@@ -178,9 +214,26 @@ class OAuthServerTest extends TestCase
             'foo'
         );
         $this->assertSame(302, $authorizeResponse->getStatusCode());
+
+        $expectedCode = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'type' => 'authorization_code',
+                    'auth_key' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client-query-redirect',
+                    'scope' => 'config',
+                    'redirect_uri' => 'http://example.org/code-cb?keep=this',
+                    'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'expires_at' => '2016-01-01T00:05:00+00:00',
+                ]
+            )
+        );
+
         $this->assertSame(
             [
-                'Location' => 'http://example.org/code-cb?keep=this&code=eyJ0eXBlIjoiYXV0aG9yaXphdGlvbl9jb2RlIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudC1xdWVyeS1yZWRpcmVjdCIsInNjb3BlIjoiY29uZmlnIiwicmVkaXJlY3RfdXJpIjoiaHR0cDpcL1wvZXhhbXBsZS5vcmdcL2NvZGUtY2I_a2VlcD10aGlzIiwiY29kZV9jaGFsbGVuZ2UiOiJFOU1lbGhvYTJPd3ZGckVNVEpndUNIYW9lSzF0OFVSV2J1R0pTc3R3LWNNIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDFUMDA6MDU6MDArMDA6MDAifQ&state=12345',
+                'Location' => \sprintf('http://example.org/code-cb?keep=this&code=%s&state=12345', $expectedCode),
                 'Content-Type' => 'text/html; charset=utf-8',
             ],
             $authorizeResponse->getHeaders()
@@ -190,10 +243,27 @@ class OAuthServerTest extends TestCase
     public function testPostToken()
     {
         $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
+
+        $providedCode = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'type' => 'authorization_code',
+                    'auth_key' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client',
+                    'scope' => 'config',
+                    'redirect_uri' => 'http://example.org/code-cb',
+                    'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'expires_at' => '2016-01-01T00:05:00+00:00',
+                ]
+            )
+        );
+
         $tokenResponse = $this->server->postToken(
             [
                 'grant_type' => 'authorization_code',
-                'code' => 'eyJ0eXBlIjoiYXV0aG9yaXphdGlvbl9jb2RlIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwicmVkaXJlY3RfdXJpIjoiaHR0cDpcL1wvZXhhbXBsZS5vcmdcL2NvZGUtY2IiLCJjb2RlX2NoYWxsZW5nZSI6IkU5TWVsaG9hMk93dkZyRU1USmd1Q0hhb2VLMXQ4VVJXYnVHSlNzdHctY00iLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMDowNTowMCJ9',
+                'code' => $providedCode,
                 'redirect_uri' => 'http://example.org/code-cb',
                 'client_id' => 'code-client',
                 'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
@@ -210,10 +280,38 @@ class OAuthServerTest extends TestCase
             ],
             $tokenResponse->getHeaders()
         );
+
+        $expectedAccessToken = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'type' => 'access_token',
+                    'auth_key' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client',
+                    'scope' => 'config',
+                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'expires_at' => '2016-01-01T01:00:00+00:00',
+                ]
+            )
+        );
+        $expectedRefreshToken = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'type' => 'refresh_token',
+                    'auth_key' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client',
+                    'scope' => 'config',
+                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'expires_at' => '2017-01-01T00:00:00+00:00',
+                ]
+            )
+        );
+
         $this->assertSame(
             [
-                'access_token' => 'eyJ0eXBlIjoiYWNjZXNzX3Rva2VuIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDFUMDE6MDA6MDArMDA6MDAifQ',
-                'refresh_token' => 'eyJ0eXBlIjoicmVmcmVzaF90b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyIsImV4cGlyZXNfYXQiOiIyMDE3LTAxLTAxVDAwOjAwOjAwKzAwOjAwIn0',
+                'access_token' => $expectedAccessToken,
+                'refresh_token' => $expectedRefreshToken,
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
@@ -224,20 +322,64 @@ class OAuthServerTest extends TestCase
     public function testPostTokenSecret()
     {
         $this->storage->storeAuthorization('foo', 'code-client-secret', 'config', 'random_1');
+
+        $providedCode = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'type' => 'authorization_code',
+                    'auth_key' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client-secret',
+                    'scope' => 'config',
+                    'redirect_uri' => 'http://example.org/code-cb',
+                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'expires_at' => '2016-01-01T00:05:00+00:00',
+                ]
+            )
+        );
+
         $tokenResponse = $this->server->postToken(
             [
                 'grant_type' => 'authorization_code',
-                'code' => 'eyJ0eXBlIjoiYXV0aG9yaXphdGlvbl9jb2RlIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudC1zZWNyZXQiLCJzY29wZSI6ImNvbmZpZyIsInJlZGlyZWN0X3VyaSI6Imh0dHA6XC9cL2V4YW1wbGUub3JnXC9jb2RlLWNiIiwiY29kZV9jaGFsbGVuZ2UiOiJFOU1lbGhvYTJPd3ZGckVNVEpndUNIYW9lSzF0OFVSV2J1R0pTc3R3LWNNIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDA6MDU6MDAifQ',
+                'code' => $providedCode,
                 'redirect_uri' => 'http://example.org/code-cb',
                 'client_id' => 'code-client-secret',
             ],
             'code-client-secret',
             '123456'
         );
+
+        $expectedAccessToken = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'type' => 'access_token',
+                    'auth_key' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client-secret',
+                    'scope' => 'config',
+                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'expires_at' => '2016-01-01T01:00:00+00:00',
+                ]
+            )
+        );
+        $expectedRefreshToken = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'type' => 'refresh_token',
+                    'auth_key' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client-secret',
+                    'scope' => 'config',
+                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'expires_at' => '2017-01-01T00:00:00+00:00',
+                ]
+            )
+        );
+
         $this->assertSame(
             [
-                'access_token' => 'eyJ0eXBlIjoiYWNjZXNzX3Rva2VuIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudC1zZWNyZXQiLCJzY29wZSI6ImNvbmZpZyIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxVDAxOjAwOjAwKzAwOjAwIn0',
-                'refresh_token' => 'eyJ0eXBlIjoicmVmcmVzaF90b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQtc2VjcmV0Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNy0wMS0wMVQwMDowMDowMCswMDowMCJ9',
+                'access_token' => $expectedAccessToken,
+                'refresh_token' => $expectedRefreshToken,
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
@@ -247,12 +389,28 @@ class OAuthServerTest extends TestCase
 
     public function testPostTokenMissingCodeVerifierPublicClient()
     {
+        $providedCode = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'type' => 'authorization_code',
+                    'auth_key' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client',
+                    'scope' => 'config',
+                    'redirect_uri' => 'http://example.org/code-cb',
+                    'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'expires_at' => '2016-01-01T00:05:00+00:00',
+                ]
+            )
+        );
+
         try {
             $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
             $this->server->postToken(
                 [
                     'grant_type' => 'authorization_code',
-                    'code' => 'eyJ0eXBlIjoiYXV0aG9yaXphdGlvbl9jb2RlIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwicmVkaXJlY3RfdXJpIjoiaHR0cDpcL1wvZXhhbXBsZS5vcmdcL2NvZGUtY2IiLCJjb2RlX2NoYWxsZW5nZSI6IkU5TWVsaG9hMk93dkZyRU1USmd1Q0hhb2VLMXQ4VVJXYnVHSlNzdHctY00iLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMDowNTowMCJ9',
+                    'code' => $providedCode,
                     'redirect_uri' => 'http://example.org/code-cb',
                     'client_id' => 'code-client',
                 ],
@@ -304,10 +462,27 @@ class OAuthServerTest extends TestCase
         try {
             $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
             $this->storage->logAuthKey('random_1');
+
+            $providedCode = Base64UrlSafe::encodeUnpadded(
+                Json::encode(
+                    [
+                        'type' => 'authorization_code',
+                        'auth_key' => 'random_1',
+                        'user_id' => 'foo',
+                        'client_id' => 'code-client',
+                        'scope' => 'config',
+                        'redirect_uri' => 'http://example.org/code-cb',
+                        'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+                        'authz_time' => '2016-01-01T00:00:00+00:00',
+                        'expires_at' => '2016-01-01T00:05:00+00:00',
+                    ]
+                )
+            );
+
             $this->server->postToken(
                 [
                     'grant_type' => 'authorization_code',
-                    'code' => 'eyJ0eXBlIjoiYXV0aG9yaXphdGlvbl9jb2RlIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwicmVkaXJlY3RfdXJpIjoiaHR0cDpcL1wvZXhhbXBsZS5vcmdcL2NvZGUtY2IiLCJjb2RlX2NoYWxsZW5nZSI6IkU5TWVsaG9hMk93dkZyRU1USmd1Q0hhb2VLMXQ4VVJXYnVHSlNzdHctY00iLCJleHBpcmVzX2F0IjoiMjAxNi0wMS0wMSAwMDowNTowMCJ9',
+                    'code' => $providedCode,
                     'redirect_uri' => 'http://example.org/code-cb',
                     'client_id' => 'code-client',
                     'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
@@ -324,10 +499,26 @@ class OAuthServerTest extends TestCase
     public function testExpiredCode()
     {
         try {
+            $providedCode = Base64UrlSafe::encodeUnpadded(
+                Json::encode(
+                    [
+                        'type' => 'authorization_code',
+                        'auth_key' => 'random_1',
+                        'user_id' => 'foo',
+                        'client_id' => 'code-client',
+                        'scope' => 'config',
+                        'redirect_uri' => 'http://example.org/code-cb',
+                        'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+                        'authz_time' => '2015-01-01T00:00:00+00:00',
+                        'expires_at' => '2015-01-01T00:05:00+00:00',
+                    ]
+                )
+            );
+
             $this->server->postToken(
                 [
                     'grant_type' => 'authorization_code',
-                    'code' => 'eyJ0eXBlIjoiYXV0aG9yaXphdGlvbl9jb2RlIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwicmVkaXJlY3RfdXJpIjoiaHR0cDpcL1wvZXhhbXBsZS5vcmdcL2NvZGUtY2IiLCJjb2RlX2NoYWxsZW5nZSI6IkU5TWVsaG9hMk93dkZyRU1USmd1Q0hhb2VLMXQ4VVJXYnVHSlNzdHctY00iLCJleHBpcmVzX2F0IjoiMjAxNS0wMS0wMSAwMDowMDowMCJ9',
+                    'code' => $providedCode,
                     'redirect_uri' => 'http://example.org/code-cb',
                     'client_id' => 'code-client',
                     'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
@@ -345,10 +536,25 @@ class OAuthServerTest extends TestCase
     {
         try {
             $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
+
+            $providedCode = Base64UrlSafe::encodeUnpadded(
+                Json::encode(
+                    [
+                        'type' => 'access_token',
+                        'auth_key' => 'random_1',
+                        'user_id' => 'foo',
+                        'client_id' => 'code-client',
+                        'scope' => 'config',
+                        'authz_time' => '2016-01-01T00:00:00+00:00',
+                        'expires_at' => '2016-01-01T01:00:00+00:00',
+                    ]
+                )
+            );
+
             $this->server->postToken(
                 [
                     'grant_type' => 'authorization_code',
-                    'code' => 'eyJ0eXBlIjoiYWNjZXNzX3Rva2VuIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDEgMDE6MDA6MDAifQ',
+                    'code' => $providedCode,
                     'redirect_uri' => 'http://example.org/code-cb',
                     'client_id' => 'code-client',
                     'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
@@ -368,18 +574,47 @@ class OAuthServerTest extends TestCase
         //
         // the authorization MUST exist for the refresh token to work
         $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
+
+        $providedRefreshToken = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'type' => 'refresh_token',
+                    'auth_key' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client',
+                    'scope' => 'config',
+                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                ]
+            )
+        );
+
         $tokenResponse = $this->server->postToken(
             [
                 'grant_type' => 'refresh_token',
-                'refresh_token' => 'eyJ0eXBlIjoicmVmcmVzaF90b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyJ9',
+                'refresh_token' => $providedRefreshToken,
                 'scope' => 'config',
             ],
             null,
             null
         );
+
+        $expectedAccessToken = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'type' => 'access_token',
+                    'auth_key' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client',
+                    'scope' => 'config',
+                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'expires_at' => '2016-01-01T01:00:00+00:00',
+                ]
+            )
+        );
+
         $this->assertSame(
             [
-                'access_token' => 'eyJ0eXBlIjoiYWNjZXNzX3Rva2VuIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDFUMDE6MDA6MDArMDA6MDAifQ',
+                'access_token' => $expectedAccessToken,
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
@@ -390,18 +625,48 @@ class OAuthServerTest extends TestCase
     public function testNonExpiredRefreshToken()
     {
         $this->storage->storeAuthorization('foo', 'code-client-secret', 'config', 'random_1');
+
+        $providedRefreshToken = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'type' => 'refresh_token',
+                    'auth_key' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client-secret',
+                    'scope' => 'config',
+                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'expires_at' => '2017-01-01T00:00:00+00:00',
+                ]
+            )
+        );
+
         $tokenResponse = $this->server->postToken(
             [
                 'grant_type' => 'refresh_token',
-                'refresh_token' => 'eyJ0eXBlIjoicmVmcmVzaF90b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQtc2VjcmV0Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNy0wMS0wMSAwMDowMDowMCJ9',
+                'refresh_token' => $providedRefreshToken,
                 'scope' => 'config',
             ],
             'code-client-secret',
             '123456'
         );
+
+        $expectedAccessToken = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'type' => 'access_token',
+                    'auth_key' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client-secret',
+                    'scope' => 'config',
+                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'expires_at' => '2016-01-01T01:00:00+00:00',
+                ]
+            )
+        );
+
         $this->assertSame(
             [
-                'access_token' => 'eyJ0eXBlIjoiYWNjZXNzX3Rva2VuIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudC1zZWNyZXQiLCJzY29wZSI6ImNvbmZpZyIsImV4cGlyZXNfYXQiOiIyMDE2LTAxLTAxVDAxOjAwOjAwKzAwOjAwIn0',
+                'access_token' => $expectedAccessToken,
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
@@ -413,10 +678,25 @@ class OAuthServerTest extends TestCase
     {
         try {
             $this->storage->storeAuthorization('foo', 'code-client-secret', 'config', 'random_1');
+
+            $providedRefreshToken = Base64UrlSafe::encodeUnpadded(
+                Json::encode(
+                    [
+                        'type' => 'refresh_token',
+                        'auth_key' => 'random_1',
+                        'user_id' => 'foo',
+                        'client_id' => 'code-client-secret',
+                        'scope' => 'config',
+                        'authz_time' => '2014-01-01T00:00:00+00:00',
+                        'expires_at' => '2015-01-01T00:00:00+00:00',
+                    ]
+                )
+            );
+
             $this->server->postToken(
                 [
                     'grant_type' => 'refresh_token',
-                    'refresh_token' => 'eyJ0eXBlIjoicmVmcmVzaF90b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQtc2VjcmV0Iiwic2NvcGUiOiJjb25maWciLCJleHBpcmVzX2F0IjoiMjAxNS0wMS0wMSAwMDowMDowMCJ9Cg',
+                    'refresh_token' => $providedRefreshToken,
                     'scope' => 'config',
                 ],
                 'code-client-secret',
