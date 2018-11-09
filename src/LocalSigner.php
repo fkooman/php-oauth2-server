@@ -69,6 +69,8 @@ class LocalSigner implements SignerInterface
      */
     public function sign(array $codeTokenInfo)
     {
+        // we add a JWT header, but this is just 'informative', it won't be
+        // verified at all by the verifier...
         $jwtHeader = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
@@ -95,6 +97,8 @@ class LocalSigner implements SignerInterface
             // invalid token, it MUST contain two dots
             return false;
         }
+
+        // we don't care at all about the JWT header, so we ignore it...
 
         $jwtSignature = Base64UrlSafe::encodeUnpadded($this->__sign($jwtParts[0].'.'.$jwtParts[1]));
         if (false === \hash_equals($jwtSignature, $jwtParts[2])) {
