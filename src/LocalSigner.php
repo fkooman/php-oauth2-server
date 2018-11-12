@@ -98,8 +98,8 @@ class LocalSigner implements SignerInterface
             return false;
         }
 
-        // we don't care at all about the JWT header, so we ignore it...
-
+        // we don't care at about the JWT header content, so we ignore it and
+        // only use it because it is part of the signature...
         $jwtSignature = Base64UrlSafe::encodeUnpadded($this->__sign($jwtParts[0].'.'.$jwtParts[1]));
         if (false === \hash_equals($jwtSignature, $jwtParts[2])) {
             return false;
