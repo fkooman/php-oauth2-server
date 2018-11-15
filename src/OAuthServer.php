@@ -383,18 +383,17 @@ class OAuthServer
             throw new InvalidGrantException('"refresh_token" is no longer authorized');
         }
 
-        $expiresIn = self::dateIntervalToSeconds($this->accessTokenExpiry);
-        $expiresAt = \date_add(clone $this->dateTime, $this->accessTokenExpiry);
+        $accessTokenExpiresIn = self::dateIntervalToSeconds($this->accessTokenExpiry);
+        $accessTokenExpiresAt = \date_add(clone $this->dateTime, $this->accessTokenExpiry);
         // make sure the access_token expires at the same time as the
         // refresh_token
         if (\array_key_exists('expires_at', $refreshTokenInfo)) {
-            $accessTokenExpiresAt = \date_add(clone $this->dateTime, $this->accessTokenExpiry);
             $refreshTokenExpiresAt = new DateTime($refreshTokenInfo['expires_at']);
             if ($accessTokenExpiresAt > $refreshTokenExpiresAt) {
                 // access_token would outlive the refresh_token, adjust expiry
                 // of access_token...
-                $expiresIn = $accessTokenExpiresAt->getTimestamp() - $refreshTokenExpiresAt->getTimestamp();
-                $expiresAt = $refreshTokenExpiresAt;
+                $accessTokenExpiresIn = $accessTokenExpiresAt->getTimestamp() - $refreshTokenExpiresAt->getTimestamp();
+                $accessTokenExpiresAt = $refreshTokenExpiresAt;
             }
         }
 
@@ -404,14 +403,14 @@ class OAuthServer
             $refreshTokenInfo['scope'],
             $refreshTokenInfo['auth_key'],
             $refreshTokenInfo['authz_time'],
-            $expiresAt
+            $accessTokenExpiresAt
         );
 
         return new JsonResponse(
             [
                 'access_token' => $accessToken,
                 'token_type' => 'bearer',
-                'expires_in' => $expiresIn,
+                'expires_in' => $accessTokenExpiresIn,
             ],
             // The authorization server MUST include the HTTP "Cache-Control"
             // response header field [RFC2616] with a value of "no-store" in any
