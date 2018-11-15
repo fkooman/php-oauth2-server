@@ -311,7 +311,8 @@ class OAuthServer
             $postData['client_id'],
             $authorizationCodeInfo['scope'],
             $authorizationCodeInfo['auth_key'],
-            $authorizationCodeInfo['authz_time']
+            $authorizationCodeInfo['authz_time'],
+            \date_add(clone $this->dateTime, $this->accessTokenExpiry)
         );
 
         $refreshToken = $this->getRefreshToken(
@@ -382,19 +383,35 @@ class OAuthServer
             throw new InvalidGrantException('"refresh_token" is no longer authorized');
         }
 
+        $expiresIn = self::dateIntervalToSeconds($this->accessTokenExpiry);
+        $expiresAt = \date_add(clone $this->dateTime, $this->accessTokenExpiry);
+        // make sure the access_token expires at the same time as the
+        // refresh_token
+        if (\array_key_exists('expires_at', $refreshTokenInfo)) {
+            $accessTokenExpiresAt = \date_add(clone $this->dateTime, $this->accessTokenExpiry);
+            $refreshTokenExpiresAt = new DateTime($refreshTokenInfo['expires_at']);
+            if ($accessTokenExpiresAt > $refreshTokenExpiresAt) {
+                // access_token would outlive the refresh_token, adjust expiry
+                // of access_token...
+                $expiresIn = $accessTokenExpiresAt->getTimestamp() - $refreshTokenExpiresAt->getTimestamp();
+                $expiresAt = $refreshTokenExpiresAt;
+            }
+        }
+
         $accessToken = $this->getAccessToken(
             $refreshTokenInfo['user_id'],
             $refreshTokenInfo['client_id'],
             $refreshTokenInfo['scope'],
             $refreshTokenInfo['auth_key'],
-            $refreshTokenInfo['authz_time']
+            $refreshTokenInfo['authz_time'],
+            $expiresAt
         );
 
         return new JsonResponse(
             [
                 'access_token' => $accessToken,
                 'token_type' => 'bearer',
-                'expires_in' => self::dateIntervalToSeconds($this->accessTokenExpiry),
+                'expires_in' => $expiresIn,
             ],
             // The authorization server MUST include the HTTP "Cache-Control"
             // response header field [RFC2616] with a value of "no-store" in any
@@ -409,20 +426,21 @@ class OAuthServer
     }
 
     /**
-     * @param string $userId
-     * @param string $clientId
-     * @param string $scope
-     * @param string $authKey
-     * @param string $authzTime
+     * @param string    $userId
+     * @param string    $clientId
+     * @param string    $scope
+     * @param string    $authKey
+     * @param string    $authzTime
+     * @param \DateTime $expiresAt
      *
      * @return string
      */
-    private function getAccessToken($userId, $clientId, $scope, $authKey, $authzTime)
+    private function getAccessToken($userId, $clientId, $scope, $authKey, $authzTime, DateTime $expiresAt)
     {
         // for prevention of replays of authorization codes and the revocation
         // of access tokens when an authorization code is replayed, we use the
         // "auth_key" as a tag for the issued access tokens
-        $expiresAt = \date_add(clone $this->dateTime, $this->accessTokenExpiry);
+        // XXX        $expiresAt = \date_add(clone $this->dateTime, $this->accessTokenExpiry);
 
         return $this->signer->sign(
             [

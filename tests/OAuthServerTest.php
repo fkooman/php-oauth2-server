@@ -674,6 +674,62 @@ class OAuthServerTest extends TestCase
         );
     }
 
+    public function testExpiringRefreshTokenWithLessTime()
+    {
+        $this->storage->storeAuthorization('foo', 'code-client-secret', 'config', 'random_1');
+
+        $providedRefreshToken = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'type' => 'refresh_token',
+                    'auth_key' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client-secret',
+                    'scope' => 'config',
+                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'expires_at' => '2017-01-01T00:00:00+00:00',
+                ]
+            )
+        );
+
+        // set DateTime to half an hour before expiry of refresh_token, we
+        // expect to get an access_token that's valid for only 1800 seconds
+        $this->server->setDateTime(new DateTime('2016-12-31T23:30:00+00:00'));
+
+        $tokenResponse = $this->server->postToken(
+            [
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $providedRefreshToken,
+                'scope' => 'config',
+            ],
+            'code-client-secret',
+            '123456'
+        );
+
+        $expectedAccessToken = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'type' => 'access_token',
+                    'auth_key' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client-secret',
+                    'scope' => 'config',
+                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'expires_at' => '2017-01-01T00:00:00+00:00',
+                ]
+            )
+        );
+
+        $this->assertSame(
+            [
+                'access_token' => $expectedAccessToken,
+                'token_type' => 'bearer',
+                'expires_in' => 1800,
+            ],
+            \json_decode($tokenResponse->getBody(), true)
+        );
+    }
+
     public function testExpiredRefreshToken()
     {
         try {
