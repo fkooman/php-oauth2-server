@@ -440,8 +440,6 @@ class OAuthServer
         // for prevention of replays of authorization codes and the revocation
         // of access tokens when an authorization code is replayed, we use the
         // "auth_key" as a tag for the issued access tokens
-        // XXX        $expiresAt = \date_add(clone $this->dateTime, $this->accessTokenExpiry);
-
         return $this->signer->sign(
             [
                 'type' => 'access_token',
