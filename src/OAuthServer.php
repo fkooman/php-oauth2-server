@@ -392,7 +392,7 @@ class OAuthServer
             if ($accessTokenExpiresAt > $refreshTokenExpiresAt) {
                 // access_token would outlive the refresh_token, adjust expiry
                 // of access_token...
-                $accessTokenExpiresIn = $accessTokenExpiresAt->getTimestamp() - $refreshTokenExpiresAt->getTimestamp();
+                $accessTokenExpiresIn = $accessTokenExpiresIn - ($accessTokenExpiresAt->getTimestamp() - $refreshTokenExpiresAt->getTimestamp());
                 $accessTokenExpiresAt = $refreshTokenExpiresAt;
             }
         }

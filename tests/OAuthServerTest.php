@@ -692,9 +692,9 @@ class OAuthServerTest extends TestCase
             )
         );
 
-        // set DateTime to half an hour before expiry of refresh_token, we
-        // expect to get an access_token that's valid for only 1800 seconds
-        $this->server->setDateTime(new DateTime('2016-12-31T23:30:00+00:00'));
+        // set DateTime to 15 minutes before expiry of refresh_token, we
+        // expect to get an access_token that's valid for only 900 seconds
+        $this->server->setDateTime(new DateTime('2016-12-31T23:45:00+00:00'));
 
         $tokenResponse = $this->server->postToken(
             [
@@ -724,7 +724,7 @@ class OAuthServerTest extends TestCase
             [
                 'access_token' => $expectedAccessToken,
                 'token_type' => 'bearer',
-                'expires_in' => 1800,
+                'expires_in' => 900,
             ],
             \json_decode($tokenResponse->getBody(), true)
         );
