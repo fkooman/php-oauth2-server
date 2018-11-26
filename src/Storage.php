@@ -30,7 +30,7 @@ use PDOException;
 class Storage
 {
     /** @var \PDO */
-    private $db;
+    protected $db;
 
     /**
      * @param \PDO $db
