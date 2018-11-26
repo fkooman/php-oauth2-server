@@ -1,5 +1,9 @@
 # ChangeLog
 
+## 3.0.3 (2018-11-26)
+- allow extending `Storage` class by marking database handle property as 
+  `protected`
+
 ## 3.0.2 (2018-09-21)
 - explicitly depend on versions of `paragonie/constant_time_encoding` that 
   support `Base64UrlSafe::encodeUnpadded`, drop hack
