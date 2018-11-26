@@ -377,7 +377,7 @@ class OAuthServer
         $accessToken = $this->getAccessToken(
             $refreshTokenInfo['user_id'],
             $refreshTokenInfo['client_id'],
-            $postData['scope'],
+            $refreshTokenInfo['scope'],
             $refreshTokenInfo['auth_key']
         );
 
