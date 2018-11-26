@@ -765,19 +765,48 @@ class OAuthServerTest extends TestCase
 
     public function testRefreshTokenWithoutExplicitScope()
     {
-        // the authorization MUST exist for the refresh token to work
-        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
+        $this->storage->storeAuthorization('foo', 'code-client-secret', 'config', 'random_1');
+
+        $providedRefreshToken = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'type' => 'refresh_token',
+                    'auth_key' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client-secret',
+                    'scope' => 'config',
+                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'expires_at' => '2017-01-01T00:00:00+00:00',
+                ]
+            )
+        );
+
         $tokenResponse = $this->server->postToken(
             [
                 'grant_type' => 'refresh_token',
-                'refresh_token' => 'eyJ0eXBlIjoicmVmcmVzaF90b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyJ9',
+                'refresh_token' => $providedRefreshToken,
             ],
-            null,
-            null
+            'code-client-secret',
+            '123456'
         );
+
+        $expectedAccessToken = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'type' => 'access_token',
+                    'auth_key' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client-secret',
+                    'scope' => 'config',
+                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'expires_at' => '2016-01-01T01:00:00+00:00',
+                ]
+            )
+        );
+
         $this->assertSame(
             [
-                'access_token' => 'eyJ0eXBlIjoiYWNjZXNzX3Rva2VuIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDFUMDE6MDA6MDArMDA6MDAifQ',
+                'access_token' => $expectedAccessToken,
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
