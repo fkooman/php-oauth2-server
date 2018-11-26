@@ -763,6 +763,28 @@ class OAuthServerTest extends TestCase
         }
     }
 
+    public function testRefreshTokenWithoutExplicitScope()
+    {
+        // the authorization MUST exist for the refresh token to work
+        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
+        $tokenResponse = $this->server->postToken(
+            [
+                'grant_type' => 'refresh_token',
+                'refresh_token' => 'eyJ0eXBlIjoicmVmcmVzaF90b2tlbiIsImF1dGhfa2V5IjoicmFuZG9tXzEiLCJ1c2VyX2lkIjoiZm9vIiwiY2xpZW50X2lkIjoiY29kZS1jbGllbnQiLCJzY29wZSI6ImNvbmZpZyJ9',
+            ],
+            null,
+            null
+        );
+        $this->assertSame(
+            [
+                'access_token' => 'eyJ0eXBlIjoiYWNjZXNzX3Rva2VuIiwiYXV0aF9rZXkiOiJyYW5kb21fMSIsInVzZXJfaWQiOiJmb28iLCJjbGllbnRfaWQiOiJjb2RlLWNsaWVudCIsInNjb3BlIjoiY29uZmlnIiwiZXhwaXJlc19hdCI6IjIwMTYtMDEtMDFUMDE6MDA6MDArMDA6MDAifQ',
+                'token_type' => 'bearer',
+                'expires_in' => 3600,
+            ],
+            \json_decode($tokenResponse->getBody(), true)
+        );
+    }
+
     public function testLoopbackClient()
     {
         $this->assertSame(
