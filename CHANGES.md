@@ -1,5 +1,9 @@
 # ChangeLog
 
+## 3.0.5 (2018-11-26)
+- `RequestValidator` also expected `scope` to always be there
+- add unit test to avoid running into trouble again
+
 ## 3.0.4 (2018-11-26)
 - `scope` is OPTIONAL when requesting a new access token using a refresh token
 
