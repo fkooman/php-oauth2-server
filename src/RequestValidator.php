@@ -141,12 +141,16 @@ class RequestValidator
      */
     private static function validateRefreshToken(array $postData)
     {
-        foreach (['refresh_token', 'scope'] as $postParameter) {
+        foreach (['refresh_token'] as $postParameter) {
             if (!\array_key_exists($postParameter, $postData)) {
                 throw new InvalidRequestException(\sprintf('missing "%s" parameter', $postParameter));
             }
         }
         SyntaxValidator::validateRefreshToken($postData['refresh_token']);
-        SyntaxValidator::validateScope($postData['scope']);
+
+        // OPTIONAL
+        if (\array_key_exists('scope', $postData)) {
+            SyntaxValidator::validateScope($postData['scope']);
+        }
     }
 }
