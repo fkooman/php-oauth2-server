@@ -1,5 +1,8 @@
 # ChangeLog
 
+## 3.0.4 (2018-11-26)
+- `scope` is OPTIONAL when requesting a new access token using a refresh token
+
 ## 3.0.3 (2018-11-26)
 - allow extending `Storage` class by marking database handle property as 
   `protected`
