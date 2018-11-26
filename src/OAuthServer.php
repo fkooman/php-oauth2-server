@@ -361,10 +361,12 @@ class OAuthServer
         $clientInfo = $this->getClient($refreshTokenInfo['client_id']);
         $this->verifyClientCredentials($refreshTokenInfo['client_id'], $clientInfo, $authUser, $authPass);
 
-        // parameters in POST body need to match the parameters stored with
-        // the refresh token
-        if ($postData['scope'] !== $refreshTokenInfo['scope']) {
-            throw new InvalidRequestException('unexpected "scope"');
+        // scope in POST body MUST match scope stored in the refresh_token when
+        // provided
+        if (\array_key_exists('scope', $postData)) {
+            if ($postData['scope'] !== $refreshTokenInfo['scope']) {
+                throw new InvalidRequestException('unexpected "scope"');
+            }
         }
 
         // make sure the authorization still exists
