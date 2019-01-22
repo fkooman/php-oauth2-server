@@ -5,7 +5,7 @@
 - introduce `ClientDbInterface` and `ArrayClientDb` instead of a `callable`
 - introduce `Scope` object in `AcessTokenInfo` instead of `string` scope value
 - remove `SodiumSigner`
-- drops compatibility with issues tokens, ALL tokens from `SodiumSigner` will
+- drops compatibility with issued tokens, ALL tokens from `SodiumSigner` will
   become invalid!
 - add `authz_time` to the tokens to record the time of the authorization by the 
   user
