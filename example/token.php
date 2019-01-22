@@ -30,12 +30,12 @@ use fkooman\OAuth\Server\Exception\OAuthException;
 use fkooman\OAuth\Server\Http\JsonResponse;
 use fkooman\OAuth\Server\LocalSigner;
 use fkooman\OAuth\Server\OAuthServer;
-use fkooman\OAuth\Server\Storage;
+use fkooman\OAuth\Server\PdoStorage;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 
 try {
     // persistent storage for access_token authorizations
-    $storage = new Storage(new PDO(\sprintf('sqlite:%s/data/db.sqlite', $baseDir)));
+    $storage = new PdoStorage(new PDO(\sprintf('sqlite:%s/data/db.sqlite', $baseDir)));
     $storage->init();
 
     $oauthServer = new OAuthServer(

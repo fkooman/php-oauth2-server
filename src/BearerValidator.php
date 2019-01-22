@@ -30,7 +30,7 @@ use ParagonIE\ConstantTime\Binary;
 
 class BearerValidator
 {
-    /** @var Storage */
+    /** @var StorageInterface */
     private $storage;
 
     /** @var ClientDbInterface */
@@ -43,11 +43,11 @@ class BearerValidator
     private $dateTime;
 
     /**
-     * @param Storage           $storage
+     * @param StorageInterface  $storage
      * @param ClientDbInterface $clientDb
      * @param SignerInterface   $verifier
      */
-    public function __construct(Storage $storage, ClientDbInterface $clientDb, SignerInterface $verifier)
+    public function __construct(StorageInterface $storage, ClientDbInterface $clientDb, SignerInterface $verifier)
     {
         $this->storage = $storage;
         $this->clientDb = $clientDb;

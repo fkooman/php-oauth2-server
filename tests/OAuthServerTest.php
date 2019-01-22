@@ -32,7 +32,7 @@ use fkooman\OAuth\Server\Exception\InvalidGrantException;
 use fkooman\OAuth\Server\Exception\InvalidRequestException;
 use fkooman\OAuth\Server\Json;
 use fkooman\OAuth\Server\OAuthServer;
-use fkooman\OAuth\Server\Storage;
+use fkooman\OAuth\Server\PdoStorage;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use PDO;
 use PHPUnit\Framework\TestCase;
@@ -76,7 +76,7 @@ class OAuthServerTest extends TestCase
             ]
         );
 
-        $this->storage = new Storage(new PDO('sqlite::memory:'));
+        $this->storage = new PdoStorage(new PDO('sqlite::memory:'));
         $this->storage->init();
         $this->server = new OAuthServer(
             $this->storage,

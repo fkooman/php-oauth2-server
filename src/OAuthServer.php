@@ -35,7 +35,7 @@ use ParagonIE\ConstantTime\Base64UrlSafe;
 
 class OAuthServer
 {
-    /** @var Storage */
+    /** @var StorageInterface */
     private $storage;
 
     /** @var ClientDbInterface */
@@ -57,11 +57,11 @@ class OAuthServer
     private $refreshTokenExpiry = null;
 
     /**
-     * @param Storage           $storage
+     * @param StorageInterface  $storage
      * @param ClientDbInterface $clientDb
      * @param SignerInterface   $signer
      */
-    public function __construct(Storage $storage, ClientDbInterface $clientDb, SignerInterface $signer)
+    public function __construct(StorageInterface $storage, ClientDbInterface $clientDb, SignerInterface $signer)
     {
         $this->storage = $storage;
         $this->clientDb = $clientDb;

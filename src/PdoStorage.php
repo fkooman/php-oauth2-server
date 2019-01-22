@@ -27,7 +27,7 @@ namespace fkooman\OAuth\Server;
 use PDO;
 use PDOException;
 
-class Storage
+class PdoStorage implements StorageInterface
 {
     /** @var \PDO */
     protected $db;

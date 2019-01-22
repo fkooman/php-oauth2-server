@@ -26,11 +26,11 @@ require_once \dirname(__DIR__).'/vendor/autoload.php';
 $baseDir = \dirname(__DIR__);
 
 use fkooman\OAuth\Server\Http\Response;
-use fkooman\OAuth\Server\Storage;
+use fkooman\OAuth\Server\PdoStorage;
 
 try {
     // persistent storage for access_token authorizations
-    $storage = new Storage(new PDO(\sprintf('sqlite:%s/data/db.sqlite', $baseDir)));
+    $storage = new PdoStorage(new PDO(\sprintf('sqlite:%s/data/db.sqlite', $baseDir)));
     $storage->init();
 
     // user authentication MUST take place, here we ignore this for simplicity,
