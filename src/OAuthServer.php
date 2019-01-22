@@ -53,7 +53,7 @@ class OAuthServer
     /** @var \DateInterval */
     private $accessTokenExpiry;
 
-    /** @var null|\DateInterval */
+    /** @var \DateInterval|null */
     private $refreshTokenExpiry = null;
 
     /**
@@ -117,7 +117,7 @@ class OAuthServer
      *
      * @param array<string,string> $getData
      *
-     * @return array<string,null|string>
+     * @return array<string,string|null>
      */
     public function getAuthorize(array $getData)
     {
@@ -216,8 +216,8 @@ class OAuthServer
      * Handles POST request to the "/token" endpoint of the OAuth server.
      *
      * @param array<string,string> $postData
-     * @param null|string          $authUser BasicAuth user in case of secret client, null if public client
-     * @param null|string          $authPass BasicAuth pass in case of secret client, null if public client
+     * @param string|null          $authUser BasicAuth user in case of secret client, null if public client
+     * @param string|null          $authPass BasicAuth pass in case of secret client, null if public client
      *
      * @return JsonResponse
      */
@@ -260,8 +260,8 @@ class OAuthServer
 
     /**
      * @param array<string,string> $postData
-     * @param null|string          $authUser BasicAuth user in case of secret client, null if public client
-     * @param null|string          $authPass BasicAuth pass in case of secret client, null if public client
+     * @param string|null          $authUser BasicAuth user in case of secret client, null if public client
+     * @param string|null          $authPass BasicAuth pass in case of secret client, null if public client
      *
      * @return JsonResponse
      */
@@ -344,8 +344,8 @@ class OAuthServer
 
     /**
      * @param array<string,string> $postData
-     * @param null|string          $authUser BasicAuth user in case of secret client, null if public client
-     * @param null|string          $authPass BasicAuth pass in case of secret client, null if public client
+     * @param string|null          $authUser BasicAuth user in case of secret client, null if public client
+     * @param string|null          $authPass BasicAuth pass in case of secret client, null if public client
      *
      * @return JsonResponse
      */
@@ -488,7 +488,7 @@ class OAuthServer
      * @param string      $scope
      * @param string      $redirectUri
      * @param string      $authKey
-     * @param null|string $codeChallenge required for "public" clients
+     * @param string|null $codeChallenge required for "public" clients
      *
      * @return string
      */
@@ -537,8 +537,8 @@ class OAuthServer
     /**
      * @param string      $clientId
      * @param ClientInfo  $clientInfo
-     * @param null|string $authUser
-     * @param null|string $authPass
+     * @param string|null $authUser
+     * @param string|null $authPass
      *
      * @return void
      */

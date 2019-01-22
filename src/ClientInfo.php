@@ -32,10 +32,10 @@ class ClientInfo
     /** @var array<string> */
     private $redirectUriList;
 
-    /** @var null|string */
+    /** @var string|null */
     private $clientSecret;
 
-    /** @var null|string */
+    /** @var string|null */
     private $displayName;
 
     /** @var bool */
@@ -44,8 +44,8 @@ class ClientInfo
     /**
      * @param string        $clientId
      * @param array<string> $redirectUriList
-     * @param null|string   $clientSecret
-     * @param null|string   $displayName
+     * @param string|null   $clientSecret
+     * @param string|null   $displayName
      * @param bool          $requireApproval
      */
     public function __construct($clientId, array $redirectUriList, $clientSecret, $displayName, $requireApproval)
@@ -66,7 +66,7 @@ class ClientInfo
     }
 
     /**
-     * @return null|string
+     * @return string|null
      */
     public function getSecret()
     {
@@ -74,7 +74,7 @@ class ClientInfo
     }
 
     /**
-     * @return null|string
+     * @return string|null
      */
     public function getDisplayName()
     {
