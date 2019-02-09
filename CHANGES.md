@@ -1,10 +1,10 @@
 # ChangeLog
 
 ## 4.0.0 (...)
-- introduce `LocalSigner` which uses the HS256 JWT algorithm
+- introduce simple `LocalSigner` which uses JWT tokens using HS256
 - introduce `ClientDbInterface` and `ArrayClientDb` instead of a `callable`
 - introduce `Scope` object in `AcessTokenInfo` instead of `string` scope value
-- remove `SodiumSigner`
+- remove `SodiumSigner` and all dependencies on _sodium_
 - drops compatibility with issued tokens, ALL tokens from `SodiumSigner` will
   become invalid!
 - add `authz_time` to the tokens to record the time of the authorization by the 
