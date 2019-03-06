@@ -31,7 +31,28 @@ On modern versions of PHP, i.e. >= 7, the library only requires
 `paragonie/constant_time_encoding`. On older versions it uses an assortment of 
 "polyfills", see `composer.json`.
 
-# Using
+# Use
+
+Currently php-jwt is not hosted on [Packagist](https://packagist.org/). It may
+be added in the future. In your `composer.json`:
+
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://git.tuxed.net/fkooman/php-oauth2-server"
+        },
+        ...
+    ],
+
+    "require": {
+        "fkooman/oauth2-server": "^4",
+        ...
+    },
+
+You can also download the signed source code archive 
+[here](https://software.tuxed.net/php-oauth2-server/download.html).
+
+# API
 
 A simple, but complete example is included in the `example/` directory. The 
 `authorize.php` script is the "authorize endpoint", the `token.php` script is
