@@ -1,6 +1,6 @@
 # ChangeLog
 
-## 4.0.0 (...)
+## 4.0.0 (2019-03-06)
 - introduce simple `LocalSigner` which uses JWT tokens using HS256
 - introduce `ClientDbInterface` and `ArrayClientDb` instead of a `callable`
 - introduce `Scope` object in `AcessTokenInfo` instead of `string` scope value
