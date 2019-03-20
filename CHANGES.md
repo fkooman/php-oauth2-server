@@ -2,7 +2,7 @@
 
 ## 5.0.0 (...)
 - implement token version check, reject tokens with wrong version
-- remove `authzTime` and replace by `authzExpiresAt` and expose in all tokens
+- fully remove `authzTime`
 
 ## 4.0.0 (2019-03-06)
 - introduce simple `LocalSigner` which uses JWT tokens using HS256

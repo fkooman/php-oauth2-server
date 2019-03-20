@@ -107,8 +107,7 @@ class BearerValidator
         return new AccessTokenInfo(
             $accessTokenInfo['user_id'],
             $accessTokenInfo['client_id'],
-            new Scope($accessTokenInfo['scope']),
-            new DateTime($accessTokenInfo['authz_expires_at'])
+            new Scope($accessTokenInfo['scope'])
         );
     }
 }

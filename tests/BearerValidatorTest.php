@@ -78,7 +78,6 @@ class BearerValidatorTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client',
                     'scope' => 'config',
-                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T01:00:00+00:00',
                 ]
             )
@@ -100,7 +99,6 @@ class BearerValidatorTest extends TestCase
                         'user_id' => 'foo',
                         'client_id' => 'code-client',
                         'scope' => 'config',
-                        'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                         'expires_at' => '2016-01-01T01:00:00+00:00',
                     ]
                 )
@@ -133,7 +131,6 @@ class BearerValidatorTest extends TestCase
                         'user_id' => 'foo',
                         'client_id' => 'code-client',
                         'scope' => 'config',
-                        'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                         'expires_at' => '2016-01-01T01:00:00+00:00',
                     ]
                 )
@@ -167,7 +164,6 @@ class BearerValidatorTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client',
                     'scope' => 'config',
-                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2015-01-01T01:00:00+00:00',
                 ]
             )
@@ -205,7 +201,6 @@ class BearerValidatorTest extends TestCase
                         'scope' => 'config',
                         'redirect_uri' => 'http://example.org/code-cb',
                         'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-                        'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                         'expires_at' => '2016-01-01T00:05:00+00:00',
                     ]
                 )

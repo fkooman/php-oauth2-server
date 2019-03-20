@@ -137,7 +137,6 @@ class OAuthServerTest extends TestCase
                     'scope' => 'config',
                     'redirect_uri' => 'http://example.org/code-cb',
                     'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T00:05:00+00:00',
                 ]
             )
@@ -183,7 +182,6 @@ class OAuthServerTest extends TestCase
                     'scope' => 'foo',
                     'redirect_uri' => 'http://example.org/code-cb',
                     'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T00:05:00+00:00',
                 ]
             )
@@ -228,7 +226,6 @@ class OAuthServerTest extends TestCase
                     'scope' => 'config',
                     'redirect_uri' => 'http://example.org/code-cb?keep=this',
                     'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T00:05:00+00:00',
                 ]
             )
@@ -258,7 +255,6 @@ class OAuthServerTest extends TestCase
                     'scope' => 'config',
                     'redirect_uri' => 'http://example.org/code-cb',
                     'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T00:05:00+00:00',
                 ]
             )
@@ -294,7 +290,6 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client',
                     'scope' => 'config',
-                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T01:00:00+00:00',
                 ]
             )
@@ -308,7 +303,7 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client',
                     'scope' => 'config',
-                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
+                    'expires_at' => '2017-01-01T00:00:00+00:00',
                 ]
             )
         );
@@ -338,7 +333,6 @@ class OAuthServerTest extends TestCase
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
                     'redirect_uri' => 'http://example.org/code-cb',
-                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T00:05:00+00:00',
                 ]
             )
@@ -364,7 +358,6 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
-                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T01:00:00+00:00',
                 ]
             )
@@ -378,7 +371,7 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
-                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
+                    'expires_at' => '2017-01-01T00:00:00+00:00',
                 ]
             )
         );
@@ -407,7 +400,6 @@ class OAuthServerTest extends TestCase
                     'scope' => 'config',
                     'redirect_uri' => 'http://example.org/code-cb',
                     'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T00:05:00+00:00',
                 ]
             )
@@ -482,7 +474,6 @@ class OAuthServerTest extends TestCase
                         'scope' => 'config',
                         'redirect_uri' => 'http://example.org/code-cb',
                         'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-                        'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                         'expires_at' => '2016-01-01T00:05:00+00:00',
                     ]
                 )
@@ -519,7 +510,6 @@ class OAuthServerTest extends TestCase
                         'scope' => 'config',
                         'redirect_uri' => 'http://example.org/code-cb',
                         'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-                        'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                         'expires_at' => '2015-01-01T00:05:00+00:00',
                     ]
                 )
@@ -556,7 +546,6 @@ class OAuthServerTest extends TestCase
                         'user_id' => 'foo',
                         'client_id' => 'code-client',
                         'scope' => 'config',
-                        'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                         'expires_at' => '2016-01-01T01:00:00+00:00',
                     ]
                 )
@@ -592,7 +581,7 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
-                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
+                    'expires_at' => '2017-01-01T00:00:00+00:00',
                 ]
             )
         );
@@ -616,7 +605,6 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
-                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T01:00:00+00:00',
                 ]
             )
@@ -645,7 +633,7 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
-                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
+                    'expires_at' => '2017-01-01T00:00:00+00:00',
                 ]
             )
         );
@@ -673,7 +661,6 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
-                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2017-01-01T00:00:00+00:00',
                 ]
             )
@@ -703,7 +690,7 @@ class OAuthServerTest extends TestCase
                         'user_id' => 'foo',
                         'client_id' => 'code-client-secret',
                         'scope' => 'config',
-                        'authz_expires_at' => '2015-01-01T00:00:00+00:00',
+                        'expires_at' => '2015-01-01T00:00:00+00:00',
                     ]
                 )
             );
@@ -736,7 +723,7 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
-                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
+                    'expires_at' => '2017-01-01T00:00:00+00:00',
                 ]
             )
         );
@@ -759,7 +746,6 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
-                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T01:00:00+00:00',
                 ]
             )

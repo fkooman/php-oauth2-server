@@ -333,14 +333,14 @@ class OAuthServer
             throw new InvalidGrantException('"authorization_code" reuse');
         }
 
-        $authzExpiresAt = new DateTime($authorizationCodeInfo['authz_expires_at']);
+        $authzExpiresAt = \date_add(clone $this->dateTime, $this->authzExpiry);
 
         $accessToken = $this->getAccessToken(
             $authorizationCodeInfo['user_id'],
             $postData['client_id'],
             $authorizationCodeInfo['scope'],
             $authorizationCodeInfo['auth_key'],
-            $authzExpiresAt
+            $this->calculateExpiresAt($authzExpiresAt)
         );
 
         $refreshToken = $this->getRefreshToken(
@@ -395,7 +395,7 @@ class OAuthServer
         }
 
         // check refresh_token expiry
-        if ($this->dateTime >= new DateTime($refreshTokenInfo['authz_expires_at'])) {
+        if ($this->dateTime >= new DateTime($refreshTokenInfo['expires_at'])) {
             throw new InvalidGrantException('"refresh_token" expired');
         }
 
@@ -415,13 +415,14 @@ class OAuthServer
             throw new InvalidGrantException('"refresh_token" is no longer authorized');
         }
 
-        $authzExpiresAt = new DateTime($refreshTokenInfo['authz_expires_at']);
+        $authzExpiresAt = new DateTime($refreshTokenInfo['expires_at']);
+
         $accessToken = $this->getAccessToken(
             $refreshTokenInfo['user_id'],
             $refreshTokenInfo['client_id'],
             $refreshTokenInfo['scope'],
             $refreshTokenInfo['auth_key'],
-            $authzExpiresAt
+            $this->calculateExpiresAt($authzExpiresAt)
         );
 
         return new JsonResponse(
@@ -447,11 +448,11 @@ class OAuthServer
      * @param string    $clientId
      * @param string    $scope
      * @param string    $authKey
-     * @param \DateTime $authzExpiresAt
+     * @param \DateTime $expiresAt
      *
      * @return string
      */
-    private function getAccessToken($userId, $clientId, $scope, $authKey, DateTime $authzExpiresAt)
+    private function getAccessToken($userId, $clientId, $scope, $authKey, DateTime $expiresAt)
     {
         // for prevention of replays of authorization codes and the revocation
         // of access tokens when an authorization code is replayed, we use the
@@ -464,8 +465,7 @@ class OAuthServer
                 'user_id' => $userId,
                 'client_id' => $clientId,
                 'scope' => $scope,
-                'authz_expires_at' => $authzExpiresAt->format(DateTime::ATOM),
-                'expires_at' => $this->calculateExpiresAt($authzExpiresAt)->format(DateTime::ATOM),
+                'expires_at' => $expiresAt->format(DateTime::ATOM),
             ]
         );
     }
@@ -475,11 +475,11 @@ class OAuthServer
      * @param string    $clientId
      * @param string    $scope
      * @param string    $authKey
-     * @param \DateTime $authzExpiresAt
+     * @param \DateTime $expiresAt
      *
      * @return string
      */
-    private function getRefreshToken($userId, $clientId, $scope, $authKey, DateTime $authzExpiresAt)
+    private function getRefreshToken($userId, $clientId, $scope, $authKey, DateTime $expiresAt)
     {
         return $this->signer->sign(
             [
@@ -489,7 +489,7 @@ class OAuthServer
                 'user_id' => $userId,
                 'client_id' => $clientId,
                 'scope' => $scope,
-                'authz_expires_at' => $authzExpiresAt->format(DateTime::ATOM),
+                'expires_at' => $expiresAt->format(DateTime::ATOM),
             ]
         );
     }
@@ -508,7 +508,6 @@ class OAuthServer
     {
         // authorization codes always expire after 5 minutes
         $expiresAt = \date_add(clone $this->dateTime, new DateInterval('PT5M'));
-        $authzExpiresAt = \date_add(clone $this->dateTime, $this->authzExpiry);
 
         // The PKCE RFC (7636) says: "The server MUST NOT include the
         // "code_challenge" value in client requests in a form that other
@@ -525,7 +524,6 @@ class OAuthServer
                 'scope' => $scope,
                 'redirect_uri' => $redirectUri,
                 'code_challenge' => $codeChallenge,
-                'authz_expires_at' => $authzExpiresAt->format(DateTime::ATOM),
                 'expires_at' => $expiresAt->format(DateTime::ATOM),
             ]
         );

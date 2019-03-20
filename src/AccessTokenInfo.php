@@ -24,8 +24,6 @@
 
 namespace fkooman\OAuth\Server;
 
-use DateTime;
-
 class AccessTokenInfo
 {
     /** @var string */
@@ -37,21 +35,17 @@ class AccessTokenInfo
     /** @var Scope */
     private $scope;
 
-    /** @var \DateTime */
-    private $authzExpiresAt;
-
     /**
      * @param string    $userId
      * @param string    $clientId
      * @param Scope     $scope
      * @param \DateTime $authzExpiresAt
      */
-    public function __construct($userId, $clientId, Scope $scope, DateTime $authzExpiresAt)
+    public function __construct($userId, $clientId, Scope $scope)
     {
         $this->userId = $userId;
         $this->clientId = $clientId;
         $this->scope = $scope;
-        $this->authzExpiresAt = $authzExpiresAt;
     }
 
     /**
@@ -76,13 +70,5 @@ class AccessTokenInfo
     public function getScope()
     {
         return $this->scope;
-    }
-
-    /**
-     * @return \DateTime
-     */
-    public function getAuthzExpiresAt()
-    {
-        return $this->authzExpiresAt;
     }
 }
