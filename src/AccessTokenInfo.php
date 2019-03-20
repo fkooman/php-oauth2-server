@@ -38,20 +38,20 @@ class AccessTokenInfo
     private $scope;
 
     /** @var \DateTime */
-    private $authzTime;
+    private $authzExpiresAt;
 
     /**
      * @param string    $userId
      * @param string    $clientId
      * @param Scope     $scope
-     * @param \DateTime $authzTime
+     * @param \DateTime $authzExpiresAt
      */
-    public function __construct($userId, $clientId, Scope $scope, DateTime $authzTime)
+    public function __construct($userId, $clientId, Scope $scope, DateTime $authzExpiresAt)
     {
         $this->userId = $userId;
         $this->clientId = $clientId;
         $this->scope = $scope;
-        $this->authzTime = $authzTime;
+        $this->authzExpiresAt = $authzExpiresAt;
     }
 
     /**
@@ -81,8 +81,8 @@ class AccessTokenInfo
     /**
      * @return \DateTime
      */
-    public function getAuthzTime()
+    public function getAuthzExpiresAt()
     {
-        return $this->authzTime;
+        return $this->authzExpiresAt;
     }
 }

@@ -85,7 +85,7 @@ class OAuthServerTest extends TestCase
         );
         $this->server->setDateTime(new DateTime('2016-01-01'));
         $this->server->setRandom(new TestRandom());
-        $this->server->setRefreshTokenExpiry(new DateInterval('P1Y'));
+        $this->server->setAuthzExpiry(new DateInterval('P1Y'));
     }
 
     public function testAuthorizeCode()
@@ -136,7 +136,7 @@ class OAuthServerTest extends TestCase
                     'scope' => 'config',
                     'redirect_uri' => 'http://example.org/code-cb',
                     'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T00:05:00+00:00',
                 ]
             )
@@ -181,7 +181,7 @@ class OAuthServerTest extends TestCase
                     'scope' => 'foo',
                     'redirect_uri' => 'http://example.org/code-cb',
                     'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T00:05:00+00:00',
                 ]
             )
@@ -225,7 +225,7 @@ class OAuthServerTest extends TestCase
                     'scope' => 'config',
                     'redirect_uri' => 'http://example.org/code-cb?keep=this',
                     'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T00:05:00+00:00',
                 ]
             )
@@ -254,7 +254,7 @@ class OAuthServerTest extends TestCase
                     'scope' => 'config',
                     'redirect_uri' => 'http://example.org/code-cb',
                     'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T00:05:00+00:00',
                 ]
             )
@@ -289,7 +289,7 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client',
                     'scope' => 'config',
-                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T01:00:00+00:00',
                 ]
             )
@@ -302,8 +302,7 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client',
                     'scope' => 'config',
-                    'authz_time' => '2016-01-01T00:00:00+00:00',
-                    'expires_at' => '2017-01-01T00:00:00+00:00',
+                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                 ]
             )
         );
@@ -332,7 +331,7 @@ class OAuthServerTest extends TestCase
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
                     'redirect_uri' => 'http://example.org/code-cb',
-                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T00:05:00+00:00',
                 ]
             )
@@ -357,7 +356,7 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
-                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T01:00:00+00:00',
                 ]
             )
@@ -370,8 +369,7 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
-                    'authz_time' => '2016-01-01T00:00:00+00:00',
-                    'expires_at' => '2017-01-01T00:00:00+00:00',
+                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                 ]
             )
         );
@@ -399,7 +397,7 @@ class OAuthServerTest extends TestCase
                     'scope' => 'config',
                     'redirect_uri' => 'http://example.org/code-cb',
                     'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T00:05:00+00:00',
                 ]
             )
@@ -473,7 +471,7 @@ class OAuthServerTest extends TestCase
                         'scope' => 'config',
                         'redirect_uri' => 'http://example.org/code-cb',
                         'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-                        'authz_time' => '2016-01-01T00:00:00+00:00',
+                        'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                         'expires_at' => '2016-01-01T00:05:00+00:00',
                     ]
                 )
@@ -509,7 +507,7 @@ class OAuthServerTest extends TestCase
                         'scope' => 'config',
                         'redirect_uri' => 'http://example.org/code-cb',
                         'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-                        'authz_time' => '2015-01-01T00:00:00+00:00',
+                        'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                         'expires_at' => '2015-01-01T00:05:00+00:00',
                     ]
                 )
@@ -545,7 +543,7 @@ class OAuthServerTest extends TestCase
                         'user_id' => 'foo',
                         'client_id' => 'code-client',
                         'scope' => 'config',
-                        'authz_time' => '2016-01-01T00:00:00+00:00',
+                        'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                         'expires_at' => '2016-01-01T01:00:00+00:00',
                     ]
                 )
@@ -568,60 +566,6 @@ class OAuthServerTest extends TestCase
         }
     }
 
-    public function testRefreshTokenWithoutExpiry()
-    {
-        // this is an "old" refresh_token that did not yet contain "expires_at"
-        //
-        // the authorization MUST exist for the refresh token to work
-        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
-
-        $providedRefreshToken = Base64UrlSafe::encodeUnpadded(
-            Json::encode(
-                [
-                    'type' => 'refresh_token',
-                    'auth_key' => 'random_1',
-                    'user_id' => 'foo',
-                    'client_id' => 'code-client',
-                    'scope' => 'config',
-                    'authz_time' => '2016-01-01T00:00:00+00:00',
-                ]
-            )
-        );
-
-        $tokenResponse = $this->server->postToken(
-            [
-                'grant_type' => 'refresh_token',
-                'refresh_token' => $providedRefreshToken,
-                'scope' => 'config',
-            ],
-            null,
-            null
-        );
-
-        $expectedAccessToken = Base64UrlSafe::encodeUnpadded(
-            Json::encode(
-                [
-                    'type' => 'access_token',
-                    'auth_key' => 'random_1',
-                    'user_id' => 'foo',
-                    'client_id' => 'code-client',
-                    'scope' => 'config',
-                    'authz_time' => '2016-01-01T00:00:00+00:00',
-                    'expires_at' => '2016-01-01T01:00:00+00:00',
-                ]
-            )
-        );
-
-        $this->assertSame(
-            [
-                'access_token' => $expectedAccessToken,
-                'token_type' => 'bearer',
-                'expires_in' => 3600,
-            ],
-            \json_decode($tokenResponse->getBody(), true)
-        );
-    }
-
     public function testNonExpiredRefreshToken()
     {
         $this->storage->storeAuthorization('foo', 'code-client-secret', 'config', 'random_1');
@@ -634,8 +578,7 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
-                    'authz_time' => '2016-01-01T00:00:00+00:00',
-                    'expires_at' => '2017-01-01T00:00:00+00:00',
+                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                 ]
             )
         );
@@ -658,7 +601,7 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
-                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T01:00:00+00:00',
                 ]
             )
@@ -686,8 +629,7 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
-                    'authz_time' => '2016-01-01T00:00:00+00:00',
-                    'expires_at' => '2017-01-01T00:00:00+00:00',
+                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                 ]
             )
         );
@@ -714,7 +656,7 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
-                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2017-01-01T00:00:00+00:00',
                 ]
             )
@@ -743,8 +685,7 @@ class OAuthServerTest extends TestCase
                         'user_id' => 'foo',
                         'client_id' => 'code-client-secret',
                         'scope' => 'config',
-                        'authz_time' => '2014-01-01T00:00:00+00:00',
-                        'expires_at' => '2015-01-01T00:00:00+00:00',
+                        'authz_expires_at' => '2015-01-01T00:00:00+00:00',
                     ]
                 )
             );
@@ -758,6 +699,7 @@ class OAuthServerTest extends TestCase
                 'code-client-secret',
                 '123456'
             );
+            $this->fail();
         } catch (InvalidGrantException $e) {
             $this->assertSame('"refresh_token" expired', $e->getDescription());
         }
@@ -775,8 +717,7 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
-                    'authz_time' => '2016-01-01T00:00:00+00:00',
-                    'expires_at' => '2017-01-01T00:00:00+00:00',
+                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                 ]
             )
         );
@@ -798,7 +739,7 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
-                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T01:00:00+00:00',
                 ]
             )

@@ -53,8 +53,8 @@ class OAuthServer
     /** @var \DateInterval */
     private $accessTokenExpiry;
 
-    /** @var \DateInterval|null */
-    private $refreshTokenExpiry = null;
+    /** @var \DateInterval */
+    private $authzExpiry;
 
     /**
      * @param StorageInterface  $storage
@@ -69,6 +69,7 @@ class OAuthServer
         $this->random = new Random();
         $this->dateTime = new DateTime();
         $this->accessTokenExpiry = new DateInterval('PT1H'); // 1 hour
+        $this->authzExpiry = new DateInterval('P1Y');        // 1 year
     }
 
     /**
@@ -102,13 +103,13 @@ class OAuthServer
     }
 
     /**
-     * @param \DateInterval $refreshTokenExpiry
+     * @param \DateInterval $authzExpiry
      *
      * @return void
      */
-    public function setRefreshTokenExpiry(DateInterval $refreshTokenExpiry)
+    public function setAuthzExpiry(DateInterval $authzExpiry)
     {
-        $this->refreshTokenExpiry = $refreshTokenExpiry;
+        $this->authzExpiry = $authzExpiry;
     }
 
     /**
@@ -306,13 +307,14 @@ class OAuthServer
             throw new InvalidGrantException('"authorization_code" reuse');
         }
 
+        $authzExpiresAt = new DateTime($authorizationCodeInfo['authz_expires_at']);
+
         $accessToken = $this->getAccessToken(
             $authorizationCodeInfo['user_id'],
             $postData['client_id'],
             $authorizationCodeInfo['scope'],
             $authorizationCodeInfo['auth_key'],
-            $authorizationCodeInfo['authz_time'],
-            \date_add(clone $this->dateTime, $this->accessTokenExpiry)
+            $authzExpiresAt
         );
 
         $refreshToken = $this->getRefreshToken(
@@ -320,7 +322,7 @@ class OAuthServer
             $postData['client_id'],
             $authorizationCodeInfo['scope'],
             $authorizationCodeInfo['auth_key'],
-            $authorizationCodeInfo['authz_time']
+            $authzExpiresAt
         );
 
         return new JsonResponse(
@@ -328,7 +330,7 @@ class OAuthServer
                 'access_token' => $accessToken,
                 'refresh_token' => $refreshToken,
                 'token_type' => 'bearer',
-                'expires_in' => $this->dateIntervalToSeconds($this->accessTokenExpiry),
+                'expires_in' => $this->calculateExpiresIn($authzExpiresAt),
             ],
             // The authorization server MUST include the HTTP "Cache-Control"
             // response header field [RFC2616] with a value of "no-store" in any
@@ -361,12 +363,9 @@ class OAuthServer
             throw new InvalidGrantException(\sprintf('expected "refresh_token", got "%s"', $refreshTokenInfo['type']));
         }
 
-        // check refresh_token expiry, refresh token expiry is OPTIONAL,
-        // disable by default...
-        if (\array_key_exists('expires_at', $refreshTokenInfo)) {
-            if ($this->dateTime >= new DateTime($refreshTokenInfo['expires_at'])) {
-                throw new InvalidGrantException('"refresh_token" expired');
-            }
+        // check refresh_token expiry
+        if ($this->dateTime >= new DateTime($refreshTokenInfo['authz_expires_at'])) {
+            throw new InvalidGrantException('"refresh_token" expired');
         }
 
         $clientInfo = $this->getClient($refreshTokenInfo['client_id']);
@@ -385,34 +384,20 @@ class OAuthServer
             throw new InvalidGrantException('"refresh_token" is no longer authorized');
         }
 
-        $accessTokenExpiresIn = $this->dateIntervalToSeconds($this->accessTokenExpiry);
-        $accessTokenExpiresAt = \date_add(clone $this->dateTime, $this->accessTokenExpiry);
-        // make sure the access_token expires at the same time as the
-        // refresh_token
-        if (\array_key_exists('expires_at', $refreshTokenInfo)) {
-            $refreshTokenExpiresAt = new DateTime($refreshTokenInfo['expires_at']);
-            if ($accessTokenExpiresAt > $refreshTokenExpiresAt) {
-                // access_token would outlive the refresh_token, adjust expiry
-                // of access_token...
-                $accessTokenExpiresIn = $accessTokenExpiresIn - ($accessTokenExpiresAt->getTimestamp() - $refreshTokenExpiresAt->getTimestamp());
-                $accessTokenExpiresAt = $refreshTokenExpiresAt;
-            }
-        }
-
+        $authzExpiresAt = new DateTime($refreshTokenInfo['authz_expires_at']);
         $accessToken = $this->getAccessToken(
             $refreshTokenInfo['user_id'],
             $refreshTokenInfo['client_id'],
             $refreshTokenInfo['scope'],
             $refreshTokenInfo['auth_key'],
-            $refreshTokenInfo['authz_time'],
-            $accessTokenExpiresAt
+            $authzExpiresAt
         );
 
         return new JsonResponse(
             [
                 'access_token' => $accessToken,
                 'token_type' => 'bearer',
-                'expires_in' => $accessTokenExpiresIn,
+                'expires_in' => $this->calculateExpiresIn($authzExpiresAt),
             ],
             // The authorization server MUST include the HTTP "Cache-Control"
             // response header field [RFC2616] with a value of "no-store" in any
@@ -431,12 +416,11 @@ class OAuthServer
      * @param string    $clientId
      * @param string    $scope
      * @param string    $authKey
-     * @param string    $authzTime
-     * @param \DateTime $expiresAt
+     * @param \DateTime $authzExpiresAt
      *
      * @return string
      */
-    private function getAccessToken($userId, $clientId, $scope, $authKey, $authzTime, DateTime $expiresAt)
+    private function getAccessToken($userId, $clientId, $scope, $authKey, DateTime $authzExpiresAt)
     {
         // for prevention of replays of authorization codes and the revocation
         // of access tokens when an authorization code is replayed, we use the
@@ -448,38 +432,33 @@ class OAuthServer
                 'user_id' => $userId,
                 'client_id' => $clientId,
                 'scope' => $scope,
-                'authz_time' => $authzTime,
-                'expires_at' => $expiresAt->format(DateTime::ATOM),
+                'authz_expires_at' => $authzExpiresAt->format(DateTime::ATOM),
+                'expires_at' => $this->calculateExpiresAt($authzExpiresAt)->format(DateTime::ATOM),
             ]
         );
     }
 
     /**
-     * @param string $userId
-     * @param string $clientId
-     * @param string $scope
-     * @param string $authKey
-     * @param string $authzTime
+     * @param string    $userId
+     * @param string    $clientId
+     * @param string    $scope
+     * @param string    $authKey
+     * @param \DateTime $authzExpiresAt
      *
      * @return string
      */
-    private function getRefreshToken($userId, $clientId, $scope, $authKey, $authzTime)
+    private function getRefreshToken($userId, $clientId, $scope, $authKey, DateTime $authzExpiresAt)
     {
-        $refreshTokenInfo = [
-            'type' => 'refresh_token',
-            'auth_key' => $authKey, // to bind it to the authorization
-            'user_id' => $userId,
-            'client_id' => $clientId,
-            'scope' => $scope,
-            'authz_time' => $authzTime,
-        ];
-
-        if (null !== $this->refreshTokenExpiry) {
-            $expiresAt = \date_add(clone $this->dateTime, $this->refreshTokenExpiry);
-            $refreshTokenInfo['expires_at'] = $expiresAt->format(DateTime::ATOM);
-        }
-
-        return $this->signer->sign($refreshTokenInfo);
+        return $this->signer->sign(
+            [
+                'type' => 'refresh_token',
+                'auth_key' => $authKey, // to bind it to the authorization
+                'user_id' => $userId,
+                'client_id' => $clientId,
+                'scope' => $scope,
+                'authz_expires_at' => $authzExpiresAt->format(DateTime::ATOM),
+            ]
+        );
     }
 
     /**
@@ -494,8 +473,9 @@ class OAuthServer
      */
     private function getAuthorizationCode($userId, $clientId, $scope, $redirectUri, $authKey, $codeChallenge)
     {
-        // authorization codes expire after 5 minutes
+        // authorization codes always expire after 5 minutes
         $expiresAt = \date_add(clone $this->dateTime, new DateInterval('PT5M'));
+        $authzExpiresAt = \date_add(clone $this->dateTime, $this->authzExpiry);
 
         // The PKCE RFC (7636) says: "The server MUST NOT include the
         // "code_challenge" value in client requests in a form that other
@@ -511,7 +491,7 @@ class OAuthServer
                 'scope' => $scope,
                 'redirect_uri' => $redirectUri,
                 'code_challenge' => $codeChallenge,
-                'authz_time' => $this->dateTime->format(DateTime::ATOM),
+                'authz_expires_at' => $authzExpiresAt->format(DateTime::ATOM),
                 'expires_at' => $expiresAt->format(DateTime::ATOM),
             ]
         );
@@ -621,13 +601,38 @@ class OAuthServer
     }
 
     /**
-     * @param \DateInterval $dateInterval
+     * @param \DateTime $authzExpiresAt
+     *
+     * @return \DateTime
+     */
+    private function calculateExpiresAt(DateTime $authzExpiresAt)
+    {
+        // make sure an access_token can never outlive a refresh_token
+        $expiresAt = \date_add(clone $this->dateTime, $this->accessTokenExpiry);
+        // expiresAt can be false! XXX
+        if ($expiresAt > $authzExpiresAt) {
+            $expiresAt = $authzExpiresAt;
+        }
+
+        return $expiresAt;
+    }
+
+    /**
+     * @param \DateTime $authzExpiresAt
      *
      * @return int
      */
-    private function dateIntervalToSeconds(DateInterval $dateInterval)
+    private function calculateExpiresIn(DateTime $authzExpiresAt)
     {
-        return \date_add(clone $this->dateTime, $dateInterval)->getTimestamp() - $this->dateTime->getTimestamp();
+        // make sure an access_token can never outlive a refresh_token
+        $expiresAt = \date_add(clone $this->dateTime, $this->accessTokenExpiry);
+        // expiresAt can be false! XXX
+        $expiresIn = $expiresAt->getTimestamp() - $this->dateTime->getTimestamp();
+        if ($expiresAt > $authzExpiresAt) {
+            $expiresIn = $authzExpiresAt->getTimestamp() - $this->dateTime->getTimestamp();
+        }
+
+        return $expiresIn;
     }
 
     /**

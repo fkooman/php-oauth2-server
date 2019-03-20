@@ -47,7 +47,7 @@ try {
     // expire access_token after 30 seconds, and refresh_token after 5 minutes
     // DEFAULT: 1 hour / 180 days
     $oauthServer->setAccessTokenExpiry(new DateInterval('PT30S'));
-    $oauthServer->setRefreshTokenExpiry(new DateInterval('PT5M'));
+    $oauthServer->setAuthzExpiry(new DateInterval('PT5M'));
 
     // user authentication MUST take place, here we ignore this for simplicity,
     // and assume the user_id is "foo"
