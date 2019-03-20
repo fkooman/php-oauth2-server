@@ -57,7 +57,7 @@ class OAuthServer
     private $accessTokenExpiry;
 
     /** @var \DateInterval */
-    private $authzExpiry;
+    private $refreshTokenExpiry;
 
     /**
      * @param StorageInterface  $storage
@@ -72,7 +72,7 @@ class OAuthServer
         $this->random = new Random();
         $this->dateTime = new DateTime();
         $this->accessTokenExpiry = new DateInterval('PT1H'); // 1 hour
-        $this->authzExpiry = new DateInterval('P1Y');        // 1 year
+        $this->refreshTokenExpiry = new DateInterval('P1Y');        // 1 year
     }
 
     /**
@@ -106,13 +106,13 @@ class OAuthServer
     }
 
     /**
-     * @param \DateInterval $authzExpiry
+     * @param \DateInterval $refreshTokenExpiry
      *
      * @return void
      */
-    public function setAuthzExpiry(DateInterval $authzExpiry)
+    public function setRefreshTokenExpiry(DateInterval $refreshTokenExpiry)
     {
-        $this->authzExpiry = $authzExpiry;
+        $this->refreshTokenExpiry = $refreshTokenExpiry;
     }
 
     /**
@@ -328,7 +328,7 @@ class OAuthServer
             $authorizationCodeInfo['auth_key']
         );
 
-        $authzExpiresAt = \date_add(clone $this->dateTime, $this->authzExpiry);
+        $authzExpiresAt = \date_add(clone $this->dateTime, $this->refreshTokenExpiry);
 
         $accessToken = $this->getAccessToken(
             $authorizationCodeInfo['user_id'],

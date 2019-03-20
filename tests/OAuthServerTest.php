@@ -24,7 +24,6 @@
 
 namespace fkooman\OAuth\Server\Tests;
 
-use DateInterval;
 use DateTime;
 use fkooman\OAuth\Server\ArrayClientDb;
 use fkooman\OAuth\Server\Exception\InvalidClientException;
@@ -85,7 +84,6 @@ class OAuthServerTest extends TestCase
         );
         $this->server->setDateTime(new DateTime('2016-01-01'));
         $this->server->setRandom(new TestRandom());
-        $this->server->setAuthzExpiry(new DateInterval('P1Y'));
     }
 
     public function testAuthorizeCode()
