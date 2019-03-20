@@ -325,7 +325,7 @@ class OAuthServer
         }
 
         // make sure the authKey was not used before
-        if (false === $this->storage->logAuthKey($authorizationCodeInfo['auth_key'])) {
+        if (false === $this->storage->logAuthKey($authorizationCodeInfo['auth_key'], $this->dateTime)) {
             // authKey was used before, delete authorization according to spec
             // so refresh_tokens and access_tokens can no longer be used
             $this->storage->deleteAuthKey($authorizationCodeInfo['auth_key']);

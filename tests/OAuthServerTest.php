@@ -461,7 +461,7 @@ class OAuthServerTest extends TestCase
     {
         try {
             $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
-            $this->storage->logAuthKey('random_1');
+            $this->storage->logAuthKey('random_1', new DateTime('2016-01-01'));
 
             $providedCode = Base64UrlSafe::encodeUnpadded(
                 Json::encode(

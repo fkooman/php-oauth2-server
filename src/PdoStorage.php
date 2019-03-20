@@ -24,6 +24,7 @@
 
 namespace fkooman\OAuth\Server;
 
+use DateTime;
 use PDO;
 use PDOException;
 
@@ -46,11 +47,12 @@ class PdoStorage implements StorageInterface
     }
 
     /**
-     * @param string $authKey
+     * @param string    $authKey
+     * @param \DateTime $authTime
      *
      * @return bool
      */
-    public function logAuthKey($authKey)
+    public function logAuthKey($authKey, DateTime $authTime)
     {
         // we will attempt to store the authKey in the database, there is a
         // duplicate contraint, so it will fail if the identical authKey is
@@ -58,14 +60,17 @@ class PdoStorage implements StorageInterface
         try {
             $stmt = $this->db->prepare(
                 'INSERT INTO auth_key_log (
-                    auth_key
+                    auth_key,
+                    auth_time
                  ) 
                  VALUES(
-                    :auth_key
+                    :auth_key,
+                    :auth_time
                  )'
             );
 
             $stmt->bindValue(':auth_key', $authKey, PDO::PARAM_STR);
+            $stmt->bindValue(':auth_time', $authTime->format(DateTime::ATOM), PDO::PARAM_STR);
             $stmt->execute();
 
             return true;
@@ -211,6 +216,7 @@ class PdoStorage implements StorageInterface
             )',
             'CREATE TABLE IF NOT EXISTS auth_key_log (
                 auth_key VARCHAR(255) NOT NULL,
+                auth_time VARCHAR(255) NOT NULL,
                 UNIQUE(auth_key)
             )',
         ];

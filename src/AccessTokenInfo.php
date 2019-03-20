@@ -36,10 +36,9 @@ class AccessTokenInfo
     private $scope;
 
     /**
-     * @param string    $userId
-     * @param string    $clientId
-     * @param Scope     $scope
-     * @param \DateTime $authzExpiresAt
+     * @param string $userId
+     * @param string $clientId
+     * @param Scope  $scope
      */
     public function __construct($userId, $clientId, Scope $scope)
     {
