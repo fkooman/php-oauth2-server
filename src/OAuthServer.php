@@ -141,18 +141,18 @@ class OAuthServer
      * user (resource owner).
      *
      * @param array<string,string> $getData
-     * @param ResourceOwner        $resourceOwner
+     * @param string               $userId
      *
      * @return Http\Response|false
      */
-    public function getAuthorizeResponse(array $getData, ResourceOwner $resourceOwner)
+    public function getAuthorizeResponse(array $getData, $userId)
     {
         $clientInfo = $this->validateAuthorizeRequest($getData);
         if ($clientInfo->isApprovalRequired()) {
             return false;
         }
 
-        return $this->postAuthorize($getData, ['approve' => 'yes'], $resourceOwner);
+        return $this->postAuthorize($getData, ['approve' => 'yes'], $userId);
     }
 
     /**
@@ -163,11 +163,11 @@ class OAuthServer
      *
      * @param array<string,string> $getData
      * @param array<string,string> $postData
-     * @param ResourceOwner        $resourceOwner
+     * @param string               $userId
      *
      * @return \fkooman\OAuth\Server\Http\RedirectResponse
      */
-    public function postAuthorize(array $getData, array $postData, ResourceOwner $resourceOwner)
+    public function postAuthorize(array $getData, array $postData, $userId)
     {
         $this->validateAuthorizeRequest($getData);
         RequestValidator::validateAuthorizePostParameters($postData);
@@ -189,7 +189,7 @@ class OAuthServer
         // authorization code, access tokens(s) and refresh token
         $authKey = $this->random->get(16);
         $this->storage->storeAuthorization(
-            $resourceOwner->getUserId(),
+            $userId,
             $getData['client_id'],
             $getData['scope'],
             $authKey
@@ -197,7 +197,7 @@ class OAuthServer
 
         // return authorization code
         $authorizationCode = $this->getAuthorizationCode(
-            $resourceOwner,
+            $userId,
             $getData['client_id'],
             $getData['scope'],
             $getData['redirect_uri'],
@@ -336,7 +336,7 @@ class OAuthServer
         $authzExpiresAt = new DateTime($authorizationCodeInfo['authz_expires_at']);
 
         $accessToken = $this->getAccessToken(
-            ResourceOwner::fromEncodedString($authorizationCodeInfo['resource_owner']),
+            $authorizationCodeInfo['user_id'],
             $postData['client_id'],
             $authorizationCodeInfo['scope'],
             $authorizationCodeInfo['auth_key'],
@@ -344,7 +344,7 @@ class OAuthServer
         );
 
         $refreshToken = $this->getRefreshToken(
-            ResourceOwner::fromEncodedString($authorizationCodeInfo['resource_owner']),
+            $authorizationCodeInfo['user_id'],
             $postData['client_id'],
             $authorizationCodeInfo['scope'],
             $authorizationCodeInfo['auth_key'],
@@ -417,7 +417,7 @@ class OAuthServer
 
         $authzExpiresAt = new DateTime($refreshTokenInfo['authz_expires_at']);
         $accessToken = $this->getAccessToken(
-            ResourceOwner::fromEncodedString($refreshTokenInfo['resource_owner']),
+            $refreshTokenInfo['user_id'],
             $refreshTokenInfo['client_id'],
             $refreshTokenInfo['scope'],
             $refreshTokenInfo['auth_key'],
@@ -443,15 +443,15 @@ class OAuthServer
     }
 
     /**
-     * @param ResourceOwner $resourceOwner
-     * @param string        $clientId
-     * @param string        $scope
-     * @param string        $authKey
-     * @param \DateTime     $authzExpiresAt
+     * @param string    $userId
+     * @param string    $clientId
+     * @param string    $scope
+     * @param string    $authKey
+     * @param \DateTime $authzExpiresAt
      *
      * @return string
      */
-    private function getAccessToken(ResourceOwner $resourceOwner, $clientId, $scope, $authKey, DateTime $authzExpiresAt)
+    private function getAccessToken($userId, $clientId, $scope, $authKey, DateTime $authzExpiresAt)
     {
         // for prevention of replays of authorization codes and the revocation
         // of access tokens when an authorization code is replayed, we use the
@@ -461,7 +461,7 @@ class OAuthServer
                 'v' => self::TOKEN_VERSION,
                 'type' => 'access_token',
                 'auth_key' => $authKey, // to bind it to the authorization
-                'resource_owner' => $resourceOwner->encode(),
+                'user_id' => $userId,
                 'client_id' => $clientId,
                 'scope' => $scope,
                 'authz_expires_at' => $authzExpiresAt->format(DateTime::ATOM),
@@ -471,22 +471,22 @@ class OAuthServer
     }
 
     /**
-     * @param ResourceOwner $resourceOwner
-     * @param string        $clientId
-     * @param string        $scope
-     * @param string        $authKey
-     * @param \DateTime     $authzExpiresAt
+     * @param string    $userId
+     * @param string    $clientId
+     * @param string    $scope
+     * @param string    $authKey
+     * @param \DateTime $authzExpiresAt
      *
      * @return string
      */
-    private function getRefreshToken(ResourceOwner $resourceOwner, $clientId, $scope, $authKey, DateTime $authzExpiresAt)
+    private function getRefreshToken($userId, $clientId, $scope, $authKey, DateTime $authzExpiresAt)
     {
         return $this->signer->sign(
             [
                 'v' => self::TOKEN_VERSION,
                 'type' => 'refresh_token',
                 'auth_key' => $authKey, // to bind it to the authorization
-                'resource_owner' => $resourceOwner->encode(),
+                'user_id' => $userId,
                 'client_id' => $clientId,
                 'scope' => $scope,
                 'authz_expires_at' => $authzExpiresAt->format(DateTime::ATOM),
@@ -495,16 +495,16 @@ class OAuthServer
     }
 
     /**
-     * @param ResourceOwner $resourceOwner
-     * @param string        $clientId
-     * @param string        $scope
-     * @param string        $redirectUri
-     * @param string        $authKey
-     * @param string|null   $codeChallenge required for "public" clients
+     * @param string      $userId
+     * @param string      $clientId
+     * @param string      $scope
+     * @param string      $redirectUri
+     * @param string      $authKey
+     * @param string|null $codeChallenge required for "public" clients
      *
      * @return string
      */
-    private function getAuthorizationCode(ResourceOwner $resourceOwner, $clientId, $scope, $redirectUri, $authKey, $codeChallenge)
+    private function getAuthorizationCode($userId, $clientId, $scope, $redirectUri, $authKey, $codeChallenge)
     {
         // authorization codes always expire after 5 minutes
         $expiresAt = \date_add(clone $this->dateTime, new DateInterval('PT5M'));
@@ -520,7 +520,7 @@ class OAuthServer
                 'v' => self::TOKEN_VERSION,
                 'type' => 'authorization_code',
                 'auth_key' => $authKey,
-                'resource_owner' => $resourceOwner->encode(),
+                'user_id' => $userId,
                 'client_id' => $clientId,
                 'scope' => $scope,
                 'redirect_uri' => $redirectUri,

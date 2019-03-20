@@ -28,8 +28,8 @@ use DateTime;
 
 class AccessTokenInfo
 {
-    /** @var ResourceOwner */
-    private $resourceOwner;
+    /** @var string */
+    private $userId;
 
     /** @var string */
     private $clientId;
@@ -41,25 +41,25 @@ class AccessTokenInfo
     private $authzExpiresAt;
 
     /**
-     * @param ResourceOwner $resourceOwner
-     * @param string        $clientId
-     * @param Scope         $scope
-     * @param \DateTime     $authzExpiresAt
+     * @param string    $userId
+     * @param string    $clientId
+     * @param Scope     $scope
+     * @param \DateTime $authzExpiresAt
      */
-    public function __construct(ResourceOwner $resourceOwner, $clientId, Scope $scope, DateTime $authzExpiresAt)
+    public function __construct($userId, $clientId, Scope $scope, DateTime $authzExpiresAt)
     {
-        $this->resourceOwner = $resourceOwner;
+        $this->userId = $userId;
         $this->clientId = $clientId;
         $this->scope = $scope;
         $this->authzExpiresAt = $authzExpiresAt;
     }
 
     /**
-     * @return ResourceOwner
+     * @return string
      */
-    public function getResourceOwner()
+    public function getUserId()
     {
-        return $this->resourceOwner;
+        return $this->userId;
     }
 
     /**

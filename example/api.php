@@ -63,7 +63,7 @@ try {
             // use "helper" JsonResponse here, typically your HTTP framework
             // will provide this...
             $jsonResponse = new JsonResponse(
-                ['user_id' => $accessTokenInfo->getResourceOwner()->getUserId()]
+                ['user_id' => $accessTokenInfo->getUserId()]
             );
             $jsonResponse->send();
             break;

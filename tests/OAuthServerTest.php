@@ -33,7 +33,6 @@ use fkooman\OAuth\Server\Exception\InvalidRequestException;
 use fkooman\OAuth\Server\Json;
 use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\PdoStorage;
-use fkooman\OAuth\Server\ResourceOwner;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use PDO;
 use PHPUnit\Framework\TestCase;
@@ -124,7 +123,7 @@ class OAuthServerTest extends TestCase
                 'code_challenge_method' => 'S256',
                 'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
             ],
-            new ResourceOwner('foo')
+            'foo'
         );
 
         $expectedCode = Base64UrlSafe::encodeUnpadded(
@@ -133,7 +132,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'authorization_code',
                     'auth_key' => 'random_1',
-                    'resource_owner' => self::encodeResourceOwner('foo'),
+                    'user_id' => 'foo',
                     'client_id' => 'code-client',
                     'scope' => 'config',
                     'redirect_uri' => 'http://example.org/code-cb',
@@ -169,7 +168,7 @@ class OAuthServerTest extends TestCase
             [
                 'approve' => 'yes',
             ],
-            new ResourceOwner('foo')
+            'foo'
         );
         $this->assertSame(302, $authorizeResponse->getStatusCode());
 
@@ -179,7 +178,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'authorization_code',
                     'auth_key' => 'random_1',
-                    'resource_owner' => self::encodeResourceOwner('foo'),
+                    'user_id' => 'foo',
                     'client_id' => 'code-client',
                     'scope' => 'foo',
                     'redirect_uri' => 'http://example.org/code-cb',
@@ -214,7 +213,7 @@ class OAuthServerTest extends TestCase
             [
                 'approve' => 'yes',
             ],
-            new ResourceOwner('foo')
+            'foo'
         );
         $this->assertSame(302, $authorizeResponse->getStatusCode());
 
@@ -224,7 +223,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'authorization_code',
                     'auth_key' => 'random_1',
-                    'resource_owner' => self::encodeResourceOwner('foo'),
+                    'user_id' => 'foo',
                     'client_id' => 'code-client-query-redirect',
                     'scope' => 'config',
                     'redirect_uri' => 'http://example.org/code-cb?keep=this',
@@ -254,7 +253,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'authorization_code',
                     'auth_key' => 'random_1',
-                    'resource_owner' => self::encodeResourceOwner('foo'),
+                    'user_id' => 'foo',
                     'client_id' => 'code-client',
                     'scope' => 'config',
                     'redirect_uri' => 'http://example.org/code-cb',
@@ -292,7 +291,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'access_token',
                     'auth_key' => 'random_1',
-                    'resource_owner' => self::encodeResourceOwner('foo'),
+                    'user_id' => 'foo',
                     'client_id' => 'code-client',
                     'scope' => 'config',
                     'authz_expires_at' => '2017-01-01T00:00:00+00:00',
@@ -306,7 +305,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'refresh_token',
                     'auth_key' => 'random_1',
-                    'resource_owner' => self::encodeResourceOwner('foo'),
+                    'user_id' => 'foo',
                     'client_id' => 'code-client',
                     'scope' => 'config',
                     'authz_expires_at' => '2017-01-01T00:00:00+00:00',
@@ -335,7 +334,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'authorization_code',
                     'auth_key' => 'random_1',
-                    'resource_owner' => self::encodeResourceOwner('foo'),
+                    'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
                     'redirect_uri' => 'http://example.org/code-cb',
@@ -362,7 +361,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'access_token',
                     'auth_key' => 'random_1',
-                    'resource_owner' => self::encodeResourceOwner('foo'),
+                    'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
                     'authz_expires_at' => '2017-01-01T00:00:00+00:00',
@@ -376,7 +375,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'refresh_token',
                     'auth_key' => 'random_1',
-                    'resource_owner' => self::encodeResourceOwner('foo'),
+                    'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
                     'authz_expires_at' => '2017-01-01T00:00:00+00:00',
@@ -403,7 +402,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'authorization_code',
                     'auth_key' => 'random_1',
-                    'resource_owner' => self::encodeResourceOwner('foo'),
+                    'user_id' => 'foo',
                     'client_id' => 'code-client',
                     'scope' => 'config',
                     'redirect_uri' => 'http://example.org/code-cb',
@@ -478,7 +477,7 @@ class OAuthServerTest extends TestCase
                         'v' => OAuthServer::TOKEN_VERSION,
                         'type' => 'authorization_code',
                         'auth_key' => 'random_1',
-                        'resource_owner' => self::encodeResourceOwner('foo'),
+                        'user_id' => 'foo',
                         'client_id' => 'code-client',
                         'scope' => 'config',
                         'redirect_uri' => 'http://example.org/code-cb',
@@ -515,7 +514,7 @@ class OAuthServerTest extends TestCase
                         'v' => OAuthServer::TOKEN_VERSION,
                         'type' => 'authorization_code',
                         'auth_key' => 'random_1',
-                        'resource_owner' => self::encodeResourceOwner('foo'),
+                        'user_id' => 'foo',
                         'client_id' => 'code-client',
                         'scope' => 'config',
                         'redirect_uri' => 'http://example.org/code-cb',
@@ -554,7 +553,7 @@ class OAuthServerTest extends TestCase
                         'v' => OAuthServer::TOKEN_VERSION,
                         'type' => 'access_token',
                         'auth_key' => 'random_1',
-                        'resource_owner' => self::encodeResourceOwner('foo'),
+                        'user_id' => 'foo',
                         'client_id' => 'code-client',
                         'scope' => 'config',
                         'authz_expires_at' => '2017-01-01T00:00:00+00:00',
@@ -590,7 +589,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'refresh_token',
                     'auth_key' => 'random_1',
-                    'resource_owner' => self::encodeResourceOwner('foo'),
+                    'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
                     'authz_expires_at' => '2017-01-01T00:00:00+00:00',
@@ -614,7 +613,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'access_token',
                     'auth_key' => 'random_1',
-                    'resource_owner' => self::encodeResourceOwner('foo'),
+                    'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
                     'authz_expires_at' => '2017-01-01T00:00:00+00:00',
@@ -643,7 +642,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'refresh_token',
                     'auth_key' => 'random_1',
-                    'resource_owner' => self::encodeResourceOwner('foo'),
+                    'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
                     'authz_expires_at' => '2017-01-01T00:00:00+00:00',
@@ -671,7 +670,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'access_token',
                     'auth_key' => 'random_1',
-                    'resource_owner' => self::encodeResourceOwner('foo'),
+                    'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
                     'authz_expires_at' => '2017-01-01T00:00:00+00:00',
@@ -701,7 +700,7 @@ class OAuthServerTest extends TestCase
                         'v' => OAuthServer::TOKEN_VERSION,
                         'type' => 'refresh_token',
                         'auth_key' => 'random_1',
-                        'resource_owner' => self::encodeResourceOwner('foo'),
+                        'user_id' => 'foo',
                         'client_id' => 'code-client-secret',
                         'scope' => 'config',
                         'authz_expires_at' => '2015-01-01T00:00:00+00:00',
@@ -734,7 +733,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'refresh_token',
                     'auth_key' => 'random_1',
-                    'resource_owner' => self::encodeResourceOwner('foo'),
+                    'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
                     'authz_expires_at' => '2017-01-01T00:00:00+00:00',
@@ -757,7 +756,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'access_token',
                     'auth_key' => 'random_1',
-                    'resource_owner' => self::encodeResourceOwner('foo'),
+                    'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
                     'authz_expires_at' => '2017-01-01T00:00:00+00:00',
@@ -808,17 +807,5 @@ class OAuthServerTest extends TestCase
         $this->assertSame(1, \count($this->storage->getAuthorizations('foo')));
         $this->storage->deleteAuthorization('foo', 'code-client', 'config');
         $this->assertSame(0, \count($this->storage->getAuthorizations('foo')));
-    }
-
-    /**
-     * @param string $userId
-     *
-     * @return string
-     */
-    private static function encodeResourceOwner($userId)
-    {
-        $resourceOwner = new ResourceOwner($userId);
-
-        return $resourceOwner->encode();
     }
 }
