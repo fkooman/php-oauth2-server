@@ -24,65 +24,76 @@
 
 namespace fkooman\OAuth\Server;
 
-use DateTime;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 
-class AccessTokenInfo
+class ResourceOwner
 {
-    /** @var ResourceOwner */
-    private $resourceOwner;
-
     /** @var string */
-    private $clientId;
+    private $userId;
 
-    /** @var Scope */
-    private $scope;
-
-    /** @var \DateTime */
-    private $authzExpiresAt;
+    /** @var string|null */
+    private $extData;
 
     /**
-     * @param ResourceOwner $resourceOwner
-     * @param string        $clientId
-     * @param Scope         $scope
-     * @param \DateTime     $authzExpiresAt
+     * @param string      $userId
+     * @param string|null $extData
      */
-    public function __construct(ResourceOwner $resourceOwner, $clientId, Scope $scope, DateTime $authzExpiresAt)
+    public function __construct($userId, $extData = null)
     {
-        $this->resourceOwner = $resourceOwner;
-        $this->clientId = $clientId;
-        $this->scope = $scope;
-        $this->authzExpiresAt = $authzExpiresAt;
-    }
-
-    /**
-     * @return ResourceOwner
-     */
-    public function getResourceOwner()
-    {
-        return $this->resourceOwner;
+        $this->userId = $userId;
+        $this->extData = $extData;
     }
 
     /**
      * @return string
      */
-    public function getClientId()
+    public function getUserId()
     {
-        return $this->clientId;
+        return $this->userId;
     }
 
     /**
-     * @return Scope
+     * @param string $extData
+     *
+     * @return void
      */
-    public function getScope()
+    public function setExtData($extData)
     {
-        return $this->scope;
+        $this->extData = $extData;
     }
 
     /**
-     * @return \DateTime
+     * @return string|null
      */
-    public function getAuthzExpiresAt()
+    public function getExtData()
     {
-        return $this->authzExpiresAt;
+        return $this->extData;
+    }
+
+    /**
+     * @return string
+     */
+    public function encode()
+    {
+        return Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'user_id' => $this->userId,
+                    'ext_data' => $this->extData,
+                ]
+            )
+        );
+    }
+
+    /**
+     * @param string $encodedString
+     *
+     * @return self
+     */
+    public static function fromEncodedString($encodedString)
+    {
+        $userData = Json::decode(Base64UrlSafe::decode($encodedString));
+
+        return new self($userData['user_id'], $userData['ext_data']);
     }
 }

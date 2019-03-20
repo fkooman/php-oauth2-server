@@ -31,6 +31,7 @@ use fkooman\OAuth\Server\Exception\InvalidTokenException;
 use fkooman\OAuth\Server\Json;
 use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\PdoStorage;
+use fkooman\OAuth\Server\ResourceOwner;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use PDO;
 use PHPUnit\Framework\TestCase;
@@ -75,7 +76,7 @@ class BearerValidatorTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'access_token',
                     'auth_key' => 'random_1',
-                    'user_id' => 'foo',
+                    'resource_owner' => self::encodeResourceOwner('foo'),
                     'client_id' => 'code-client',
                     'scope' => 'config',
                     'authz_expires_at' => '2017-01-01T00:00:00+00:00',
@@ -84,7 +85,9 @@ class BearerValidatorTest extends TestCase
             )
         );
         $accessTokenInfo = $this->validator->validate(\sprintf('Bearer %s', $providedAccessToken));
-        $this->assertSame('foo', $accessTokenInfo->getUserId());
+        $this->assertSame('foo', $accessTokenInfo->getResourceOwner()->getUserId());
+        $this->assertNull($accessTokenInfo->getResourceOwner()->getExtData());
+        $this->assertSame('2017-01-01T00:00:00+00:00', $accessTokenInfo->getAuthzExpiresAt()->format(DateTime::ATOM));
         $this->assertSame('config', (string) $accessTokenInfo->getScope());
     }
 
@@ -97,7 +100,7 @@ class BearerValidatorTest extends TestCase
                         'v' => OAuthServer::TOKEN_VERSION,
                         'type' => 'access_token',
                         'auth_key' => 'invalid_sig',
-                        'user_id' => 'foo',
+                        'resource_owner' => self::encodeResourceOwner('foo'),
                         'client_id' => 'code-client',
                         'scope' => 'config',
                         'authz_expires_at' => '2017-01-01T00:00:00+00:00',
@@ -130,7 +133,7 @@ class BearerValidatorTest extends TestCase
                         'v' => OAuthServer::TOKEN_VERSION,
                         'type' => 'access_token',
                         'auth_key' => 'random_1',
-                        'user_id' => 'foo',
+                        'resource_owner' => self::encodeResourceOwner('foo'),
                         'client_id' => 'code-client',
                         'scope' => 'config',
                         'authz_expires_at' => '2017-01-01T00:00:00+00:00',
@@ -164,7 +167,7 @@ class BearerValidatorTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'access_token',
                     'auth_key' => 'random_1',
-                    'user_id' => 'foo',
+                    'resource_owner' => self::encodeResourceOwner('foo'),
                     'client_id' => 'code-client',
                     'scope' => 'config',
                     'authz_expires_at' => '2017-01-01T00:00:00+00:00',
@@ -200,7 +203,7 @@ class BearerValidatorTest extends TestCase
                         'v' => OAuthServer::TOKEN_VERSION,
                         'type' => 'authorization_code',
                         'auth_key' => 'random_1',
-                        'user_id' => 'foo',
+                        'resource_owner' => self::encodeResourceOwner('foo'),
                         'client_id' => 'code-client',
                         'scope' => 'config',
                         'redirect_uri' => 'http://example.org/code-cb',
@@ -216,5 +219,17 @@ class BearerValidatorTest extends TestCase
         } catch (InvalidTokenException $e) {
             $this->assertSame('expected "access_token", got "authorization_code"', $e->getDescription());
         }
+    }
+
+    /**
+     * @param string $userId
+     *
+     * @return string
+     */
+    private static function encodeResourceOwner($userId)
+    {
+        $resourceOwner = new ResourceOwner($userId);
+
+        return $resourceOwner->encode();
     }
 }

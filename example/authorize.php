@@ -31,6 +31,7 @@ use fkooman\OAuth\Server\Http\Response;
 use fkooman\OAuth\Server\LocalSigner;
 use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\PdoStorage;
+use fkooman\OAuth\Server\ResourceOwner;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 
 try {
@@ -50,8 +51,8 @@ try {
     $oauthServer->setAuthzExpiry(new DateInterval('PT5M'));
 
     // user authentication MUST take place, here we ignore this for simplicity,
-    // and assume the user_id is "foo"
-    $userId = 'foo';
+    // and assume the resource owner has user_id "foo"
+    $resourceOwner = new ResourceOwner('foo');
 
     // typically you would handle this with your framework or HTTP framework...
     switch ($_SERVER['REQUEST_METHOD']) {
@@ -59,7 +60,7 @@ try {
         case 'HEAD':
             // optional "shortcut" to avoid "Approval" dialog if the client has
             // the flag "require_approval" set to false
-            if ($authorizeResponse = $oauthServer->getAuthorizeResponse($_GET, $userId)) {
+            if ($authorizeResponse = $oauthServer->getAuthorizeResponse($_GET, $resourceOwner)) {
                 $authorizeResponse->send();
                 break;
             }
@@ -80,7 +81,7 @@ try {
             break;
         case 'POST':
             // you MUST implement CSRF protection!
-            $httpResponse = $oauthServer->postAuthorize($_GET, $_POST, $userId);
+            $httpResponse = $oauthServer->postAuthorize($_GET, $_POST, $resourceOwner);
             $httpResponse->send();
             break;
         default:
