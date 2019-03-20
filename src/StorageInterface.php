@@ -75,4 +75,11 @@ interface StorageInterface
      * @return void
      */
     public function deleteAuthorization($userId, $clientId, $scope);
+
+    /**
+     * @param string $userId
+     *
+     * @return void
+     */
+    public function deleteAuthorizations($userId);
 }
