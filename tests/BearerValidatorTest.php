@@ -29,6 +29,7 @@ use fkooman\OAuth\Server\ArrayClientDb;
 use fkooman\OAuth\Server\BearerValidator;
 use fkooman\OAuth\Server\Exception\InvalidTokenException;
 use fkooman\OAuth\Server\Json;
+use fkooman\OAuth\Server\OAuthServer;
 use fkooman\OAuth\Server\PdoStorage;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use PDO;
@@ -71,12 +72,13 @@ class BearerValidatorTest extends TestCase
         $providedAccessToken = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
+                    'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'access_token',
                     'auth_key' => 'random_1',
                     'user_id' => 'foo',
                     'client_id' => 'code-client',
                     'scope' => 'config',
-                    'authz_time' => '2016-01-01T00:00:00+00:00',
+                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2016-01-01T01:00:00+00:00',
                 ]
             )
@@ -92,12 +94,13 @@ class BearerValidatorTest extends TestCase
             $providedAccessToken = Base64UrlSafe::encodeUnpadded(
                 Json::encode(
                     [
+                        'v' => OAuthServer::TOKEN_VERSION,
                         'type' => 'access_token',
                         'auth_key' => 'invalid_sig',
                         'user_id' => 'foo',
                         'client_id' => 'code-client',
                         'scope' => 'config',
-                        'authz_time' => '2016-01-01T00:00:00+00:00',
+                        'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                         'expires_at' => '2016-01-01T01:00:00+00:00',
                     ]
                 )
@@ -124,12 +127,13 @@ class BearerValidatorTest extends TestCase
             $providedAccessToken = Base64UrlSafe::encodeUnpadded(
                 Json::encode(
                     [
+                        'v' => OAuthServer::TOKEN_VERSION,
                         'type' => 'access_token',
                         'auth_key' => 'random_1',
                         'user_id' => 'foo',
                         'client_id' => 'code-client',
                         'scope' => 'config',
-                        'authz_time' => '2016-01-01T00:00:00+00:00',
+                        'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                         'expires_at' => '2016-01-01T01:00:00+00:00',
                     ]
                 )
@@ -157,12 +161,13 @@ class BearerValidatorTest extends TestCase
         $providedAccessToken = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
+                    'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'access_token',
                     'auth_key' => 'random_1',
                     'user_id' => 'foo',
                     'client_id' => 'code-client',
                     'scope' => 'config',
-                    'authz_time' => '2015-01-01T00:00:00+00:00',
+                    'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                     'expires_at' => '2015-01-01T01:00:00+00:00',
                 ]
             )
@@ -192,6 +197,7 @@ class BearerValidatorTest extends TestCase
             $providedAccessToken = Base64UrlSafe::encodeUnpadded(
                 Json::encode(
                     [
+                        'v' => OAuthServer::TOKEN_VERSION,
                         'type' => 'authorization_code',
                         'auth_key' => 'random_1',
                         'user_id' => 'foo',
@@ -199,7 +205,7 @@ class BearerValidatorTest extends TestCase
                         'scope' => 'config',
                         'redirect_uri' => 'http://example.org/code-cb',
                         'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
-                        'authz_time' => '2016-01-01T00:00:00+00:00',
+                        'authz_expires_at' => '2017-01-01T00:00:00+00:00',
                         'expires_at' => '2016-01-01T00:05:00+00:00',
                     ]
                 )

@@ -129,6 +129,7 @@ class OAuthServerTest extends TestCase
         $expectedCode = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
+                    'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'authorization_code',
                     'auth_key' => 'random_1',
                     'user_id' => 'foo',
@@ -174,6 +175,7 @@ class OAuthServerTest extends TestCase
         $expectedCode = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
+                    'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'authorization_code',
                     'auth_key' => 'random_1',
                     'user_id' => 'foo',
@@ -218,6 +220,7 @@ class OAuthServerTest extends TestCase
         $expectedCode = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
+                    'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'authorization_code',
                     'auth_key' => 'random_1',
                     'user_id' => 'foo',
@@ -247,6 +250,7 @@ class OAuthServerTest extends TestCase
         $providedCode = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
+                    'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'authorization_code',
                     'auth_key' => 'random_1',
                     'user_id' => 'foo',
@@ -284,6 +288,7 @@ class OAuthServerTest extends TestCase
         $expectedAccessToken = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
+                    'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'access_token',
                     'auth_key' => 'random_1',
                     'user_id' => 'foo',
@@ -297,6 +302,7 @@ class OAuthServerTest extends TestCase
         $expectedRefreshToken = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
+                    'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'refresh_token',
                     'auth_key' => 'random_1',
                     'user_id' => 'foo',
@@ -325,6 +331,7 @@ class OAuthServerTest extends TestCase
         $providedCode = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
+                    'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'authorization_code',
                     'auth_key' => 'random_1',
                     'user_id' => 'foo',
@@ -351,6 +358,7 @@ class OAuthServerTest extends TestCase
         $expectedAccessToken = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
+                    'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'access_token',
                     'auth_key' => 'random_1',
                     'user_id' => 'foo',
@@ -364,6 +372,7 @@ class OAuthServerTest extends TestCase
         $expectedRefreshToken = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
+                    'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'refresh_token',
                     'auth_key' => 'random_1',
                     'user_id' => 'foo',
@@ -390,6 +399,7 @@ class OAuthServerTest extends TestCase
         $providedCode = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
+                    'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'authorization_code',
                     'auth_key' => 'random_1',
                     'user_id' => 'foo',
@@ -464,6 +474,7 @@ class OAuthServerTest extends TestCase
             $providedCode = Base64UrlSafe::encodeUnpadded(
                 Json::encode(
                     [
+                        'v' => OAuthServer::TOKEN_VERSION,
                         'type' => 'authorization_code',
                         'auth_key' => 'random_1',
                         'user_id' => 'foo',
@@ -500,6 +511,7 @@ class OAuthServerTest extends TestCase
             $providedCode = Base64UrlSafe::encodeUnpadded(
                 Json::encode(
                     [
+                        'v' => OAuthServer::TOKEN_VERSION,
                         'type' => 'authorization_code',
                         'auth_key' => 'random_1',
                         'user_id' => 'foo',
@@ -538,6 +550,7 @@ class OAuthServerTest extends TestCase
             $providedCode = Base64UrlSafe::encodeUnpadded(
                 Json::encode(
                     [
+                        'v' => OAuthServer::TOKEN_VERSION,
                         'type' => 'access_token',
                         'auth_key' => 'random_1',
                         'user_id' => 'foo',
@@ -573,6 +586,7 @@ class OAuthServerTest extends TestCase
         $providedRefreshToken = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
+                    'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'refresh_token',
                     'auth_key' => 'random_1',
                     'user_id' => 'foo',
@@ -596,6 +610,7 @@ class OAuthServerTest extends TestCase
         $expectedAccessToken = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
+                    'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'access_token',
                     'auth_key' => 'random_1',
                     'user_id' => 'foo',
@@ -624,6 +639,7 @@ class OAuthServerTest extends TestCase
         $providedRefreshToken = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
+                    'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'refresh_token',
                     'auth_key' => 'random_1',
                     'user_id' => 'foo',
@@ -651,6 +667,7 @@ class OAuthServerTest extends TestCase
         $expectedAccessToken = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
+                    'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'access_token',
                     'auth_key' => 'random_1',
                     'user_id' => 'foo',
@@ -680,6 +697,7 @@ class OAuthServerTest extends TestCase
             $providedRefreshToken = Base64UrlSafe::encodeUnpadded(
                 Json::encode(
                     [
+                        'v' => OAuthServer::TOKEN_VERSION,
                         'type' => 'refresh_token',
                         'auth_key' => 'random_1',
                         'user_id' => 'foo',
@@ -712,6 +730,7 @@ class OAuthServerTest extends TestCase
         $providedRefreshToken = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
+                    'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'refresh_token',
                     'auth_key' => 'random_1',
                     'user_id' => 'foo',
@@ -734,6 +753,7 @@ class OAuthServerTest extends TestCase
         $expectedAccessToken = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
+                    'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'access_token',
                     'auth_key' => 'random_1',
                     'user_id' => 'foo',

@@ -35,6 +35,9 @@ use ParagonIE\ConstantTime\Base64UrlSafe;
 
 class OAuthServer
 {
+    /** @var int */
+    const TOKEN_VERSION = 5;
+
     /** @var StorageInterface */
     private $storage;
 
@@ -236,6 +239,24 @@ class OAuthServer
     }
 
     /**
+     * @param array $tokenInfo
+     *
+     * @return bool
+     */
+    public static function checkTokenVersion(array $tokenInfo)
+    {
+        // check version
+        if (!\array_key_exists('v', $tokenInfo)) {
+            return false;
+        }
+        if (self::TOKEN_VERSION !== $tokenInfo['v']) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Validate the request to the "/authorize" endpoint.
      *
      * @param array<string,string> $getData
@@ -274,6 +295,11 @@ class OAuthServer
         // verify the authorization code signature
         if (false === $authorizationCodeInfo = $this->signer->verify($postData['code'])) {
             throw new InvalidGrantException('"authorization_code" has invalid signature');
+        }
+
+        // check version
+        if (false === self::checkTokenVersion($authorizationCodeInfo)) {
+            throw new InvalidGrantException('"authorization_code" has wrong version');
         }
 
         // make sure we got an authorization_code
@@ -358,6 +384,11 @@ class OAuthServer
             throw new InvalidGrantException('"refresh_token" has invalid signature');
         }
 
+        // check version
+        if (false === self::checkTokenVersion($refreshTokenInfo)) {
+            throw new InvalidGrantException('"refresh_token" has wrong version');
+        }
+
         // make sure we got a refresh_token
         if ('refresh_token' !== $refreshTokenInfo['type']) {
             throw new InvalidGrantException(\sprintf('expected "refresh_token", got "%s"', $refreshTokenInfo['type']));
@@ -427,6 +458,7 @@ class OAuthServer
         // "auth_key" as a tag for the issued access tokens
         return $this->signer->sign(
             [
+                'v' => self::TOKEN_VERSION,
                 'type' => 'access_token',
                 'auth_key' => $authKey, // to bind it to the authorization
                 'user_id' => $userId,
@@ -451,6 +483,7 @@ class OAuthServer
     {
         return $this->signer->sign(
             [
+                'v' => self::TOKEN_VERSION,
                 'type' => 'refresh_token',
                 'auth_key' => $authKey, // to bind it to the authorization
                 'user_id' => $userId,
@@ -484,6 +517,7 @@ class OAuthServer
         // "S256" and never "plain".
         return $this->signer->sign(
             [
+                'v' => self::TOKEN_VERSION,
                 'type' => 'authorization_code',
                 'auth_key' => $authKey,
                 'user_id' => $userId,

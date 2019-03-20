@@ -37,7 +37,7 @@ class BearerValidator
     private $clientDb;
 
     /** @var SignerInterface */
-    private $verifier;
+    private $signer;
 
     /** @var \DateTime */
     private $dateTime;
@@ -47,11 +47,11 @@ class BearerValidator
      * @param ClientDbInterface $clientDb
      * @param SignerInterface   $verifier
      */
-    public function __construct(StorageInterface $storage, ClientDbInterface $clientDb, SignerInterface $verifier)
+    public function __construct(StorageInterface $storage, ClientDbInterface $clientDb, SignerInterface $signer)
     {
         $this->storage = $storage;
         $this->clientDb = $clientDb;
-        $this->verifier = $verifier;
+        $this->signer = $signer;
         $this->dateTime = new DateTime();
     }
 
@@ -74,8 +74,13 @@ class BearerValidator
     {
         SyntaxValidator::validateBearerToken($authorizationHeader);
         $providedToken = Binary::safeSubstr($authorizationHeader, 7);
-        if (false === $accessTokenInfo = $this->verifier->verify($providedToken)) {
+        if (false === $accessTokenInfo = $this->signer->verify($providedToken)) {
             throw new InvalidTokenException('"access_token" has invalid signature');
+        }
+
+        // check version
+        if (false === OAuthServer::checkTokenVersion($accessTokenInfo)) {
+            throw new InvalidTokenException('"access_token" has wrong version');
         }
 
         // make sure we got an access_token
@@ -103,7 +108,7 @@ class BearerValidator
             $accessTokenInfo['user_id'],
             $accessTokenInfo['client_id'],
             new Scope($accessTokenInfo['scope']),
-            new DateTime($accessTokenInfo['authz_time'])
+            new DateTime($accessTokenInfo['authz_expires_at'])
         );
     }
 }
