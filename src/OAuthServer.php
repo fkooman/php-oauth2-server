@@ -72,7 +72,7 @@ class OAuthServer
         $this->random = new Random();
         $this->dateTime = new DateTime();
         $this->accessTokenExpiry = new DateInterval('PT1H'); // 1 hour
-        $this->refreshTokenExpiry = new DateInterval('P1Y');        // 1 year
+        $this->refreshTokenExpiry = new DateInterval('P1Y'); // 1 year
     }
 
     /**
