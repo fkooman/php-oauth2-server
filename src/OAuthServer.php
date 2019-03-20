@@ -319,12 +319,12 @@ class OAuthServer
         // verify code_verifier (iff public client)
         $this->verifyCodeVerifier($clientInfo, $authorizationCodeInfo, $postData);
 
-        // 1. check if the authorization is still there
+        // check if the authorization is still there
         if (false === $this->storage->hasAuthorization($authorizationCodeInfo['auth_key'])) {
             throw new InvalidGrantException('"authorization_code" is no longer authorized');
         }
 
-        // 2. make sure the authKey was not used before
+        // make sure the authKey was not used before
         if (false === $this->storage->logAuthKey($authorizationCodeInfo['auth_key'])) {
             // authKey was used before, delete authorization according to spec
             // so refresh_tokens and access_tokens can no longer be used
