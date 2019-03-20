@@ -188,12 +188,6 @@ class OAuthServer
         // every "authorization" has a unique key that is bound to the
         // authorization code, access tokens(s) and refresh token
         $authKey = $this->random->get(16);
-        $this->storage->storeAuthorization(
-            $userId,
-            $getData['client_id'],
-            $getData['scope'],
-            $authKey
-        );
 
         // return authorization code
         $authorizationCode = $this->getAuthorizationCode(
@@ -319,19 +313,20 @@ class OAuthServer
         // verify code_verifier (iff public client)
         $this->verifyCodeVerifier($clientInfo, $authorizationCodeInfo, $postData);
 
-        // check if the authorization is still there
-        if (false === $this->storage->hasAuthorization($authorizationCodeInfo['auth_key'])) {
-            throw new InvalidGrantException('"authorization_code" is no longer authorized');
-        }
-
-        // make sure the authKey was not used before
-        if (false === $this->storage->logAuthKey($authorizationCodeInfo['auth_key'], $this->dateTime)) {
-            // authKey was used before, delete authorization according to spec
-            // so refresh_tokens and access_tokens can no longer be used
+        // check whether authorization_code was already used
+        if ($this->storage->hasAuthorization($authorizationCodeInfo['auth_key'])) {
             $this->storage->deleteAuthKey($authorizationCodeInfo['auth_key']);
 
-            throw new InvalidGrantException('"authorization_code" reuse');
+            throw new InvalidGrantException('"authorization_code" was used before');
         }
+
+        // store the authorization
+        $this->storage->storeAuthorization(
+            $authorizationCodeInfo['user_id'],
+            $authorizationCodeInfo['client_id'],
+            $authorizationCodeInfo['scope'],
+            $authorizationCodeInfo['auth_key']
+        );
 
         $authzExpiresAt = \date_add(clone $this->dateTime, $this->authzExpiry);
 

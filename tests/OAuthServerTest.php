@@ -242,8 +242,6 @@ class OAuthServerTest extends TestCase
 
     public function testPostToken()
     {
-        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
-
         $providedCode = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
@@ -321,8 +319,6 @@ class OAuthServerTest extends TestCase
 
     public function testPostTokenSecret()
     {
-        $this->storage->storeAuthorization('foo', 'code-client-secret', 'config', 'random_1');
-
         $providedCode = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
@@ -461,7 +457,6 @@ class OAuthServerTest extends TestCase
     {
         try {
             $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
-            $this->storage->logAuthKey('random_1', new DateTime('2016-01-01'));
 
             $providedCode = Base64UrlSafe::encodeUnpadded(
                 Json::encode(
@@ -492,7 +487,7 @@ class OAuthServerTest extends TestCase
             );
             $this->fail();
         } catch (InvalidGrantException $e) {
-            $this->assertSame('"authorization_code" reuse', $e->getDescription());
+            $this->assertSame('"authorization_code" was used before', $e->getDescription());
         }
     }
 

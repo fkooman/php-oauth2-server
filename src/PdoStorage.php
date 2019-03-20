@@ -24,9 +24,7 @@
 
 namespace fkooman\OAuth\Server;
 
-use DateTime;
 use PDO;
-use PDOException;
 
 class PdoStorage implements StorageInterface
 {
@@ -44,40 +42,6 @@ class PdoStorage implements StorageInterface
         }
 
         $this->db = $db;
-    }
-
-    /**
-     * @param string    $authKey
-     * @param \DateTime $authTime
-     *
-     * @return bool
-     */
-    public function logAuthKey($authKey, DateTime $authTime)
-    {
-        // we will attempt to store the authKey in the database, there is a
-        // duplicate contraint, so it will fail if the identical authKey is
-        // already there
-        try {
-            $stmt = $this->db->prepare(
-                'INSERT INTO auth_key_log (
-                    auth_key,
-                    auth_time
-                 ) 
-                 VALUES(
-                    :auth_key,
-                    :auth_time
-                 )'
-            );
-
-            $stmt->bindValue(':auth_key', $authKey, PDO::PARAM_STR);
-            $stmt->bindValue(':auth_time', $authTime->format(DateTime::ATOM), PDO::PARAM_STR);
-            $stmt->execute();
-
-            return true;
-        } catch (PDOException $e) {
-            // insert failed, so this is a replay of the authorization code
-            return false;
-        }
     }
 
     /**
@@ -142,7 +106,6 @@ class PdoStorage implements StorageInterface
     {
         $stmt = $this->db->prepare(
             'SELECT
-                auth_key,
                 client_id,
                 scope
              FROM authorizations
@@ -212,11 +175,6 @@ class PdoStorage implements StorageInterface
                 user_id VARCHAR(255) NOT NULL,
                 client_id VARCHAR(255) NOT NULL,
                 scope VARCHAR(255) NOT NULL,
-                UNIQUE(auth_key)
-            )',
-            'CREATE TABLE IF NOT EXISTS auth_key_log (
-                auth_key VARCHAR(255) NOT NULL,
-                auth_time VARCHAR(255) NOT NULL,
                 UNIQUE(auth_key)
             )',
         ];

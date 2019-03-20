@@ -24,18 +24,8 @@
 
 namespace fkooman\OAuth\Server;
 
-use DateTime;
-
 interface StorageInterface
 {
-    /**
-     * @param string    $authKey
-     * @param \DateTime $authTime
-     *
-     * @return bool
-     */
-    public function logAuthKey($authKey, DateTime $authTime);
-
     /**
      * @param string $authKey
      *
