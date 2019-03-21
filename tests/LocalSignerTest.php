@@ -30,12 +30,18 @@ use PHPUnit\Framework\TestCase;
 
 class LocalSignerTest extends TestCase
 {
+    /**
+     * @return void
+     */
     public function testSign()
     {
         $localSigner = new LocalSigner(Base64UrlSafe::decode('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
         $this->assertSame('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIifQ.p0tzemsBv_XCxD8laFsr1iXdq0U-mGnYPmto_ogVXj8', $localSigner->sign(['foo' => 'bar']));
     }
 
+    /**
+     * @return void
+     */
     public function testVerify()
     {
         $localSigner = new LocalSigner(Base64UrlSafe::decode('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
@@ -47,12 +53,18 @@ class LocalSignerTest extends TestCase
         );
     }
 
+    /**
+     * @return void
+     */
     public function testNoDot()
     {
         $localSigner = new LocalSigner(Base64UrlSafe::decode('pCPTNvjDByHTwqjTlcWOX9xEG0cWJsHf4B1Vc6GJ_3g'));
         $this->assertFalse($localSigner->verify('NO_DOT'));
     }
 
+    /**
+     * @return void
+     */
     public function testVerifyWrongKey()
     {
         $localSigner = new LocalSigner(Base64UrlSafe::decode('5Zo4eJa3Nni5RPn1bz0uAZao41RqAnWJqD9dYrjVqiU'));

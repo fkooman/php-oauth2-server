@@ -43,6 +43,9 @@ class BearerValidatorTest extends TestCase
     /** @var \fkooman\OAuth\Server\PdoStorage */
     private $storage;
 
+    /**
+     * @return void
+     */
     public function setUp()
     {
         $clientDb = new ArrayClientDb(
@@ -65,6 +68,9 @@ class BearerValidatorTest extends TestCase
         $this->validator->setDateTime(new DateTime('2016-01-01'));
     }
 
+    /**
+     * @return void
+     */
     public function testValidToken()
     {
         $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1', new DateTime('2016-01-01'));
@@ -87,6 +93,9 @@ class BearerValidatorTest extends TestCase
         $this->assertSame('config', (string) $accessTokenInfo->getScope());
     }
 
+    /**
+     * @return void
+     */
     public function testInvalidSignature()
     {
         try {
@@ -112,6 +121,9 @@ class BearerValidatorTest extends TestCase
         }
     }
 
+    /**
+     * @return void
+     */
     public function testDeletedClient()
     {
         try {
@@ -143,6 +155,9 @@ class BearerValidatorTest extends TestCase
         }
     }
 
+    /**
+     * @return void
+     */
     public function testInvalidSyntax()
     {
         try {
@@ -153,6 +168,9 @@ class BearerValidatorTest extends TestCase
         }
     }
 
+    /**
+     * @return void
+     */
     public function testExpiredToken()
     {
         $providedAccessToken = Base64UrlSafe::encodeUnpadded(
@@ -177,6 +195,9 @@ class BearerValidatorTest extends TestCase
         }
     }
 
+    /**
+     * @return void
+     */
     public function testBasicAuthentication()
     {
         try {
@@ -187,6 +208,9 @@ class BearerValidatorTest extends TestCase
         }
     }
 
+    /**
+     * @return void
+     */
     public function testCodeAsAccessToken()
     {
         try {

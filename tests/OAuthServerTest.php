@@ -44,6 +44,9 @@ class OAuthServerTest extends TestCase
     /** @var \fkooman\OAuth\Server\OAuthServer */
     private $server;
 
+    /**
+     * @return void
+     */
     public function setUp()
     {
         $clientDb = new ArrayClientDb(
@@ -86,6 +89,9 @@ class OAuthServerTest extends TestCase
         $this->server->setRandom(new TestRandom());
     }
 
+    /**
+     * @return void
+     */
     public function testAuthorizeCode()
     {
         $this->assertSame(
@@ -109,6 +115,9 @@ class OAuthServerTest extends TestCase
         );
     }
 
+    /**
+     * @return void
+     */
     public function testGetAuthorizeResponse()
     {
         $authorizeResponse = $this->server->getAuthorizeResponse(
@@ -150,6 +159,9 @@ class OAuthServerTest extends TestCase
         );
     }
 
+    /**
+     * @return void
+     */
     public function testAuthorizeCodePost()
     {
         $authorizeResponse = $this->server->postAuthorize(
@@ -194,6 +206,9 @@ class OAuthServerTest extends TestCase
         );
     }
 
+    /**
+     * @return void
+     */
     public function testAuthorizeTokenPostRedirectUriWithQuery()
     {
         $authorizeResponse = $this->server->postAuthorize(
@@ -238,6 +253,9 @@ class OAuthServerTest extends TestCase
         );
     }
 
+    /**
+     * @return void
+     */
     public function testPostToken()
     {
         $providedCode = Base64UrlSafe::encodeUnpadded(
@@ -314,6 +332,9 @@ class OAuthServerTest extends TestCase
         );
     }
 
+    /**
+     * @return void
+     */
     public function testPostTokenSecret()
     {
         $providedCode = Base64UrlSafe::encodeUnpadded(
@@ -379,6 +400,9 @@ class OAuthServerTest extends TestCase
         );
     }
 
+    /**
+     * @return void
+     */
     public function testPostTokenMissingCodeVerifierPublicClient()
     {
         $providedCode = Base64UrlSafe::encodeUnpadded(
@@ -415,6 +439,9 @@ class OAuthServerTest extends TestCase
         }
     }
 
+    /**
+     * @return void
+     */
     public function testBrokenPostToken()
     {
         try {
@@ -430,6 +457,9 @@ class OAuthServerTest extends TestCase
         }
     }
 
+    /**
+     * @return void
+     */
     public function testPostTokenSecretInvalid()
     {
         try {
@@ -449,6 +479,9 @@ class OAuthServerTest extends TestCase
         }
     }
 
+    /**
+     * @return void
+     */
     public function testPostReuseCode()
     {
         try {
@@ -487,6 +520,9 @@ class OAuthServerTest extends TestCase
         }
     }
 
+    /**
+     * @return void
+     */
     public function testExpiredCode()
     {
         try {
@@ -523,6 +559,9 @@ class OAuthServerTest extends TestCase
         }
     }
 
+    /**
+     * @return void
+     */
     public function testAccessTokenAsCode()
     {
         try {
@@ -559,6 +598,9 @@ class OAuthServerTest extends TestCase
         }
     }
 
+    /**
+     * @return void
+     */
     public function testRefreshTokenWithoutExplicitScope()
     {
         $this->storage->storeAuthorization('foo', 'code-client-secret', 'config', 'random_1', new DateTime('2016-01-01'));
@@ -610,6 +652,9 @@ class OAuthServerTest extends TestCase
         );
     }
 
+    /**
+     * @return void
+     */
     public function testLoopbackClient()
     {
         $this->assertSame(
@@ -633,6 +678,9 @@ class OAuthServerTest extends TestCase
         );
     }
 
+    /**
+     * @return void
+     */
     public function testDeleteAuthorization()
     {
         $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1', new DateTime('2016-01-01'));
