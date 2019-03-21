@@ -301,7 +301,7 @@ class OAuthServer
 
         // check whether authorization_code was already used
         if ($this->storage->hasAuthorization($authorizationCodeInfo['auth_key'])) {
-            $this->storage->deleteAuthKey($authorizationCodeInfo['auth_key']);
+            $this->storage->deleteAuthorization($authorizationCodeInfo['auth_key']);
 
             throw new InvalidGrantException('"authorization_code" was used before');
         }

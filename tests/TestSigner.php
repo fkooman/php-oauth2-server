@@ -35,7 +35,7 @@ use ParagonIE\ConstantTime\Base64UrlSafe;
 class TestSigner implements SignerInterface
 {
     /**
-     * @param array $codeTokenInfo
+     * @param array<string,mixed> $codeTokenInfo
      *
      * @return string
      */
@@ -47,7 +47,7 @@ class TestSigner implements SignerInterface
     /**
      * @param string $codeTokenString
      *
-     * @return false|array
+     * @return false|array<string,mixed>
      */
     public function verify($codeTokenString)
     {

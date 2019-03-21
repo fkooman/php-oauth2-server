@@ -46,7 +46,7 @@ try {
             $authorization['client_id'],
             $authorization['scope']
         );
-        $storage->deleteAuthorization($userId, $authorization['client_id'], $authorization['scope']);
+        $storage->deleteAuthorization($authorization['auth_key']);
     }
     echo '</ul></body></html>';
 } catch (Exception $e) {

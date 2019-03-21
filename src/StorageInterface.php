@@ -49,7 +49,7 @@ interface StorageInterface
     /**
      * @param string $userId
      *
-     * @return array
+     * @return array<array>
      */
     public function getAuthorizations($userId);
 
@@ -58,14 +58,5 @@ interface StorageInterface
      *
      * @return void
      */
-    public function deleteAuthKey($authKey);
-
-    /**
-     * @param string $userId
-     * @param string $clientId
-     * @param string $scope
-     *
-     * @return void
-     */
-    public function deleteAuthorization($userId, $clientId, $scope);
+    public function deleteAuthorization($authKey);
 }

@@ -108,35 +108,19 @@ class PdoStorage implements StorageInterface
     /**
      * @param string $userId
      *
-     * @return array
+     * @return array<array>
      */
     public function getAuthorizations($userId)
     {
-        // we need a subquery because the same user_id/client_id/scope can have
-        // multiple entries and we want to obtain the auth_time from the _last_
-        // authorization for this user_id/client_id/scope pair
         $stmt = $this->db->prepare(
             'SELECT
+                auth_key,
                 client_id,
                 scope,
-                (
-                    SELECT
-                        auth_time
-                    FROM
-                        authorizations
-                    WHERE
-                        user_id = :user_id
-                    AND
-                        a.client_id = client_id
-                    AND
-                        a.scope = scope
-                    ORDER BY auth_time DESC
-                ) AS auth_time
-             FROM authorizations a
+                auth_time
+             FROM authorizations
              WHERE
-                user_id = :user_id
-             GROUP BY
-                client_id, scope'
+                user_id = :user_id'
         );
 
         $stmt->bindValue(':user_id', $userId, PDO::PARAM_STR);
@@ -150,7 +134,7 @@ class PdoStorage implements StorageInterface
      *
      * @return void
      */
-    public function deleteAuthKey($authKey)
+    public function deleteAuthorization($authKey)
     {
         $stmt = $this->db->prepare(
             'DELETE FROM
@@ -160,32 +144,6 @@ class PdoStorage implements StorageInterface
         );
 
         $stmt->bindValue(':auth_key', $authKey, PDO::PARAM_STR);
-        $stmt->execute();
-    }
-
-    /**
-     * @param string $userId
-     * @param string $clientId
-     * @param string $scope
-     *
-     * @return void
-     */
-    public function deleteAuthorization($userId, $clientId, $scope)
-    {
-        $stmt = $this->db->prepare(
-            'DELETE FROM
-                authorizations
-             WHERE
-                user_id = :user_id
-             AND
-                client_id = :client_id
-             AND
-                scope = :scope'
-        );
-
-        $stmt->bindValue(':user_id', $userId, PDO::PARAM_STR);
-        $stmt->bindValue(':client_id', $clientId, PDO::PARAM_STR);
-        $stmt->bindValue(':scope', $scope, PDO::PARAM_STR);
         $stmt->execute();
     }
 

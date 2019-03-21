@@ -38,7 +38,7 @@ use PHPUnit\Framework\TestCase;
 
 class OAuthServerTest extends TestCase
 {
-    /** @var \fkooman\OAuth\Server\Storage */
+    /** @var \fkooman\OAuth\Server\StorageInterface */
     private $storage;
 
     /** @var \fkooman\OAuth\Server\OAuthServer */
@@ -639,31 +639,8 @@ class OAuthServerTest extends TestCase
         $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_2', new DateTime('2016-01-01'));
         $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_3', new DateTime('2016-01-01'));
         $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_4', new DateTime('2016-01-01'));
-        $this->assertSame(1, \count($this->storage->getAuthorizations('foo')));
-        $this->storage->deleteAuthorization('foo', 'code-client', 'config');
-        $this->assertSame(0, \count($this->storage->getAuthorizations('foo')));
-    }
-
-    public function testGetAuthorizations()
-    {
-        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1', new DateTime('2016-01-01'));
-        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_2', new DateTime('2016-01-02'));
-        $this->storage->storeAuthorization('foo', 'code-client', 'config xyz', 'random_3', new DateTime('2016-01-03'));
-        $this->storage->storeAuthorization('bar', 'code-client', 'config', 'random_4', new DateTime('2016-01-04'));
-        $this->assertSame(
-            [
-                [
-                    'client_id' => 'code-client',
-                    'scope' => 'config',
-                    'auth_time' => '2016-01-02T00:00:00+00:00',
-                ],
-                [
-                    'client_id' => 'code-client',
-                    'scope' => 'config xyz',
-                    'auth_time' => '2016-01-03T00:00:00+00:00',
-                ],
-            ],
-            $this->storage->getAuthorizations('foo')
-        );
+        $this->assertSame(4, \count($this->storage->getAuthorizations('foo')));
+        $this->storage->deleteAuthorization('random_1');
+        $this->assertSame(3, \count($this->storage->getAuthorizations('foo')));
     }
 }
