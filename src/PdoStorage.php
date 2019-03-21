@@ -112,6 +112,9 @@ class PdoStorage implements StorageInterface
      */
     public function getAuthorizations($userId)
     {
+        // we need a subquery because the same user_id/client_id/scope can have
+        // multiple entries and we want to obtain the auth_time from the _last_
+        // authorization for this user_id/client_id/scope pair
         $stmt = $this->db->prepare(
             'SELECT
                 client_id,
