@@ -44,10 +44,8 @@ try {
         new LocalSigner(Base64UrlSafe::decode(\file_get_contents('server.key')))
     );
 
-    // expire access_token after 30 seconds, and refresh_token after 5 minutes
-    // DEFAULT: 1 hour / 180 days
+    // expire access_token after 30 seconds
     $oauthServer->setAccessTokenExpiry(new DateInterval('PT30S'));
-    $oauthServer->setRefreshTokenExpiry(new DateInterval('PT5M'));
 
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'POST':

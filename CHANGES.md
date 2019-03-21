@@ -2,7 +2,12 @@
 
 ## 5.0.0 (...)
 - implement token version check, reject tokens with wrong version
-- fully remove `authzTime`
+- remove `authz_time` again
+- record `auth_time` for a new authorization in the database
+- only record an authorization when the authorization code is first used
+- update and simplify database schema
+- remove refresh_token expiry, can be implemented outside of the library since
+  we record the `auth_time` in the database now
 
 ## 4.0.0 (2019-03-06)
 - introduce simple `LocalSigner` which uses JWT tokens using HS256

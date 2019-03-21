@@ -299,7 +299,6 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client',
                     'scope' => 'config',
-                    'expires_at' => '2017-01-01T00:00:00+00:00',
                 ]
             )
         );
@@ -365,7 +364,6 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
-                    'expires_at' => '2017-01-01T00:00:00+00:00',
                 ]
             )
         );
@@ -558,148 +556,6 @@ class OAuthServerTest extends TestCase
             $this->fail();
         } catch (InvalidGrantException $e) {
             $this->assertSame('expected "authorization_code", got "access_token"', $e->getDescription());
-        }
-    }
-
-    public function testNonExpiredRefreshToken()
-    {
-        $this->storage->storeAuthorization('foo', 'code-client-secret', 'config', 'random_1', new DateTime('2016-01-01'));
-
-        $providedRefreshToken = Base64UrlSafe::encodeUnpadded(
-            Json::encode(
-                [
-                    'v' => OAuthServer::TOKEN_VERSION,
-                    'type' => 'refresh_token',
-                    'auth_key' => 'random_1',
-                    'user_id' => 'foo',
-                    'client_id' => 'code-client-secret',
-                    'scope' => 'config',
-                    'expires_at' => '2017-01-01T00:00:00+00:00',
-                ]
-            )
-        );
-
-        $tokenResponse = $this->server->postToken(
-            [
-                'grant_type' => 'refresh_token',
-                'refresh_token' => $providedRefreshToken,
-                'scope' => 'config',
-            ],
-            'code-client-secret',
-            '123456'
-        );
-
-        $expectedAccessToken = Base64UrlSafe::encodeUnpadded(
-            Json::encode(
-                [
-                    'v' => OAuthServer::TOKEN_VERSION,
-                    'type' => 'access_token',
-                    'auth_key' => 'random_1',
-                    'user_id' => 'foo',
-                    'client_id' => 'code-client-secret',
-                    'scope' => 'config',
-                    'expires_at' => '2016-01-01T01:00:00+00:00',
-                ]
-            )
-        );
-
-        $this->assertSame(
-            [
-                'access_token' => $expectedAccessToken,
-                'token_type' => 'bearer',
-                'expires_in' => 3600,
-            ],
-            \json_decode($tokenResponse->getBody(), true)
-        );
-    }
-
-    public function testExpiringRefreshTokenWithLessTime()
-    {
-        $this->storage->storeAuthorization('foo', 'code-client-secret', 'config', 'random_1', new DateTime('2016-01-01'));
-
-        $providedRefreshToken = Base64UrlSafe::encodeUnpadded(
-            Json::encode(
-                [
-                    'v' => OAuthServer::TOKEN_VERSION,
-                    'type' => 'refresh_token',
-                    'auth_key' => 'random_1',
-                    'user_id' => 'foo',
-                    'client_id' => 'code-client-secret',
-                    'scope' => 'config',
-                    'expires_at' => '2017-01-01T00:00:00+00:00',
-                ]
-            )
-        );
-
-        // set DateTime to 15 minutes before expiry of refresh_token, we
-        // expect to get an access_token that's valid for only 900 seconds
-        $this->server->setDateTime(new DateTime('2016-12-31T23:45:00+00:00'));
-
-        $tokenResponse = $this->server->postToken(
-            [
-                'grant_type' => 'refresh_token',
-                'refresh_token' => $providedRefreshToken,
-                'scope' => 'config',
-            ],
-            'code-client-secret',
-            '123456'
-        );
-
-        $expectedAccessToken = Base64UrlSafe::encodeUnpadded(
-            Json::encode(
-                [
-                    'v' => OAuthServer::TOKEN_VERSION,
-                    'type' => 'access_token',
-                    'auth_key' => 'random_1',
-                    'user_id' => 'foo',
-                    'client_id' => 'code-client-secret',
-                    'scope' => 'config',
-                    'expires_at' => '2017-01-01T00:00:00+00:00',
-                ]
-            )
-        );
-
-        $this->assertSame(
-            [
-                'access_token' => $expectedAccessToken,
-                'token_type' => 'bearer',
-                'expires_in' => 900,
-            ],
-            \json_decode($tokenResponse->getBody(), true)
-        );
-    }
-
-    public function testExpiredRefreshToken()
-    {
-        try {
-            $this->storage->storeAuthorization('foo', 'code-client-secret', 'config', 'random_1', new DateTime('2016-01-01'));
-
-            $providedRefreshToken = Base64UrlSafe::encodeUnpadded(
-                Json::encode(
-                    [
-                        'v' => OAuthServer::TOKEN_VERSION,
-                        'type' => 'refresh_token',
-                        'auth_key' => 'random_1',
-                        'user_id' => 'foo',
-                        'client_id' => 'code-client-secret',
-                        'scope' => 'config',
-                        'expires_at' => '2015-01-01T00:00:00+00:00',
-                    ]
-                )
-            );
-
-            $this->server->postToken(
-                [
-                    'grant_type' => 'refresh_token',
-                    'refresh_token' => $providedRefreshToken,
-                    'scope' => 'config',
-                ],
-                'code-client-secret',
-                '123456'
-            );
-            $this->fail();
-        } catch (InvalidGrantException $e) {
-            $this->assertSame('"refresh_token" expired', $e->getDescription());
         }
     }
 
