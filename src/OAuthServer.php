@@ -334,7 +334,7 @@ class OAuthServer
                 'access_token' => $accessToken,
                 'refresh_token' => $refreshToken,
                 'token_type' => 'bearer',
-                'expires_in' => $this->accessTokenExpiryToInt(),
+                'expires_in' => $this->accessTokenExpiryAsInt(),
             ],
             // The authorization server MUST include the HTTP "Cache-Control"
             // response header field [RFC2616] with a value of "no-store" in any
@@ -399,7 +399,7 @@ class OAuthServer
             [
                 'access_token' => $accessToken,
                 'token_type' => 'bearer',
-                'expires_in' => $this->accessTokenExpiryToInt(),
+                'expires_in' => $this->accessTokenExpiryAsInt(),
             ],
             // The authorization server MUST include the HTTP "Cache-Control"
             // response header field [RFC2616] with a value of "no-store" in any
@@ -475,7 +475,7 @@ class OAuthServer
      */
     private function getAuthorizationCode($userId, $clientId, $scope, $redirectUri, $authKey, $codeChallenge)
     {
-        // authorization codes always expire after 5 minutes
+        // authorization codes expire after 5 minutes
         $expiresAt = \date_add(clone $this->dateTime, new DateInterval('PT5M'));
 
         // The PKCE RFC (7636) says: "The server MUST NOT include the
@@ -604,11 +604,9 @@ class OAuthServer
     /**
      * @return int
      */
-    private function accessTokenExpiryToInt()
+    private function accessTokenExpiryAsInt()
     {
-        $expiresAt = \date_add(clone $this->dateTime, $this->accessTokenExpiry);
-
-        return $expiresAt->getTimestamp() - $this->dateTime->getTimestamp();
+        return \date_add(clone $this->dateTime, $this->accessTokenExpiry)->getTimestamp() - $this->dateTime->getTimestamp();
     }
 
     /**
