@@ -67,7 +67,7 @@ class BearerValidatorTest extends TestCase
 
     public function testValidToken()
     {
-        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
+        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1', new DateTime('2016-01-01'));
 
         $providedAccessToken = Base64UrlSafe::encodeUnpadded(
             Json::encode(
@@ -104,7 +104,7 @@ class BearerValidatorTest extends TestCase
                 )
             );
 
-            $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
+            $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1', new DateTime('2016-01-01'));
             $this->validator->validate(\sprintf('Bearer %s', $providedAccessToken));
             $this->fail();
         } catch (InvalidTokenException $e) {

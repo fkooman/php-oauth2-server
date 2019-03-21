@@ -325,7 +325,8 @@ class OAuthServer
             $authorizationCodeInfo['user_id'],
             $authorizationCodeInfo['client_id'],
             $authorizationCodeInfo['scope'],
-            $authorizationCodeInfo['auth_key']
+            $authorizationCodeInfo['auth_key'],
+            $this->dateTime
         );
 
         $authzExpiresAt = \date_add(clone $this->dateTime, $this->refreshTokenExpiry);

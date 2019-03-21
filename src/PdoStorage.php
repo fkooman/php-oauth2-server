@@ -24,6 +24,7 @@
 
 namespace fkooman\OAuth\Server;
 
+use DateTime;
 use PDO;
 
 class PdoStorage implements StorageInterface
@@ -66,27 +67,33 @@ class PdoStorage implements StorageInterface
     }
 
     /**
-     * @param string $userId
-     * @param string $clientId
-     * @param string $scope
-     * @param string $authKey
+     * @param string    $userId
+     * @param string    $clientId
+     * @param string    $scope
+     * @param string    $authKey
+     * @param \DateTime $authTime
      *
      * @return void
      */
-    public function storeAuthorization($userId, $clientId, $scope, $authKey)
+    public function storeAuthorization($userId, $clientId, $scope, $authKey, DateTime $authTime)
     {
+        // the "authorizations" table has the UNIQUE constraint on the
+        // "auth_key" column, thus preventing multiple entries with the same
+        // "auth_key" to make absolutely sure "auth_keys" cannot be replayed
         $stmt = $this->db->prepare(
             'INSERT INTO authorizations (
                 auth_key,
                 user_id,
                 client_id,
-                scope
+                scope,
+                auth_time
              ) 
              VALUES(
                 :auth_key,
                 :user_id, 
                 :client_id,
-                :scope
+                :scope,
+                :auth_time
              )'
         );
 
@@ -94,6 +101,7 @@ class PdoStorage implements StorageInterface
         $stmt->bindValue(':user_id', $userId, PDO::PARAM_STR);
         $stmt->bindValue(':client_id', $clientId, PDO::PARAM_STR);
         $stmt->bindValue(':scope', $scope, PDO::PARAM_STR);
+        $stmt->bindValue(':auth_time', $authTime->format(DateTime::ATOM), PDO::PARAM_STR);
         $stmt->execute();
     }
 
@@ -107,11 +115,25 @@ class PdoStorage implements StorageInterface
         $stmt = $this->db->prepare(
             'SELECT
                 client_id,
-                scope
-             FROM authorizations
+                scope,
+                (
+                    SELECT
+                        auth_time
+                    FROM
+                        authorizations
+                    WHERE
+                        user_id = :user_id
+                    AND
+                        a.client_id = client_id
+                    AND
+                        a.scope = scope
+                    ORDER BY auth_time DESC
+                ) AS auth_time
+             FROM authorizations a
              WHERE
                 user_id = :user_id
-             GROUP BY client_id, scope'
+             GROUP BY
+                client_id, scope'
         );
 
         $stmt->bindValue(':user_id', $userId, PDO::PARAM_STR);
@@ -175,6 +197,7 @@ class PdoStorage implements StorageInterface
                 user_id VARCHAR(255) NOT NULL,
                 client_id VARCHAR(255) NOT NULL,
                 scope VARCHAR(255) NOT NULL,
+                auth_time VARCHAR(255) NOT NULL,
                 UNIQUE(auth_key)
             )',
         ];
