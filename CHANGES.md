@@ -6,8 +6,7 @@
 - record `auth_time` for a new authorization in the database
 - only record an authorization when the authorization code is first used
 - update and simplify database schema
-- remove refresh_token expiry, can be implemented outside of the library since
-  we record the `auth_time` in the database now
+- remove refresh_token expiry
 
 ## 4.0.0 (2019-03-06)
 - introduce simple `LocalSigner` which uses JWT tokens using HS256

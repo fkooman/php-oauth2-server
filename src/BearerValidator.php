@@ -45,7 +45,7 @@ class BearerValidator
     /**
      * @param StorageInterface  $storage
      * @param ClientDbInterface $clientDb
-     * @param SignerInterface   $verifier
+     * @param SignerInterface   $signer
      */
     public function __construct(StorageInterface $storage, ClientDbInterface $clientDb, SignerInterface $signer)
     {

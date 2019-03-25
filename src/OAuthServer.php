@@ -311,8 +311,7 @@ class OAuthServer
             $authorizationCodeInfo['user_id'],
             $authorizationCodeInfo['client_id'],
             $authorizationCodeInfo['scope'],
-            $authorizationCodeInfo['auth_key'],
-            $this->dateTime
+            $authorizationCodeInfo['auth_key']
         );
 
         $accessToken = $this->getAccessToken(

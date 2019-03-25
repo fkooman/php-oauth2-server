@@ -24,8 +24,6 @@
 
 namespace fkooman\OAuth\Server;
 
-use DateTime;
-
 interface StorageInterface
 {
     /**
@@ -36,15 +34,14 @@ interface StorageInterface
     public function hasAuthorization($authKey);
 
     /**
-     * @param string    $userId
-     * @param string    $clientId
-     * @param string    $scope
-     * @param string    $authKey
-     * @param \DateTime $authTime
+     * @param string $userId
+     * @param string $clientId
+     * @param string $scope
+     * @param string $authKey
      *
      * @return void
      */
-    public function storeAuthorization($userId, $clientId, $scope, $authKey, DateTime $authTime);
+    public function storeAuthorization($userId, $clientId, $scope, $authKey);
 
     /**
      * @param string $userId

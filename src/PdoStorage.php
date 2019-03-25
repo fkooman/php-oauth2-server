@@ -24,7 +24,6 @@
 
 namespace fkooman\OAuth\Server;
 
-use DateTime;
 use PDO;
 
 class PdoStorage implements StorageInterface
@@ -67,15 +66,14 @@ class PdoStorage implements StorageInterface
     }
 
     /**
-     * @param string    $userId
-     * @param string    $clientId
-     * @param string    $scope
-     * @param string    $authKey
-     * @param \DateTime $authTime
+     * @param string $userId
+     * @param string $clientId
+     * @param string $scope
+     * @param string $authKey
      *
      * @return void
      */
-    public function storeAuthorization($userId, $clientId, $scope, $authKey, DateTime $authTime)
+    public function storeAuthorization($userId, $clientId, $scope, $authKey)
     {
         // the "authorizations" table has the UNIQUE constraint on the
         // "auth_key" column, thus preventing multiple entries with the same
@@ -85,15 +83,13 @@ class PdoStorage implements StorageInterface
                 auth_key,
                 user_id,
                 client_id,
-                scope,
-                auth_time
+                scope
              ) 
              VALUES(
                 :auth_key,
                 :user_id, 
                 :client_id,
-                :scope,
-                :auth_time
+                :scope
              )'
         );
 
@@ -101,7 +97,6 @@ class PdoStorage implements StorageInterface
         $stmt->bindValue(':user_id', $userId, PDO::PARAM_STR);
         $stmt->bindValue(':client_id', $clientId, PDO::PARAM_STR);
         $stmt->bindValue(':scope', $scope, PDO::PARAM_STR);
-        $stmt->bindValue(':auth_time', $authTime->format(DateTime::ATOM), PDO::PARAM_STR);
         $stmt->execute();
     }
 
@@ -116,8 +111,7 @@ class PdoStorage implements StorageInterface
             'SELECT
                 auth_key,
                 client_id,
-                scope,
-                auth_time
+                scope
              FROM authorizations
              WHERE
                 user_id = :user_id'
@@ -158,7 +152,6 @@ class PdoStorage implements StorageInterface
                 user_id VARCHAR(255) NOT NULL,
                 client_id VARCHAR(255) NOT NULL,
                 scope VARCHAR(255) NOT NULL,
-                auth_time VARCHAR(255) NOT NULL,
                 UNIQUE(auth_key)
             )',
         ];
