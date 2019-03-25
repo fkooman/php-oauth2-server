@@ -2,9 +2,9 @@
 
 ## 5.0.0 (...)
 - implement token version check, reject tokens with wrong version
-- remove `authz_time` again
-- record `auth_time` for a new authorization in the database
-- only record an authorization when the authorization code is first used
+- remove `authz_time` from token again
+- only record an authorization after the authorization code is used, simplifies
+  database storage requirements
 - update and simplify database schema
 - remove refresh_token expiry
 
