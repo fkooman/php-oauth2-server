@@ -103,15 +103,15 @@ class ClientInfo
         // parsing is NOT great... but don't see how to avoid it here, we need
         // to accept all ports and both IPv4 and IPv6 for loopback entries
         foreach ($this->redirectUriList as $clientRedirectUri) {
+            // IPv4 loopback
             if (0 === \strpos($clientRedirectUri, 'http://127.0.0.1:{PORT}/')) {
-                // IPv4
                 if (self::portMatch($clientRedirectUri, $redirectUri)) {
                     return true;
                 }
             }
 
+            // IPv6 loopback
             if (0 === \strpos($clientRedirectUri, 'http://[::1]:{PORT}/')) {
-                // IPv6
                 if (self::portMatch($clientRedirectUri, $redirectUri)) {
                     return true;
                 }

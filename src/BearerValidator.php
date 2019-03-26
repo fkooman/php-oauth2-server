@@ -74,6 +74,8 @@ class BearerValidator
     {
         SyntaxValidator::validateBearerToken($authorizationHeader);
         $providedToken = Binary::safeSubstr($authorizationHeader, 7);
+
+        // check signature
         if (false === $accessTokenInfo = $this->signer->verify($providedToken)) {
             throw new InvalidTokenException('"access_token" has invalid signature');
         }
@@ -101,7 +103,7 @@ class BearerValidator
         // the authorization MUST exist in the DB as well, otherwise it was
         // revoked...
         if (!$this->storage->hasAuthorization($accessTokenInfo['auth_key'])) {
-            throw new InvalidTokenException(\sprintf('authorization for client "%s" no longer exists', $accessTokenInfo['client_id']));
+            throw new InvalidTokenException(\sprintf('authorization for client "%s" with scope "%s" no longer exists', $accessTokenInfo['client_id'], $accessTokenInfo['scope']));
         }
 
         return new AccessTokenInfo(
