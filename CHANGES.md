@@ -1,6 +1,6 @@
 # ChangeLog
 
-## 5.0.0 (...)
+## 5.0.0 (2019-03-27)
 - implement token version check, reject tokens with wrong version
 - remove `authz_time` from token again
 - only record an authorization after the authorization code is used, simplifies
