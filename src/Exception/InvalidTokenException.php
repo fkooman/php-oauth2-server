@@ -37,10 +37,7 @@ class InvalidTokenException extends OAuthException
             'invalid_token',
             $description,
             [
-                'WWW-Authenticate' => \sprintf(
-                    'Bearer realm="OAuth",error="invalid_token",error_description="%s"',
-                    \rawurlencode($description)
-                ),
+                'WWW-Authenticate' => 'Bearer realm="OAuth",error="invalid_token"',
             ],
             401,
             $previous

@@ -1,5 +1,10 @@
 # ChangeLog
 
+## 5.0.1 (...)
+- do not use the `error_description` field in the `WWW-Authenticate` response
+  header when an invalid token was provided to avoid having to "escape" the 
+  error message. The `error_description` is still available in the JSON body
+
 ## 5.0.0 (2019-03-27)
 - implement token version check, reject tokens with wrong version
 - remove `authz_time` from token again
