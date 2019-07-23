@@ -1,4 +1,5 @@
 # Introduction
+
 This is a very simple OAuth 2.0 server for integration in your own application. 
 It has minimal dependencies, but still tries to be secure. The main purpose is 
 to be compatible with PHP 5.4.
@@ -33,8 +34,9 @@ On modern versions of PHP, i.e. >= 7, the library only requires
 
 # Use
 
-Currently php-jwt is not hosted on [Packagist](https://packagist.org/). It may
-be added in the future. In your `composer.json`:
+Currently php-oauth2-server is not hosted on 
+[Packagist](https://packagist.org/). It may be added in the future. In your 
+`composer.json`:
 
     "repositories": [
         {
@@ -45,7 +47,7 @@ be added in the future. In your `composer.json`:
     ],
 
     "require": {
-        "fkooman/oauth2-server": "^4",
+        "fkooman/oauth2-server": "^5",
         ...
     },
 
@@ -64,23 +66,19 @@ MUST generate your own 32 bytes random key. This key is used to sign the
 OAuth authorization codes, access tokens and refresh tokens instead of storing
 them in the database.
 
-In order to generate your own (Base64UrlSafe) encoded secret, you can use this 
-snippet:
+In order to generate your own (`Base64UrlSafe`) encoded secret, you can use 
+this snippet:
 
-```php
-<?php
-require_once 'vendor/autoload.php';
-echo \ParagonIE\ConstantTime\Base64UrlSafe::encodeUnpadded(\random_bytes(32)).PHP_EOL;
-```
+    <?php
+    require_once 'vendor/autoload.php';
+    echo \ParagonIE\ConstantTime\Base64UrlSafe::encodeUnpadded(\random_bytes(32)).PHP_EOL;
 
 Store this in a configuration file, or as a file on the disk.
 
 You can start the demo OAuth server on your (development) machine using PHP's 
 built in web server:
 
-```bash
-$ php -S localhost:8080 -t example/
-```
+    $ php -S localhost:8080 -t example/
 
 If you have an OAuth client you can point it to 
 `http://localhost:8080/authorize.php`.
