@@ -1,5 +1,8 @@
 # ChangeLog
 
+## 5.1.0 (...)
+- remove recommendation for `league/oauth2-server`
+
 ## 5.0.1 (2019-07-21)
 - do not use the `error_description` field in the `WWW-Authenticate` response
   header when an invalid token was provided to avoid having to "escape" the 
