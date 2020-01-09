@@ -4,10 +4,6 @@ This is a very simple OAuth 2.0 server for integration in your own application.
 It has minimal dependencies, but still tries to be secure. The main purpose is 
 to be compatible with PHP 5.4.
 
-**NOTE**: if you are not bound to PHP 5.4, you should probably use the OAuth 
-2.0 server of the League of Extraordinary Packages! It can be found 
-[here](https://oauth2.thephpleague.com/).
-
 # Client Support
 
 All (optional) OAuth authorization and token request parameters MUST always be
