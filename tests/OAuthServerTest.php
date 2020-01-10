@@ -118,6 +118,34 @@ class OAuthServerTest extends TestCase
     /**
      * @return void
      */
+    public function testAuthorizeCodeNoCodeChallenge()
+    {
+        try {
+            $this->assertSame(
+                [
+                    'client_id' => 'code-client',
+                    'display_name' => 'Code Client',
+                    'scope' => 'config',
+                    'redirect_uri' => 'http://example.org/code-cb',
+                ],
+                $this->server->getAuthorize(
+                    [
+                        'client_id' => 'code-client',
+                        'redirect_uri' => 'http://example.org/code-cb',
+                        'response_type' => 'code',
+                        'scope' => 'config',
+                        'state' => '12345',
+                    ]
+                )
+            );
+        } catch (InvalidRequestException $e) {
+            $this->assertSame('missing "code_challenge_method" parameter', $e->getDescription());
+        }
+    }
+
+    /**
+     * @return void
+     */
     public function testGetAuthorizeResponse()
     {
         $authorizeResponse = $this->server->getAuthorizeResponse(
@@ -347,6 +375,7 @@ class OAuthServerTest extends TestCase
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
                     'redirect_uri' => 'http://example.org/code-cb',
+                    'code_challenge' => 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
                     'expires_at' => '2016-01-01T00:05:00+00:00',
                 ]
             )
@@ -358,6 +387,7 @@ class OAuthServerTest extends TestCase
                 'code' => $providedCode,
                 'redirect_uri' => 'http://example.org/code-cb',
                 'client_id' => 'code-client-secret',
+                'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
             ],
             'code-client-secret',
             '123456'
@@ -403,7 +433,7 @@ class OAuthServerTest extends TestCase
     /**
      * @return void
      */
-    public function testPostTokenMissingCodeVerifierPublicClient()
+    public function testPostTokenMissingCodeVerifier()
     {
         $providedCode = Base64UrlSafe::encodeUnpadded(
             Json::encode(
@@ -469,6 +499,7 @@ class OAuthServerTest extends TestCase
                     'code' => 'DEF.abcdefgh',
                     'redirect_uri' => 'http://example.org/code-cb',
                     'client_id' => 'code-client-secret',
+                    'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
                 ],
                 'code-client-secret',
                 '654321'

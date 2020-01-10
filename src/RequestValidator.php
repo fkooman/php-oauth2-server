@@ -36,7 +36,7 @@ class RequestValidator
     public static function validateAuthorizeQueryParameters(array $getData)
     {
         // REQUIRED
-        foreach (['client_id', 'redirect_uri', 'response_type', 'scope', 'state'] as $queryParameter) {
+        foreach (['client_id', 'redirect_uri', 'response_type', 'scope', 'state', 'code_challenge_method', 'code_challenge'] as $queryParameter) {
             if (!\array_key_exists($queryParameter, $getData)) {
                 throw new InvalidRequestException(\sprintf('missing "%s" parameter', $queryParameter));
             }
@@ -47,14 +47,8 @@ class RequestValidator
         SyntaxValidator::validateResponseType($getData['response_type']);
         SyntaxValidator::validateScope($getData['scope']);
         SyntaxValidator::validateState($getData['state']);
-
-        // OPTIONAL
-        if (\array_key_exists('code_challenge_method', $getData)) {
-            SyntaxValidator::validateCodeChallengeMethod($getData['code_challenge_method']);
-        }
-        if (\array_key_exists('code_challenge', $getData)) {
-            SyntaxValidator::validateCodeChallenge($getData['code_challenge']);
-        }
+        SyntaxValidator::validateCodeChallengeMethod($getData['code_challenge_method']);
+        SyntaxValidator::validateCodeChallenge($getData['code_challenge']);
     }
 
     /**
@@ -97,28 +91,13 @@ class RequestValidator
     }
 
     /**
-     * @param array<string,string> $getData
-     *
-     * @return void
-     */
-    public static function validatePkceParameters(array $getData)
-    {
-        if (!\array_key_exists('code_challenge_method', $getData)) {
-            throw new InvalidRequestException('missing "code_challenge_method" parameter');
-        }
-        if (!\array_key_exists('code_challenge', $getData)) {
-            throw new InvalidRequestException('missing "code_challenge" parameter');
-        }
-    }
-
-    /**
      * @param array<string,string> $postData
      *
      * @return void
      */
     private static function validateAuthorizationCode(array $postData)
     {
-        foreach (['code', 'redirect_uri', 'client_id'] as $postParameter) {
+        foreach (['code', 'redirect_uri', 'client_id', 'code_verifier'] as $postParameter) {
             if (!\array_key_exists($postParameter, $postData)) {
                 throw new InvalidRequestException(\sprintf('missing "%s" parameter', $postParameter));
             }
@@ -127,11 +106,7 @@ class RequestValidator
         // NOTE: no need to validate the redirect_uri, as we do strict matching
         SyntaxValidator::validateCode($postData['code']);
         SyntaxValidator::validateClientId($postData['client_id']);
-
-        // OPTIONAL
-        if (\array_key_exists('code_verifier', $postData)) {
-            SyntaxValidator::validateCodeVerifier($postData['code_verifier']);
-        }
+        SyntaxValidator::validateCodeVerifier($postData['code_verifier']);
     }
 
     /**

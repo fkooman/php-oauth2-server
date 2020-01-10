@@ -17,7 +17,7 @@ sent.
 - Easy integration with your own application and/or framework;
 - Does not force a framework on you;
 - There will be no toggles to shoot yourself in the foot;
-- Supports [PKCE](https://tools.ietf.org/html/rfc7636);
+- Requires [PKCE](https://tools.ietf.org/html/rfc7636) for all client types;
 - Supports refresh tokens;
 - Does NOT implement RFC 6749 (#4.1.2.1) error response (except for 
   `access_denied`);

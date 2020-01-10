@@ -48,7 +48,7 @@ try {
         case 'GET':
         case 'HEAD':
             // get the "Authorization" header from the HTTP request
-            $authorizationHeader = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : null;
+            $authorizationHeader = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : '';
 
             // obtain accessTokenInfo from the "Authorization", this contains
             // the user_id the authorization is bound to, as well as some other

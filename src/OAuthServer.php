@@ -182,7 +182,7 @@ class OAuthServer
             $getData['scope'],
             $getData['redirect_uri'],
             $authKey,
-            \array_key_exists('code_challenge', $getData) ? $getData['code_challenge'] : null
+            $getData['code_challenge']
         );
 
         return new RedirectResponse(
@@ -253,10 +253,6 @@ class OAuthServer
             throw new InvalidClientException('client does not support this "redirect_uri"');
         }
 
-        if (null === $clientInfo->getSecret()) {
-            RequestValidator::validatePkceParameters($getData);
-        }
-
         return $clientInfo;
     }
 
@@ -296,8 +292,8 @@ class OAuthServer
         // the code
         $this->verifyAuthorizationCodeInfo($postData, $authorizationCodeInfo);
 
-        // verify code_verifier (iff public client)
-        $this->verifyCodeVerifier($clientInfo, $authorizationCodeInfo, $postData);
+        // verify code_verifier
+        $this->verifyCodeVerifier($authorizationCodeInfo, $postData);
 
         // check whether authorization_code was already used
         if ($this->storage->hasAuthorization($authorizationCodeInfo['auth_key'])) {
@@ -468,7 +464,7 @@ class OAuthServer
      * @param string      $scope
      * @param string      $redirectUri
      * @param string      $authKey
-     * @param string|null $codeChallenge required for "public" clients
+     * @param string $codeChallenge
      *
      * @return string
      */
@@ -544,7 +540,6 @@ class OAuthServer
     }
 
     /**
-     * @param ClientInfo           $clientInfo
      * @param array<string,mixed>  $authorizationCodeInfo
      * @param array<string,string> $postData
      *
@@ -552,37 +547,26 @@ class OAuthServer
      *
      * @return void
      */
-    private function verifyCodeVerifier(ClientInfo $clientInfo, array $authorizationCodeInfo, array $postData)
+    private function verifyCodeVerifier(array $authorizationCodeInfo, array $postData)
     {
-        // only for public clients
-        if (null === $clientInfo->getSecret()) {
-            if (!\array_key_exists('code_verifier', $postData)) {
-                throw new InvalidRequestException('missing "code_verifier" parameter');
-            }
-
-            if (null === $codeChallenge = $authorizationCodeInfo['code_challenge']) {
-                // the code_challenge was not part of the authorization_code,
-                // this is not supposed to happen, as public clients MUST have
-                // a code_challenge query parameter in the authorization
-                // request before the request is accepted...
-                throw new InvalidGrantException('no registered "code_challenge" for this request');
-            }
-
-            // compare code_challenge with expected value
-            $strCmp = \hash_equals(
-                $codeChallenge,
-                Base64UrlSafe::encodeUnpadded(
-                    \hash(
-                        'sha256',
-                        $postData['code_verifier'],
-                        true
-                    )
+        // in >= 5.1.0 we ALWAYS require PKCE. In case clients do NOT support
+        // PKCE they will fail anyway due to missing authorize/token 
+        // parameters regarding PKCE and never reach this point. Confidential 
+        // clients that DO support PKCE will keep working nicely, but in 
+        // addition now their code verifier is checked as well...
+        $strCmp = \hash_equals(
+            $authorizationCodeInfo['code_challenge'],
+            Base64UrlSafe::encodeUnpadded(
+                \hash(
+                    'sha256',
+                    $postData['code_verifier'],
+                    true
                 )
-            );
+            )
+        );
 
-            if (false === $strCmp) {
-                throw new InvalidGrantException('invalid "code_verifier"');
-            }
+        if (false === $strCmp) {
+            throw new InvalidGrantException('invalid "code_verifier"');
         }
     }
 

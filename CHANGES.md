@@ -2,6 +2,8 @@
 
 ## 5.1.0 (...)
 - remove recommendation for `league/oauth2-server`
+- always enforce PKCE, also for confidential clients, see OAuth 2.1 
+  [proposal](https://aaronparecki.com/2019/12/12/21/its-time-for-oauth-2-dot-1)
 
 ## 5.0.1 (2019-07-21)
 - do not use the `error_description` field in the `WWW-Authenticate` response
