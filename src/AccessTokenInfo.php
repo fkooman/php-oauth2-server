@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (c) 2017, 2018 François Kooman <fkooman@tuxed.net>
+ * Copyright (c) 2017-2020 François Kooman <fkooman@tuxed.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,7 +38,6 @@ class AccessTokenInfo
     /**
      * @param string $userId
      * @param string $clientId
-     * @param Scope  $scope
      */
     public function __construct($userId, $clientId, Scope $scope)
     {

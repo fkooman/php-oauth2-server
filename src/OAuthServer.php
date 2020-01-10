@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (c) 2017, 2018 François Kooman <fkooman@tuxed.net>
+ * Copyright (c) 2017-2020 François Kooman <fkooman@tuxed.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -56,11 +56,6 @@ class OAuthServer
     /** @var \DateInterval */
     private $accessTokenExpiry;
 
-    /**
-     * @param StorageInterface  $storage
-     * @param ClientDbInterface $clientDb
-     * @param SignerInterface   $signer
-     */
     public function __construct(StorageInterface $storage, ClientDbInterface $clientDb, SignerInterface $signer)
     {
         $this->storage = $storage;
@@ -72,8 +67,6 @@ class OAuthServer
     }
 
     /**
-     * @param RandomInterface $random
-     *
      * @return void
      */
     public function setRandom(RandomInterface $random)
@@ -82,8 +75,6 @@ class OAuthServer
     }
 
     /**
-     * @param \DateTime $dateTime
-     *
      * @return void
      */
     public function setDateTime(DateTime $dateTime)
@@ -92,8 +83,6 @@ class OAuthServer
     }
 
     /**
-     * @param \DateInterval $accessTokenExpiry
-     *
      * @return void
      */
     public function setAccessTokenExpiry(DateInterval $accessTokenExpiry)
@@ -219,8 +208,6 @@ class OAuthServer
     }
 
     /**
-     * @param array $tokenInfo
-     *
      * @return bool
      */
     public static function checkTokenVersion(array $tokenInfo)
@@ -459,11 +446,11 @@ class OAuthServer
     }
 
     /**
-     * @param string      $userId
-     * @param string      $clientId
-     * @param string      $scope
-     * @param string      $redirectUri
-     * @param string      $authKey
+     * @param string $userId
+     * @param string $clientId
+     * @param string $scope
+     * @param string $redirectUri
+     * @param string $authKey
      * @param string $codeChallenge
      *
      * @return string
@@ -512,7 +499,6 @@ class OAuthServer
 
     /**
      * @param string      $clientId
-     * @param ClientInfo  $clientInfo
      * @param string|null $authUser
      * @param string|null $authPass
      *
@@ -550,9 +536,9 @@ class OAuthServer
     private function verifyCodeVerifier(array $authorizationCodeInfo, array $postData)
     {
         // in >= 5.1.0 we ALWAYS require PKCE. In case clients do NOT support
-        // PKCE they will fail anyway due to missing authorize/token 
-        // parameters regarding PKCE and never reach this point. Confidential 
-        // clients that DO support PKCE will keep working nicely, but in 
+        // PKCE they will fail anyway due to missing authorize/token
+        // parameters regarding PKCE and never reach this point. Confidential
+        // clients that DO support PKCE will keep working nicely, but in
         // addition now their code verifier is checked as well...
         $strCmp = \hash_equals(
             $authorizationCodeInfo['code_challenge'],

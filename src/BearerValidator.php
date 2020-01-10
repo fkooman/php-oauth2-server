@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (c) 2017, 2018 François Kooman <fkooman@tuxed.net>
+ * Copyright (c) 2017-2020 François Kooman <fkooman@tuxed.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,11 +42,6 @@ class BearerValidator
     /** @var \DateTime */
     private $dateTime;
 
-    /**
-     * @param StorageInterface  $storage
-     * @param ClientDbInterface $clientDb
-     * @param SignerInterface   $signer
-     */
     public function __construct(StorageInterface $storage, ClientDbInterface $clientDb, SignerInterface $signer)
     {
         $this->storage = $storage;
@@ -56,8 +51,6 @@ class BearerValidator
     }
 
     /**
-     * @param DateTime $dateTime
-     *
      * @return void
      */
     public function setDateTime(DateTime $dateTime)

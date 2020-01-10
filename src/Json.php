@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (c) 2017, 2018 François Kooman <fkooman@tuxed.net>
+ * Copyright (c) 2017-2020 François Kooman <fkooman@tuxed.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,12 +38,7 @@ class Json
         $jsonString = \json_encode($jsonData);
         // 5.5.0 	The return value on failure was changed from null string to FALSE.
         if (false === $jsonString || 'null' === $jsonString) {
-            throw new JsonException(
-                \sprintf(
-                    'unable to encode JSON, error code "%d"',
-                    \json_last_error()
-                )
-            );
+            throw new JsonException(\sprintf('unable to encode JSON, error code "%d"', \json_last_error()));
         }
 
         return $jsonString;
@@ -58,12 +53,7 @@ class Json
     {
         $jsonData = \json_decode($jsonString, true);
         if (null === $jsonData && JSON_ERROR_NONE !== \json_last_error()) {
-            throw new JsonException(
-                \sprintf(
-                    'unable to decode JSON, error code "%d"',
-                    \json_last_error()
-                )
-            );
+            throw new JsonException(\sprintf('unable to decode JSON, error code "%d"', \json_last_error()));
         }
 
         return $jsonData;
