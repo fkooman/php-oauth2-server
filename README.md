@@ -1,31 +1,32 @@
 # Introduction
 
-This is a very simple OAuth 2.0 server for integration in your own application. 
-It has minimal dependencies, but still tries to be secure. The main purpose is 
-to be compatible with PHP 5.4.
+The project provides an opinionated OAuth 2.0 server library for integration in 
+your own application. It has minimal dependencies, but still tries to be 
+secure. The main purpose is to be as simple as possible whilst being secure.
+
+This library supports all versions of PHP >= 5.4.
 
 # Client Support
 
 All (optional) OAuth authorization and token request parameters MUST always be
-sent.
+sent. PKCE is required for all client types.
 
 # Features
 
 - Supports PHP >= 5.4;
-- Simple;
 - Only supports _Authorization Code Grant_;
 - Easy integration with your own application and/or framework;
 - Does not force a framework on you;
-- There will be no toggles to shoot yourself in the foot;
+- There will be no toggles to shoot yourself in the foot with;
 - Requires [PKCE](https://tools.ietf.org/html/rfc7636) for all client types;
 - Supports refresh tokens;
-- Does NOT implement RFC 6749 (#4.1.2.1) error response (except for 
+- Does NOT implement RFC 6749 (#4.1.2.1) error responses (except for 
   `access_denied`);
 
 # Requirements
 
 On modern versions of PHP, i.e. >= 7, the library only requires 
-`paragonie/constant_time_encoding`. On older versions it uses an assortment of 
+`paragonie/constant_time_encoding`. On older versions it uses a couple of 
 "polyfills", see `composer.json`.
 
 # Use
@@ -62,12 +63,9 @@ MUST generate your own 32 bytes random key. This key is used to sign the
 OAuth authorization codes, access tokens and refresh tokens instead of storing
 them in the database.
 
-In order to generate your own (`Base64UrlSafe`) encoded secret, you can use 
-this snippet:
+In order to generate your own secret key, you can use the following command:
 
-    <?php
-    require_once 'vendor/autoload.php';
-    echo \ParagonIE\ConstantTime\Base64UrlSafe::encodeUnpadded(\random_bytes(32)).PHP_EOL;
+	$ dd if=/dev/urandom count=32 bs=1 | base64 | tr -d '=' | tr '/+' '_-'
 
 Store this in a configuration file, or as a file on the disk.
 
@@ -82,7 +80,7 @@ If you have an OAuth client you can point it to
 You can use 
 [php-oauth2-client](https://git.tuxed.net/fkooman/php-oauth2-client/) as a 
 client to interact with this server, the example there is configured to work 
-with this server.
+with this server out of the box.
 
 # Contact
 
