@@ -271,7 +271,8 @@ class OAuthServer
         }
 
         // check authorization_code expiry
-        if ($this->dateTime >= new DateTime($authorizationCodeInfo['expires_at'])) {
+        $expiresAt = new DateTime($authorizationCodeInfo['expires_at']);
+        if ($this->dateTime->getTimestamp() >= $expiresAt->getTimestamp()) {
             throw new InvalidGrantException('"authorization_code" expired');
         }
 
@@ -405,7 +406,8 @@ class OAuthServer
      */
     private function getAccessToken($userId, $clientId, $scope, $authKey)
     {
-        $expiresAt = \date_add(clone $this->dateTime, $this->accessTokenExpiry);
+        $expiresAt = clone $this->dateTime;
+        $expiresAt->add($this->accessTokenExpiry);
 
         // for prevention of replays of authorization codes and the revocation
         // of access tokens when an authorization code is replayed, we use the
@@ -458,7 +460,8 @@ class OAuthServer
     private function getAuthorizationCode($userId, $clientId, $scope, $redirectUri, $authKey, $codeChallenge)
     {
         // authorization codes expire after 5 minutes
-        $expiresAt = \date_add(clone $this->dateTime, new DateInterval('PT5M'));
+        $expiresAt = clone $this->dateTime;
+        $expiresAt->add(new DateInterval('PT5M'));
 
         // The PKCE RFC (7636) says: "The server MUST NOT include the
         // "code_challenge" value in client requests in a form that other
@@ -575,7 +578,10 @@ class OAuthServer
      */
     private function accessTokenExpiryAsInt()
     {
-        return \date_add(clone $this->dateTime, $this->accessTokenExpiry)->getTimestamp() - $this->dateTime->getTimestamp();
+        $expiresAt = clone $this->dateTime;
+        $expiresAt->add($this->accessTokenExpiry);
+
+        return (int) ($expiresAt->getTimestamp() - $this->dateTime->getTimestamp());
     }
 
     /**

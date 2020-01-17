@@ -84,7 +84,8 @@ class BearerValidator
         }
 
         // check access_token expiry
-        if ($this->dateTime >= new DateTime($accessTokenInfo['expires_at'])) {
+        $expiresAt = new DateTime($accessTokenInfo['expires_at']);
+        if ($this->dateTime->getTimestamp() >= $expiresAt->getTimestamp()) {
             throw new InvalidTokenException('"access_token" expired');
         }
 
