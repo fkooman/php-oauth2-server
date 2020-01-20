@@ -44,7 +44,7 @@ Currently php-oauth2-server is not hosted on
     ],
 
     "require": {
-        "fkooman/oauth2-server": "^5",
+        "fkooman/oauth2-server": "^6",
         ...
     },
 
