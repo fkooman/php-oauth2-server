@@ -1,6 +1,6 @@
 # ChangeLog
 
-## 5.1.0 (...)
+## 6.0.0 (2020-01-20)
 - remove recommendation for `league/oauth2-server`
 - always enforce PKCE, also for confidential clients, see OAuth 2.1 
   [proposal](https://aaronparecki.com/2019/12/12/21/its-time-for-oauth-2-dot-1)

@@ -538,7 +538,7 @@ class OAuthServer
      */
     private function verifyCodeVerifier(array $authorizationCodeInfo, array $postData)
     {
-        // in >= 5.1.0 we ALWAYS require PKCE. In case clients do NOT support
+        // in >= 6.0.0 we ALWAYS require PKCE. In case clients do NOT support
         // PKCE they will fail anyway due to missing authorize/token
         // parameters regarding PKCE and never reach this point. Confidential
         // clients that DO support PKCE will keep working nicely, but in
