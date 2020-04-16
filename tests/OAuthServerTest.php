@@ -645,7 +645,6 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
-                    'expires_at' => '2017-01-01T00:00:00+00:00',
                 ]
             )
         );
