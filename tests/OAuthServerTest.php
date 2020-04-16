@@ -452,7 +452,7 @@ class OAuthServerTest extends TestCase
         );
 
         try {
-            $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1', new DateTime('2016-01-01'));
+            $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
             $this->server->postToken(
                 [
                     'grant_type' => 'authorization_code',
@@ -516,7 +516,7 @@ class OAuthServerTest extends TestCase
     public function testPostReuseCode()
     {
         try {
-            $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1', new DateTime('2016-01-01'));
+            $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
 
             $providedCode = Base64UrlSafe::encodeUnpadded(
                 Json::encode(
@@ -596,7 +596,7 @@ class OAuthServerTest extends TestCase
     public function testAccessTokenAsCode()
     {
         try {
-            $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1', new DateTime('2016-01-01'));
+            $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
 
             $providedCode = Base64UrlSafe::encodeUnpadded(
                 Json::encode(
@@ -634,7 +634,7 @@ class OAuthServerTest extends TestCase
      */
     public function testRefreshTokenWithoutExplicitScope()
     {
-        $this->storage->storeAuthorization('foo', 'code-client-secret', 'config', 'random_1', new DateTime('2016-01-01'));
+        $this->storage->storeAuthorization('foo', 'code-client-secret', 'config', 'random_1');
 
         $providedRefreshToken = Base64UrlSafe::encodeUnpadded(
             Json::encode(
@@ -714,10 +714,10 @@ class OAuthServerTest extends TestCase
      */
     public function testDeleteAuthorization()
     {
-        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1', new DateTime('2016-01-01'));
-        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_2', new DateTime('2016-01-01'));
-        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_3', new DateTime('2016-01-01'));
-        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_4', new DateTime('2016-01-01'));
+        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
+        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_2');
+        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_3');
+        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_4');
         $this->assertSame(4, \count($this->storage->getAuthorizations('foo')));
         $this->storage->deleteAuthorization('random_1');
         $this->assertSame(3, \count($this->storage->getAuthorizations('foo')));
