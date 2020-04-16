@@ -379,7 +379,7 @@ class OAuthServer
         if (false === $this->storage->updateAuthorization($refreshTokenInfo['auth_key'], $refreshTokenInfo['refresh_token_id'], $refreshTokenId)) {
             $this->storage->deleteAuthorization($refreshTokenInfo['auth_key']);
 
-            throw new InvalidGrantException('"refresh_token" was used before7');
+            throw new InvalidGrantException('"refresh_token" was used before');
         }
 
         $accessToken = $this->getAccessToken(
