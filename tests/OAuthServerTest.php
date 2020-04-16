@@ -703,6 +703,56 @@ class OAuthServerTest extends TestCase
     /**
      * @return void
      */
+    public function testRefreshTokenReplay()
+    {
+        $this->storage->storeAuthorization('foo', 'code-client-secret', 'config', 'random_1', 'rt_1');
+
+        $providedRefreshToken = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'v' => OAuthServer::TOKEN_VERSION,
+                    'type' => 'refresh_token',
+                    'auth_key' => 'random_1',
+                    'refresh_token_id' => 'rt_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client-secret',
+                    'scope' => 'config',
+                ]
+            )
+        );
+
+        try {
+            $tokenResponse = $this->server->postToken(
+                [
+                    'grant_type' => 'refresh_token',
+                    'refresh_token' => $providedRefreshToken,
+                ],
+                'code-client-secret',
+                '123456'
+            );
+
+            // not replayed yet, authorization should still be there
+            $this->assertTrue($this->storage->hasAuthorization('random_1'));
+
+            $tokenResponse = $this->server->postToken(
+                [
+                    'grant_type' => 'refresh_token',
+                    'refresh_token' => $providedRefreshToken,
+                ],
+                'code-client-secret',
+                '123456'
+            );
+        } catch (InvalidGrantException $e) {
+            $this->assertSame('"refresh_token" was used before', $e->getDescription());
+        }
+
+        // make sure the authorization is no longer there
+        $this->assertFalse($this->storage->hasAuthorization('random_1'));
+    }
+
+    /**
+     * @return void
+     */
     public function testLoopbackClient()
     {
         $this->assertSame(
