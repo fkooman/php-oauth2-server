@@ -38,10 +38,20 @@ interface StorageInterface
      * @param string $clientId
      * @param string $scope
      * @param string $authKey
+     * @param string $refreshTokenId
      *
      * @return void
      */
-    public function storeAuthorization($userId, $clientId, $scope, $authKey);
+    public function storeAuthorization($userId, $clientId, $scope, $authKey, $refreshTokenId);
+
+    /**
+     * @param string $authKey
+     * @param string $currentRefreshTokenId
+     * @param string $newRefreshTokenId
+     *
+     * @return bool
+     */
+    public function updateAuthorization($authKey, $currentRefreshTokenId, $newRefreshTokenId);
 
     /**
      * @param string $userId

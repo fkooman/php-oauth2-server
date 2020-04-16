@@ -290,12 +290,15 @@ class OAuthServer
             throw new InvalidGrantException('"authorization_code" was used before');
         }
 
+        $refreshTokenId = $this->random->get(16);
+
         // store the authorization
         $this->storage->storeAuthorization(
             $authorizationCodeInfo['user_id'],
             $authorizationCodeInfo['client_id'],
             $authorizationCodeInfo['scope'],
-            $authorizationCodeInfo['auth_key']
+            $authorizationCodeInfo['auth_key'],
+            $refreshTokenId
         );
 
         $accessToken = $this->getAccessToken(
@@ -309,7 +312,8 @@ class OAuthServer
             $authorizationCodeInfo['user_id'],
             $postData['client_id'],
             $authorizationCodeInfo['scope'],
-            $authorizationCodeInfo['auth_key']
+            $authorizationCodeInfo['auth_key'],
+            $refreshTokenId
         );
 
         return new JsonResponse(
@@ -371,6 +375,13 @@ class OAuthServer
             throw new InvalidGrantException('"refresh_token" is no longer authorized');
         }
 
+        $refreshTokenId = $this->random->get(16);
+        if (false === $this->storage->updateAuthorization($refreshTokenInfo['auth_key'], $refreshTokenInfo['refresh_token_id'], $refreshTokenId)) {
+            $this->storage->deleteAuthorization($refreshTokenInfo['auth_key']);
+
+            throw new InvalidGrantException('"refresh_token" was used before7');
+        }
+
         $accessToken = $this->getAccessToken(
             $refreshTokenInfo['user_id'],
             $refreshTokenInfo['client_id'],
@@ -378,9 +389,18 @@ class OAuthServer
             $refreshTokenInfo['auth_key']
         );
 
+        $refreshToken = $this->getRefreshToken(
+            $refreshTokenInfo['user_id'],
+            $refreshTokenInfo['client_id'],
+            $refreshTokenInfo['scope'],
+            $refreshTokenInfo['auth_key'],
+            $refreshTokenId
+        );
+
         return new JsonResponse(
             [
                 'access_token' => $accessToken,
+                'refresh_token' => $refreshToken,
                 'token_type' => 'bearer',
                 'expires_in' => $this->accessTokenExpiryAsInt(),
             ],
@@ -430,16 +450,18 @@ class OAuthServer
      * @param string $clientId
      * @param string $scope
      * @param string $authKey
+     * @param string $refreshTokenId
      *
      * @return string
      */
-    private function getRefreshToken($userId, $clientId, $scope, $authKey)
+    private function getRefreshToken($userId, $clientId, $scope, $authKey, $refreshTokenId)
     {
         return $this->signer->sign(
             [
                 'v' => self::TOKEN_VERSION,
                 'type' => 'refresh_token',
                 'auth_key' => $authKey, // to bind it to the authorization
+                'refresh_token_id' => $refreshTokenId,
                 'user_id' => $userId,
                 'client_id' => $clientId,
                 'scope' => $scope,

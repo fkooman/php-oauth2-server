@@ -67,10 +67,11 @@ class PdoStorage implements StorageInterface
      * @param string $clientId
      * @param string $scope
      * @param string $authKey
+     * @param string $refreshTokenId
      *
      * @return void
      */
-    public function storeAuthorization($userId, $clientId, $scope, $authKey)
+    public function storeAuthorization($userId, $clientId, $scope, $authKey, $refreshTokenId)
     {
         // the "authorizations" table has the UNIQUE constraint on the
         // "auth_key" column, thus preventing multiple entries with the same
@@ -80,13 +81,15 @@ class PdoStorage implements StorageInterface
                 auth_key,
                 user_id,
                 client_id,
-                scope
+                scope,
+                refresh_token_id
              ) 
              VALUES(
                 :auth_key,
                 :user_id, 
                 :client_id,
-                :scope
+                :scope,
+                :refresh_token_id
              )'
         );
 
@@ -94,6 +97,7 @@ class PdoStorage implements StorageInterface
         $stmt->bindValue(':user_id', $userId, PDO::PARAM_STR);
         $stmt->bindValue(':client_id', $clientId, PDO::PARAM_STR);
         $stmt->bindValue(':scope', $scope, PDO::PARAM_STR);
+        $stmt->bindValue(':refresh_token_id', $refreshTokenId, PDO::PARAM_STR);
         $stmt->execute();
     }
 
@@ -118,6 +122,34 @@ class PdoStorage implements StorageInterface
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * @param string $authKey
+     * @param string $currentRefreshTokenId
+     * @param string $newRefreshTokenId
+     *
+     * @return bool
+     */
+    public function updateAuthorization($authKey, $currentRefreshTokenId, $newRefreshTokenId)
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE
+                 authorizations
+             SET
+                 refresh_token_id = :new_refresh_token_id
+             WHERE
+                 auth_key = :auth_key
+             AND
+                 refresh_token_id = :current_refresh_token_id'
+        );
+
+        $stmt->bindValue(':auth_key', $authKey, PDO::PARAM_STR);
+        $stmt->bindValue(':new_refresh_token_id', $newRefreshTokenId, PDO::PARAM_STR);
+        $stmt->bindValue(':current_refresh_token_id', $currentRefreshTokenId, PDO::PARAM_STR);
+        $stmt->execute();
+
+        return 1 === (int) $stmt->rowCount();
     }
 
     /**
@@ -149,6 +181,7 @@ class PdoStorage implements StorageInterface
                 user_id VARCHAR(255) NOT NULL,
                 client_id VARCHAR(255) NOT NULL,
                 scope VARCHAR(255) NOT NULL,
+                refresh_token_id VARCHAR(255) NOT NULL,
                 UNIQUE(auth_key)
             )',
         ];

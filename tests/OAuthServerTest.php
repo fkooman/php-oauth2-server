@@ -342,6 +342,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'refresh_token',
                     'auth_key' => 'random_1',
+                    'refresh_token_id' => 'random_1',
                     'user_id' => 'foo',
                     'client_id' => 'code-client',
                     'scope' => 'config',
@@ -412,6 +413,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'refresh_token',
                     'auth_key' => 'random_1',
+                    'refresh_token_id' => 'random_1',
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
@@ -452,7 +454,7 @@ class OAuthServerTest extends TestCase
         );
 
         try {
-            $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
+            $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1', 'rt_1');
             $this->server->postToken(
                 [
                     'grant_type' => 'authorization_code',
@@ -516,7 +518,7 @@ class OAuthServerTest extends TestCase
     public function testPostReuseCode()
     {
         try {
-            $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
+            $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1', 'rt_1');
 
             $providedCode = Base64UrlSafe::encodeUnpadded(
                 Json::encode(
@@ -596,7 +598,7 @@ class OAuthServerTest extends TestCase
     public function testAccessTokenAsCode()
     {
         try {
-            $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
+            $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1', 'rt_1');
 
             $providedCode = Base64UrlSafe::encodeUnpadded(
                 Json::encode(
@@ -634,7 +636,7 @@ class OAuthServerTest extends TestCase
      */
     public function testRefreshTokenWithoutExplicitScope()
     {
-        $this->storage->storeAuthorization('foo', 'code-client-secret', 'config', 'random_1');
+        $this->storage->storeAuthorization('foo', 'code-client-secret', 'config', 'random_1', 'rt_1');
 
         $providedRefreshToken = Base64UrlSafe::encodeUnpadded(
             Json::encode(
@@ -642,10 +644,10 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'refresh_token',
                     'auth_key' => 'random_1',
+                    'refresh_token_id' => 'rt_1',
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
-                    'expires_at' => '2017-01-01T00:00:00+00:00',
                 ]
             )
         );
@@ -673,9 +675,24 @@ class OAuthServerTest extends TestCase
             )
         );
 
+        $expectedRefreshToken = Base64UrlSafe::encodeUnpadded(
+            Json::encode(
+                [
+                    'v' => OAuthServer::TOKEN_VERSION,
+                    'type' => 'refresh_token',
+                    'auth_key' => 'random_1',
+                    'refresh_token_id' => 'random_1',
+                    'user_id' => 'foo',
+                    'client_id' => 'code-client-secret',
+                    'scope' => 'config',
+                ]
+            )
+        );
+
         $this->assertSame(
             [
                 'access_token' => $expectedAccessToken,
+                'refresh_token' => $expectedRefreshToken,
                 'token_type' => 'bearer',
                 'expires_in' => 3600,
             ],
@@ -714,10 +731,10 @@ class OAuthServerTest extends TestCase
      */
     public function testDeleteAuthorization()
     {
-        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1');
-        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_2');
-        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_3');
-        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_4');
+        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_1', 'rt_1');
+        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_2', 'rt_1');
+        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_3', 'rt_1');
+        $this->storage->storeAuthorization('foo', 'code-client', 'config', 'random_4', 'rt_1');
         $this->assertSame(4, \count($this->storage->getAuthorizations('foo')));
         $this->storage->deleteAuthorization('random_1');
         $this->assertSame(3, \count($this->storage->getAuthorizations('foo')));
