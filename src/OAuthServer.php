@@ -374,7 +374,8 @@ class OAuthServer
         // delete the old authorization
         $this->storage->deleteAuthorization($refreshTokenInfo['auth_key']);
 
-        // store the authorization
+        // store a new authorization and issue access_token and refresh_token
+        // under this new authorzation
         $authKey = $this->random->get(16);
         $this->storage->storeAuthorization(
             $refreshTokenInfo['user_id'],
