@@ -56,4 +56,22 @@ interface StorageInterface
      * @return void
      */
     public function deleteAuthorization($authKey);
+
+    /**
+     * Delete a refresh_token_id from the list of acceptable refresh_tokens.
+     *
+     * @param string $refreshTokenId
+     *
+     * @return bool indicating success
+     */
+    public function deleteRefreshTokenId($refreshTokenId);
+
+    /**
+     * Add a refresh_token_id to the list of acceptable refresh_tokens.
+     *
+     * @param string $refreshTokenId
+     *
+     * @return void
+     */
+    public function addRefreshTokenId($refreshTokenId);
 }

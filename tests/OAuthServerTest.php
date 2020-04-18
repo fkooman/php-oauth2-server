@@ -342,6 +342,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'refresh_token',
                     'auth_key' => 'random_1',
+                    'refresh_token_id' => 'random_1',
                     'user_id' => 'foo',
                     'client_id' => 'code-client',
                     'scope' => 'config',
@@ -412,6 +413,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'refresh_token',
                     'auth_key' => 'random_1',
+                    'refresh_token_id' => 'random_1',
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
@@ -635,7 +637,7 @@ class OAuthServerTest extends TestCase
     public function testRefreshTokenWithoutExplicitScope()
     {
         $this->storage->storeAuthorization('foo', 'code-client-secret', 'config', 'random_1');
-
+        $this->storage->addRefreshTokenId('xyz');
         $providedRefreshToken = Base64UrlSafe::encodeUnpadded(
             Json::encode(
                 [
@@ -645,6 +647,7 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
+                    'refresh_token_id' => 'xyz',
                 ]
             )
         );
@@ -678,6 +681,7 @@ class OAuthServerTest extends TestCase
                     'v' => OAuthServer::TOKEN_VERSION,
                     'type' => 'refresh_token',
                     'auth_key' => 'random_1',
+                    'refresh_token_id' => 'random_1',
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
@@ -712,6 +716,7 @@ class OAuthServerTest extends TestCase
                     'user_id' => 'foo',
                     'client_id' => 'code-client-secret',
                     'scope' => 'config',
+                    'refresh_token_id' => 'xyz',
                 ]
             )
         );
@@ -742,7 +747,7 @@ class OAuthServerTest extends TestCase
             );
             $this->fail();
         } catch (InvalidGrantException $e) {
-            $this->assertSame('"refresh_token" is no longer authorized', $e->getDescription());
+            $this->assertSame('"refresh_token" was used before', $e->getDescription());
         }
     }
 

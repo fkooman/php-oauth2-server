@@ -305,12 +305,15 @@ class OAuthServer
             $authorizationCodeInfo['auth_key']
         );
 
+        $refreshTokenId = $this->random->get(16);
         $refreshToken = $this->getRefreshToken(
             $authorizationCodeInfo['user_id'],
             $postData['client_id'],
             $authorizationCodeInfo['scope'],
-            $authorizationCodeInfo['auth_key']
+            $authorizationCodeInfo['auth_key'],
+            $refreshTokenId
         );
+        $this->storage->addRefreshTokenId($refreshTokenId);
 
         return new JsonResponse(
             [
@@ -371,32 +374,30 @@ class OAuthServer
             throw new InvalidGrantException('"refresh_token" is no longer authorized');
         }
 
-        // delete the old authorization
-        $this->storage->deleteAuthorization($refreshTokenInfo['auth_key']);
+        if (false === $this->storage->deleteRefreshTokenId($refreshTokenInfo['refresh_token_id'])) {
+            // refresh_token was no longer listed as a valid refresh_token...
+            // this indicated refresh_token replay! Delete the authorization...
+            $this->storage->deleteAuthorization($refreshTokenInfo['auth_key']);
 
-        // store a new authorization and issue access_token and refresh_token
-        // under this new authorzation
-        $authKey = $this->random->get(16);
-        $this->storage->storeAuthorization(
-            $refreshTokenInfo['user_id'],
-            $refreshTokenInfo['client_id'],
-            $refreshTokenInfo['scope'],
-            $authKey
-        );
+            throw new InvalidGrantException('"refresh_token" was used before');
+        }
 
         $accessToken = $this->getAccessToken(
             $refreshTokenInfo['user_id'],
             $refreshTokenInfo['client_id'],
             $refreshTokenInfo['scope'],
-            $authKey
+            $refreshTokenInfo['auth_key']
         );
 
+        $refreshTokenId = $this->random->get(16);
         $refreshToken = $this->getRefreshToken(
             $refreshTokenInfo['user_id'],
             $refreshTokenInfo['client_id'],
             $refreshTokenInfo['scope'],
-            $authKey
+            $refreshTokenInfo['auth_key'],
+            $refreshTokenId
         );
+        $this->storage->addRefreshTokenId($refreshTokenId);
 
         return new JsonResponse(
             [
@@ -451,16 +452,18 @@ class OAuthServer
      * @param string $clientId
      * @param string $scope
      * @param string $authKey
+     * @param string $refreshTokenId
      *
      * @return string
      */
-    private function getRefreshToken($userId, $clientId, $scope, $authKey)
+    private function getRefreshToken($userId, $clientId, $scope, $authKey, $refreshTokenId)
     {
         return $this->signer->sign(
             [
                 'v' => self::TOKEN_VERSION,
                 'type' => 'refresh_token',
                 'auth_key' => $authKey, // to bind it to the authorization
+                'refresh_token_id' => $refreshTokenId,
                 'user_id' => $userId,
                 'client_id' => $clientId,
                 'scope' => $scope,

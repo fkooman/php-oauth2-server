@@ -139,6 +139,50 @@ class PdoStorage implements StorageInterface
     }
 
     /**
+     * Delete a refresh_token_id from the list of acceptable refresh_tokens.
+     *
+     * @param string $refreshTokenId
+     *
+     * @return bool indicating success
+     */
+    public function deleteRefreshTokenId($refreshTokenId)
+    {
+        $stmt = $this->db->prepare(
+            'DELETE FROM
+                refresh_tokens
+             WHERE
+                refresh_token_id = :refresh_token_id'
+        );
+
+        $stmt->bindValue(':refresh_token_id', $refreshTokenId, PDO::PARAM_STR);
+        $stmt->execute();
+
+        return 1 === (int) $stmt->rowCount();
+    }
+
+    /**
+     * Add a refresh_token_id to the list of acceptable refresh_tokens.
+     *
+     * @param string $refreshTokenId
+     *
+     * @return void
+     */
+    public function addRefreshTokenId($refreshTokenId)
+    {
+        $stmt = $this->db->prepare(
+            'INSERT INTO refresh_tokens (
+                refresh_token_id
+             )
+             VALUES(
+                :refresh_token_id
+             )'
+        );
+
+        $stmt->bindValue(':refresh_token_id', $refreshTokenId, PDO::PARAM_STR);
+        $stmt->execute();
+    }
+
+    /**
      * @return void
      */
     public function init()
@@ -150,6 +194,10 @@ class PdoStorage implements StorageInterface
                 client_id VARCHAR(255) NOT NULL,
                 scope VARCHAR(255) NOT NULL,
                 UNIQUE(auth_key)
+            )',
+            'CREATE TABLE IF NOT EXISTS refresh_tokens (
+                refresh_token_id VARCHAR(255) NOT NULL,
+                UNIQUE(refresh_token_id)
             )',
         ];
 
