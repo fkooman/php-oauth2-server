@@ -1,5 +1,10 @@
 # ChangeLog
 
+## 6.0.1 (...)
+- prevent `refresh_token` reuse. Every use of a `refresh_token` results in 
+  issuance of a new `access_token` and `refresh_token` and invalidation of the
+  old `access_token` and `refresh_token`
+
 ## 6.0.0 (2020-01-20)
 - remove recommendation for `league/oauth2-server`
 - always enforce PKCE, also for confidential clients, see OAuth 2.1 
