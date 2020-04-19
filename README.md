@@ -14,14 +14,17 @@ sent. PKCE is required for all client types.
 # Features
 
 - Supports PHP >= 5.4;
-- Only supports _Authorization Code Grant_;
 - Easy integration with your own application and/or framework;
-- Does not force a framework on you;
-- There will be no toggles to shoot yourself in the foot with;
-- Requires [PKCE](https://tools.ietf.org/html/rfc7636) for all client types;
-- Supports refresh tokens;
+- Does not require the use of a framework;
 - Does NOT implement RFC 6749 (#4.1.2.1) error responses (except for 
   `access_denied`);
+- Follows draft 
+  [OAuth 2.1](https://tools.ietf.org/html/draft-parecki-oauth-v2-1-01) 
+  recommendations
+  - Always requires [PKCE](https://tools.ietf.org/html/rfc7636);
+  - Exact string match for `redirect_uri`;
+  - Only supports _Authorization Code Grant_;
+  - Refresh token rotation
 
 # Requirements
 
