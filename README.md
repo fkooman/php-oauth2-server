@@ -20,7 +20,7 @@ sent. PKCE is required for all client types.
   `access_denied`);
 - Follows draft 
   [OAuth 2.1](https://tools.ietf.org/html/draft-parecki-oauth-v2-1-01) 
-  recommendations
+  recommendations:
   - Always requires [PKCE](https://tools.ietf.org/html/rfc7636);
   - Exact string match for `redirect_uri`;
   - Only supports _Authorization Code Grant_;
