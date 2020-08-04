@@ -26,7 +26,6 @@ namespace fkooman\OAuth\Server;
 
 use LengthException;
 use ParagonIE\ConstantTime\Base64UrlSafe;
-use ParagonIE\ConstantTime\Binary;
 
 /**
  * JWT Signer, using HS256 algorithm.
@@ -46,7 +45,7 @@ class LocalSigner implements SignerInterface
     public function __construct($secretKey)
     {
         // php -r 'echo strlen(hash("sha256", "", true));'
-        if (32 !== Binary::safeStrlen($secretKey)) {
+        if (32 !== \strlen($secretKey)) {
             throw new LengthException('invalid key length');
         }
         $this->secretKey = $secretKey;
