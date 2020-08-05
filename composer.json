@@ -15,7 +15,7 @@
             "fkooman\\OAuth\\Server\\Tests\\": "tests/"
         }
     },
-    "description": "Opinionated OAuth 2.0 server",
+    "description": "Simple and secure OAuth 2.0 server",
     "license": "MIT",
     "name": "fkooman/oauth2-server",
     "require": {

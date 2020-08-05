@@ -1,3 +1,11 @@
+**Summary**: Simple and secure OAuth 2.0 server
+
+**Description**: Opinionated, simple, easy to use OAuth 2.0 server for 
+integrating OAuth 2.0 in your server applications using the latest 
+(security) recommendations.
+
+**License**: MIT
+
 # Introduction
 
 The project provides an opinionated OAuth 2.0 server library for integration in 
