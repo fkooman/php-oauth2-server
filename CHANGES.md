@@ -1,5 +1,11 @@
 # ChangeLog
 
+## 6.0.1 (2020-08-09)
+- update README
+- small test fixes
+- no longer use `paragonie/constant_time_encoding` for `strlen` and `substr`
+- require `ext-sqlite3`
+
 ## 6.0.0 (2020-01-20)
 - remove recommendation for `league/oauth2-server`
 - always enforce PKCE, also for confidential clients, see OAuth 2.1 
